@@ -33,7 +33,7 @@ export default function DashboardLayout({
             <SidebarHeader>
               <div className="flex items-center gap-2 p-2">
                 <Bot className="h-8 w-8 text-primary" />
-                <span className="text-xl font-headline font-semibold">Análisis COCOCO</span>
+                <span className="text-xl font-headline font-semibold">COCOCO Scan</span>
               </div>
             </SidebarHeader>
             <SidebarMenu>

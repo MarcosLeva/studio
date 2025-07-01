@@ -17,8 +17,8 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: 'Análisis COCOCO',
-  description: 'Análisis de documentos con IA',
+  title: 'COCOCO Scan',
+  description: 'Análisis de Catálogos con IA',
 };
 
 export default function RootLayout({
