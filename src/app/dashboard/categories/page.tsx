@@ -19,6 +19,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -39,6 +40,7 @@ import { useApp } from "../store";
 import { useToast } from "@/hooks/use-toast";
 import { suggestCategoryPrompt } from "@/ai/flows/suggest-category-prompt";
 import type { Category } from "@/lib/types";
+import { FileUploader } from "@/components/file-uploader";
 
 const categorySchema = z.object({
   name: z.string().min(3, { message: "El nombre de la categoría debe tener al menos 3 caracteres." }),
@@ -46,7 +48,17 @@ const categorySchema = z.object({
   aiModel: z.string({ required_error: "Por favor, selecciona un modelo de IA." }),
   prompt: z.string().min(10, { message: "El prompt debe tener al menos 10 caracteres." }),
   instructions: z.string().min(10, { message: "Las instrucciones deben tener al menos 10 caracteres." }),
+  files: z.array(z.instanceof(File)).optional(),
 });
+
+const readFileAsDataURI = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => reject(error);
+    reader.readAsDataURL(file);
+  });
+};
 
 export default function CategoriesPage() {
   const { categories, addCategory, editCategory } = useApp();
@@ -64,6 +76,7 @@ export default function CategoriesPage() {
       aiModel: "",
       prompt: "",
       instructions: "",
+      files: [],
     },
   });
 
@@ -85,7 +98,7 @@ export default function CategoriesPage() {
   }
   
   const handleSuggestPrompt = async () => {
-    const categoryName = form.getValues("name");
+    const { name: categoryName, files } = form.getValues();
     if (!categoryName) {
       toast({
         variant: "destructive",
@@ -97,7 +110,12 @@ export default function CategoriesPage() {
     
     setIsSuggesting(true);
     try {
-      const result = await suggestCategoryPrompt({ categoryName });
+      const fileDataUris =
+        files && files.length > 0
+          ? await Promise.all(files.map((file) => readFileAsDataURI(file)))
+          : undefined;
+
+      const result = await suggestCategoryPrompt({ categoryName, fileDataUris });
       form.setValue("prompt", result.suggestedPrompt, { shouldValidate: true });
       toast({
         title: "¡Prompt Sugerido!",
@@ -216,6 +234,33 @@ export default function CategoriesPage() {
                     <FormLabel>Descripción</FormLabel>
                     <FormControl>
                       <Textarea placeholder="Una breve descripción para qué sirve esta categoría." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="files"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Archivos de Ejemplo (Opcional)</FormLabel>
+                    <FormDescription>
+                      Sube uno o más archivos de ejemplo para ayudar a la IA a sugerir un prompt más preciso.
+                    </FormDescription>
+                    <FormControl>
+                      <FileUploader
+                        value={field.value ?? []}
+                        onChange={field.onChange}
+                        dropzoneOptions={{
+                          accept: {
+                            "application/pdf": [".pdf"],
+                            "text/plain": [".txt"],
+                            "image/jpeg": [".jpeg", ".jpg"],
+                            "image/png": [".png"],
+                          },
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
