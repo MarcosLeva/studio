@@ -65,10 +65,7 @@ export default function DashboardLayout({
           </SidebarContent>
         </Sidebar>
 
-        <div className={cn(
-          "relative flex min-h-svh flex-1 flex-col bg-background min-w-0",
-          "peer-data-[variant=inset]:min-h-[calc(100svh-theme(spacing.4))] md:peer-data-[variant=inset]:m-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow"
-        )}>
+        <div className="relative flex w-full flex-1 flex-col min-h-svh bg-background min-w-0">
           <header className="flex h-14 shrink-0 items-center justify-between border-b bg-card px-4 lg:px-6">
             <SidebarTrigger className="md:hidden" />
             <div className="flex-1">
