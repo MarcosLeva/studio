@@ -6,82 +6,75 @@ import { useDropzone, type DropzoneOptions, type FileRejection } from "react-dro
 import { twMerge } from "tailwind-merge";
 import Image from "next/image";
 
-// Make the uploader area larger and define a cleaner style for when a file is selected.
 const variants = {
-  base: "relative rounded-lg flex justify-center items-center flex-col cursor-pointer min-h-48 w-full border-2 border-dashed border-muted-foreground/50 transition-colors duration-200 ease-in-out",
-  image: "border-solid border-border bg-muted/10 p-0", // Cleaner style for the container when a file is present
+  base: "relative rounded-lg p-4 flex justify-center items-center flex-col cursor-pointer min-h-52 w-full border-2 border-dashed border-muted-foreground/50 text-center transition-colors duration-200 ease-in-out",
   active: "border-primary",
-  disabled: "bg-muted cursor-default pointer-events-none bg-opacity-30",
-  accept: "border-green-500 bg-green-500 bg-opacity-10",
-  reject: "border-red-500 bg-red-500 bg-opacity-10",
+  disabled: "bg-muted/50 cursor-default pointer-events-none",
+  accept: "border-green-500 bg-green-500/10",
+  reject: "border-red-500 bg-red-500/10",
 };
 
-type InputProps = {
+type FileUploaderProps = {
   className?: string;
   value?: File;
-  onChange?: (file?: File) => void | Promise<void>;
+  onChange?: (file?: File) => void;
   disabled?: boolean;
-  dropzoneOptions?: Omit<DropzoneOptions, "disabled">;
+  dropzoneOptions?: Omit<DropzoneOptions, "disabled" | "onDrop">;
 };
 
-const FileUploader = React.forwardRef<HTMLInputElement, InputProps>(
-  (
-    {
-      dropzoneOptions,
-      value: file,
-      className,
-      disabled,
-      onChange,
-    },
-    ref
-  ) => {
+const FileUploader = React.forwardRef<HTMLInputElement, FileUploaderProps>(
+  ({ className, value, onChange, disabled, dropzoneOptions }, ref) => {
     const [preview, setPreview] = React.useState<string | null>(null);
     const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
     const onDrop = React.useCallback(
-      (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
+      (acceptedFiles: File[], fileRejections: FileRejection[]) => {
         setErrorMessage(null);
 
-        if (rejectedFiles && rejectedFiles.length > 0) {
-            const firstError = rejectedFiles[0].errors[0];
-            let message = firstError.message;
-            if (firstError.code === 'file-too-large' && dropzoneOptions?.maxSize) {
-                message = `El archivo es demasiado grande. El tamaño máximo es ${Math.round(dropzoneOptions.maxSize / 1024 / 1024)}MB.`;
-            } else if (firstError.code === 'file-invalid-type') {
-                message = "Tipo de archivo no válido.";
-            } else if (firstError.code === 'file-too-small' && dropzoneOptions?.minSize) {
-                message = `El archivo es demasiado pequeño. El tamaño mínimo es ${Math.round(dropzoneOptions.minSize / 1024)}KB.`;
-            }
-            setErrorMessage(message);
-            onChange?.(undefined);
-            return;
+        if (fileRejections.length > 0) {
+          const firstError = fileRejections[0].errors[0];
+          let message = firstError.message;
+          if (firstError.code === 'file-too-large' && dropzoneOptions?.maxSize) {
+            message = `El archivo es demasiado grande. El tamaño máximo es ${Math.round(dropzoneOptions.maxSize / 1024 / 1024)}MB.`;
+          } else if (firstError.code === 'file-invalid-type') {
+            message = "Tipo de archivo no válido.";
+          }
+          setErrorMessage(message);
+          if (onChange) {
+            onChange(undefined);
+          }
+          return;
         }
-        
-        if (acceptedFiles && acceptedFiles.length > 0) {
-          onChange?.(acceptedFiles[0]);
+
+        if (acceptedFiles.length > 0) {
+          if (onChange) {
+            onChange(acceptedFiles[0]);
+          }
         }
       },
       [onChange, dropzoneOptions]
     );
 
     React.useEffect(() => {
-        if(!file) {
-          setErrorMessage(null);
-        }
-    }, [file]);
+      if (!value) {
+        setPreview(null);
+        setErrorMessage(null);
+        return;
+      }
+      
+      if (value.type.startsWith("image/")) {
+        const objectUrl = URL.createObjectURL(value);
+        setPreview(objectUrl);
+        setErrorMessage(null);
 
-    React.useEffect(() => {
-        if (file && file.type.startsWith("image/")) {
-            const objectUrl = URL.createObjectURL(file);
-            setPreview(objectUrl);
-            
-            return () => {
-                URL.revokeObjectURL(objectUrl);
-            };
-        } else {
-            setPreview(null);
-        }
-    }, [file]);
+        return () => {
+          URL.revokeObjectURL(objectUrl);
+        };
+      } else {
+        setPreview(null);
+        setErrorMessage(null);
+      }
+    }, [value]);
 
     const {
       getRootProps,
@@ -100,81 +93,72 @@ const FileUploader = React.forwardRef<HTMLInputElement, InputProps>(
         twMerge(
           variants.base,
           isDragActive && variants.active,
-          (isDragReject || errorMessage) && variants.reject,
           isDragAccept && variants.accept,
+          (isDragReject || !!errorMessage) && variants.reject,
           disabled && variants.disabled,
-          file && !errorMessage ? variants.image : "",
+          value && !errorMessage ? "p-0 border-solid" : "", 
           className
         ).trim(),
-      [
-        isDragActive,
-        isDragReject,
-        file,
-        isDragAccept,
-        disabled,
-        className,
-        errorMessage,
-      ]
+      [isDragActive, isDragAccept, isDragReject, errorMessage, disabled, value, className]
     );
 
-    const removeFile = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    const removeFile = (e: React.MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
-      onChange?.(undefined);
+      if (onChange) {
+        onChange(undefined);
+      }
     };
 
     return (
-      <div
-        {...getRootProps({
-          className: dropZoneClassName,
-        })}
-      >
+      <div {...getRootProps({ className: dropZoneClassName })}>
         <input ref={ref} {...getInputProps()} />
 
-        {file && !errorMessage ? (
-          preview ? (
-            <div className="relative h-full w-full">
+        {value && !errorMessage ? (
+          <div className="relative h-full w-full flex items-center justify-center">
+            {preview ? (
               <Image
-                  src={preview}
-                  alt={file.name || "Vista previa"}
-                  fill
-                  className="rounded-md object-contain p-2"
+                src={preview}
+                alt={value.name}
+                fill
+                className="rounded-md object-contain"
               />
-            </div>
-          ) : (
-            <div className="flex h-full w-full flex-col items-center justify-center space-y-4 text-center p-4 rounded-md">
-              <div className="flex items-center justify-center rounded-full bg-muted p-5">
-                  <FileIcon className="h-10 w-10 text-muted-foreground" />
+            ) : (
+              <div className="flex flex-col items-center justify-center p-4 h-full w-full space-y-2">
+                <div className="flex items-center justify-center rounded-full bg-muted p-4">
+                  <FileIcon className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-medium text-foreground truncate">{value.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {Math.round(value.size / 1024)} KB
+                  </p>
+                </div>
               </div>
-              <div className="max-w-full truncate px-2">
-                  <p className="text-sm font-medium text-foreground truncate">{file.name}</p>
-                  <p className="text-xs text-muted-foreground">{Math.round(file.size / 1024)} KB</p>
-              </div>
-            </div>
-          )
+            )}
+            
+            {!disabled && (
+              <button
+                type="button"
+                onClick={removeFile}
+                className="absolute -right-2 -top-2 z-10 rounded-full bg-destructive p-1.5 text-destructive-foreground shadow-md transition-colors hover:bg-destructive/80"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         ) : (
-          <div className="flex flex-col items-center justify-center text-center p-4">
-            <UploadCloud className="h-12 w-12 text-muted-foreground" />
-            <p className="mt-2 text-sm text-foreground">
-              <span className="font-semibold">Arrastra y suelta</span> un archivo aquí o
-              haz clic para seleccionar un archivo
+          <div className="flex flex-col items-center justify-center">
+            <UploadCloud className="h-10 w-10 text-muted-foreground" />
+            <p className="mt-4 text-sm text-foreground">
+              <span className="font-semibold">Arrastra y suelta</span> o haz clic
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground mt-1">
               Soporta TXT, PDF e imágenes.
             </p>
             {errorMessage && (
-                <p className="mt-2 text-xs text-destructive">{errorMessage}</p>
+              <p className="mt-2 text-xs font-semibold text-destructive">{errorMessage}</p>
             )}
           </div>
-        )}
-        
-        {file && !disabled && (
-            <button
-              type="button"
-              onClick={removeFile}
-              className="absolute -right-2 -top-2 inline-flex items-center justify-center rounded-full bg-destructive p-1.5 text-destructive-foreground transition-colors hover:bg-destructive/80 z-10"
-            >
-              <X className="h-4 w-4"/>
-            </button>
         )}
       </div>
     );
