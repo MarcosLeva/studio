@@ -33,7 +33,7 @@ import { useToast } from "@/hooks/use-toast";
 const formSchema = z.object({
   category: z.string().min(1, { message: "Por favor, selecciona una categoría." }),
   catalogName: z.string().min(1, { message: "El nombre del catálogo es obligatorio." }),
-  file: z.instanceof(File).refine(file => file.size > 0, "Se requiere un archivo."),
+  files: z.array(z.instanceof(File)).min(1, { message: "Se requiere al menos un archivo." }),
 });
 
 const readFileAsDataURI = (file: File): Promise<string> => {
@@ -55,6 +55,7 @@ export default function AnalyzeCatalogPage() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       catalogName: "",
+      files: [],
     },
   });
 
@@ -73,12 +74,14 @@ export default function AnalyzeCatalogPage() {
     }
 
     try {
-      const fileDataUri = await readFileAsDataURI(values.file);
+      const fileDataUris = await Promise.all(
+        values.files.map(file => readFileAsDataURI(file))
+      );
       
       const result = await analyzeCatalogInput({
         categoryName: selectedCategory.name,
         catalogName: values.catalogName,
-        fileDataUri,
+        fileDataUris,
         instructions: selectedCategory.instructions,
         prompt: selectedCategory.prompt,
       });
@@ -112,7 +115,7 @@ export default function AnalyzeCatalogPage() {
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Analizar Catálogo</h1>
         <p className="text-muted-foreground">
-          Selecciona una categoría, sube un archivo de catálogo y deja que nuestra IA haga el resto.
+          Selecciona una categoría, sube uno o más archivos de catálogo y deja que nuestra IA haga el resto.
         </p>
       </div>
 
@@ -168,10 +171,10 @@ export default function AnalyzeCatalogPage() {
                 </div>
                 <FormField
                   control={form.control}
-                  name="file"
+                  name="files"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Archivo de Catálogo</FormLabel>
+                      <FormLabel>Archivos de Catálogo</FormLabel>
                       <FormControl>
                          <FileUploader
                             value={field.value}

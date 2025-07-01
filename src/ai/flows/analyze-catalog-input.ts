@@ -14,10 +14,11 @@ import {z} from 'genkit';
 const AnalyzeCatalogInputInputSchema = z.object({
   categoryName: z.string().describe('The name of the category to use for analysis.'),
   catalogName: z.string().describe('The name of the catalog being analyzed.'),
-  fileDataUri: z
-    .string()
+  fileDataUris: z
+    .array(z.string())
     .describe(
-      'The catalog file data, as a data URI that must include a MIME type and use Base64 encoding. Expected format: \'data:<mimetype>;base64,<encoded_data>\'.'    ),
+      'The catalog files data, as an array of data URIs. Each URI must include a MIME type and use Base64 encoding. Expected format: \'data:<mimetype>;base64,<encoded_data>\'.'
+    ),
   instructions: z.string().describe('Instructions for the AI model to follow during analysis.'),
   prompt: z.string().describe('The prompt to use for analyzing the catalog.'),
 });
@@ -45,7 +46,11 @@ const analyzeCatalogInputPrompt = ai.definePrompt({
   Analyze the following catalog content and extract relevant information based on the prompt:
 
   Prompt: {{{prompt}}}
-  Catalog Content: {{media url=fileDataUri}}
+  
+  Catalog Content: 
+  {{#each fileDataUris}}
+  {{media url=this}}
+  {{/each}}
   `,
 });
 
