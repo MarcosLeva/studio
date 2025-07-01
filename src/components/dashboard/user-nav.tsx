@@ -26,11 +26,12 @@ export function UserNav() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-9 w-9">
-            <AvatarImage src="https://placehold.co/100x100" alt="@shadcn" data-ai-hint="user avatar" />
-            <AvatarFallback>SC</AvatarFallback>
-          </Avatar>
+        <Button variant="ghost" className="relative flex h-10 w-auto items-center justify-end rounded-full p-1">
+            <span className="mr-2 hidden text-sm font-medium sm:block">Usuario de Demostración</span>
+            <Avatar className="h-8 w-8">
+                <AvatarImage src="https://placehold.co/100x100" alt="@shadcn" data-ai-hint="user avatar" />
+                <AvatarFallback>SC</AvatarFallback>
+            </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
