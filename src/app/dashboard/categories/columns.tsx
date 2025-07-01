@@ -15,7 +15,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import type { Category } from "@/lib/types";
 
-export const columns: ColumnDef<Category>[] = [
+export const getColumns = (
+  onEdit: (category: Category) => void
+): ColumnDef<Category>[] => [
   {
     accessorKey: "name",
     header: ({ column }) => {
@@ -71,7 +73,7 @@ export const columns: ColumnDef<Category>[] = [
                   Copiar ID de Categoría
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Editar</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onEdit(category)}>Editar</DropdownMenuItem>
                 <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive">Eliminar</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

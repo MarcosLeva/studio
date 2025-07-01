@@ -56,6 +56,7 @@ interface AppContextType {
   results: ScanResult[];
   setResults: React.Dispatch<React.SetStateAction<ScanResult[]>>;
   addCategory: (category: Omit<Category, 'id' | 'dateCreated'>) => void;
+  editCategory: (id: string, data: Omit<Category, 'id' | 'dateCreated'>) => void;
   addScanResult: (result: Omit<ScanResult, 'id' | 'dateScanned'>) => void;
 }
 
@@ -74,6 +75,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setCategories(prev => [...prev, newCategory]);
   };
 
+  const editCategory = (id: string, data: Omit<Category, 'id' | 'dateCreated'>) => {
+    setCategories(prev => 
+      prev.map(cat => (cat.id === id ? { ...cat, ...data } : cat))
+    );
+  };
+
   const addScanResult = (result: Omit<ScanResult, 'id' | 'dateScanned'>) => {
     const newResult: ScanResult = {
         ...result,
@@ -84,7 +91,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AppContext.Provider value={{ categories, setCategories, results, setResults, addCategory, addScanResult }}>
+    <AppContext.Provider value={{ categories, setCategories, results, setResults, addCategory, editCategory, addScanResult }}>
       {children}
     </AppContext.Provider>
   );

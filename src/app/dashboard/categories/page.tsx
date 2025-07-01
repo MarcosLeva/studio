@@ -14,7 +14,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -34,10 +33,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DataTable } from "./data-table";
-import { columns } from "./columns";
+import { getColumns } from "./columns";
 import { useApp } from "../store";
 import { useToast } from "@/hooks/use-toast";
 import { suggestCategoryPrompt } from "@/ai/flows/suggest-category-prompt";
+import type { Category } from "@/lib/types";
 
 const categorySchema = z.object({
   name: z.string().min(3, { message: "El nombre de la categoría debe tener al menos 3 caracteres." }),
@@ -48,9 +48,10 @@ const categorySchema = z.object({
 });
 
 export default function CategoriesPage() {
-  const { categories, addCategory } = useApp();
+  const { categories, addCategory, editCategory } = useApp();
   const { toast } = useToast();
-  const [open, setOpen] = React.useState(false);
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [editingCategory, setEditingCategory] = React.useState<Category | null>(null);
   const [isSuggesting, setIsSuggesting] = React.useState(false);
 
   const form = useForm<z.infer<typeof categorySchema>>({
@@ -58,19 +59,27 @@ export default function CategoriesPage() {
     defaultValues: {
       name: "",
       description: "",
+      aiModel: "",
       prompt: "",
       instructions: "",
     },
   });
 
   async function onSubmit(values: z.infer<typeof categorySchema>) {
-    addCategory(values);
-    toast({
-      title: "Categoría Creada",
-      description: `La categoría "${values.name}" ha sido añadida con éxito.`,
-    });
-    setOpen(false);
-    form.reset();
+    if (editingCategory) {
+      editCategory(editingCategory.id, values);
+      toast({
+        title: "Categoría Actualizada",
+        description: `La categoría "${values.name}" ha sido actualizada con éxito.`,
+      });
+    } else {
+      addCategory(values);
+      toast({
+        title: "Categoría Creada",
+        description: `La categoría "${values.name}" ha sido añadida con éxito.`,
+      });
+    }
+    setIsDialogOpen(false);
   }
   
   const handleSuggestPrompt = async () => {
@@ -104,6 +113,28 @@ export default function CategoriesPage() {
     }
   };
 
+  const handleDialogClose = (open: boolean) => {
+    if (!open) {
+      setEditingCategory(null);
+      form.reset();
+    }
+    setIsDialogOpen(open);
+  }
+
+  const handleCreateClick = () => {
+    setEditingCategory(null);
+    form.reset();
+    setIsDialogOpen(true);
+  }
+
+  const handleEditClick = React.useCallback((category: Category) => {
+    setEditingCategory(category);
+    form.reset(category);
+    setIsDialogOpen(true);
+  }, [form]);
+
+  const columns = React.useMemo(() => getColumns(handleEditClick), [handleEditClick]);
+
   return (
     <div className="container mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -113,131 +144,130 @@ export default function CategoriesPage() {
             Gestiona tus categorías de análisis aquí.
           </p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Nueva Categoría
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[625px]">
-            <DialogHeader>
-              <DialogTitle>Añadir Nueva Categoría</DialogTitle>
-              <DialogDescription>
-                Crea una nueva categoría para clasificar y analizar tus catálogos.
-              </DialogDescription>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nombre de la Categoría</FormLabel>
-                          <FormControl>
-                            <Input placeholder="ej., Descripciones de Productos" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="aiModel"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Modelo de IA</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecciona un modelo" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Gemini 2.0 Flash">Gemini 2.0 Flash</SelectItem>
-                              <SelectItem value="Gemini Pro">Gemini Pro</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                </div>
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Descripción</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Una breve descripción para qué sirve esta categoría." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="prompt"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center justify-between">
-                        <span>Prompt de IA</span>
-                        <Button
-                            type="button"
-                            variant="link"
-                            size="sm"
-                            className="p-0 h-auto text-primary"
-                            onClick={handleSuggestPrompt}
-                            disabled={isSuggesting}
-                        >
-                            {isSuggesting ? (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                            ) : (
-                                <Lightbulb className="mr-2 h-4 w-4"/>
-                            )}
-                            Sugerir con IA
-                        </Button>
-                      </FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Indica a la IA qué extraer, ej., 'Extraer nombres de productos y precios.'"
-                          className="min-h-[100px]"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="instructions"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Instrucciones para la IA</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Proporciona instrucciones específicas, ej., 'Formatear la salida como JSON.'"
-                          className="min-h-[100px]"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-                  <Button type="submit">Guardar Categoría</Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={handleCreateClick}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Nueva Categoría
+        </Button>
       </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
+        <DialogContent className="sm:max-w-[625px]">
+          <DialogHeader>
+            <DialogTitle>{editingCategory ? 'Editar Categoría' : 'Añadir Nueva Categoría'}</DialogTitle>
+            <DialogDescription>
+              {editingCategory ? 'Modifica los detalles de tu categoría.' : 'Crea una nueva categoría para clasificar y analizar tus catálogos.'}
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nombre de la Categoría</FormLabel>
+                        <FormControl>
+                          <Input placeholder="ej., Descripciones de Productos" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="aiModel"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Modelo de IA</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona un modelo" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Gemini 2.0 Flash">Gemini 2.0 Flash</SelectItem>
+                            <SelectItem value="Gemini Pro">Gemini Pro</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+              </div>
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Descripción</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Una breve descripción para qué sirve esta categoría." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="prompt"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center justify-between">
+                      <span>Prompt de IA</span>
+                      <Button
+                          type="button"
+                          variant="link"
+                          size="sm"
+                          className="p-0 h-auto text-primary"
+                          onClick={handleSuggestPrompt}
+                          disabled={isSuggesting}
+                      >
+                          {isSuggesting ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                          ) : (
+                              <Lightbulb className="mr-2 h-4 w-4"/>
+                          )}
+                          Sugerir con IA
+                      </Button>
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Indica a la IA qué extraer, ej., 'Extraer nombres de productos y precios.'"
+                        className="min-h-[100px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="instructions"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Instrucciones para la IA</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Proporciona instrucciones específicas, ej., 'Formatear la salida como JSON.'"
+                        className="min-h-[100px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
+                <Button type="submit">{editingCategory ? 'Guardar Cambios' : 'Guardar Categoría'}</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
 
       <DataTable columns={columns} data={categories} />
     </div>
