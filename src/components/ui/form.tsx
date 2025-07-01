@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -14,6 +15,7 @@ import {
 
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 const Form = FormProvider
 
@@ -110,17 +112,30 @@ const FormControl = React.forwardRef<
   const { error, formItemId, formDescriptionId, formMessageId } = useFormField()
 
   return (
-    <Slot
-      ref={ref}
-      id={formItemId}
-      aria-describedby={
-        !error
-          ? `${formDescriptionId}`
-          : `${formDescriptionId} ${formMessageId}`
-      }
-      aria-invalid={!!error}
-      {...props}
-    />
+    <Popover open={!!error}>
+      <PopoverTrigger asChild>
+        <Slot
+          ref={ref}
+          id={formItemId}
+          aria-describedby={
+            !error
+              ? `${formDescriptionId}`
+              : `${formDescriptionId} ${formMessageId}`
+          }
+          aria-invalid={!!error}
+          {...props}
+        />
+      </PopoverTrigger>
+      {error?.message && (
+        <PopoverContent
+          side="bottom"
+          align="start"
+          className="w-auto border-none bg-destructive p-2 text-sm text-destructive-foreground shadow-md"
+        >
+          <p>{error.message.toString()}</p>
+        </PopoverContent>
+      )}
+    </Popover>
   )
 })
 FormControl.displayName = "FormControl"
@@ -153,11 +168,13 @@ const FormMessage = React.forwardRef<
     return null
   }
 
+  // We render a visually hidden element for screen readers to announce the error,
+  // while the visual error is displayed in a popover.
   return (
     <p
       ref={ref}
       id={formMessageId}
-      className={cn("text-sm font-medium text-destructive", className)}
+      className={cn("sr-only", className)}
       {...props}
     >
       {body}
