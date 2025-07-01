@@ -49,7 +49,7 @@ export const getColumns = (
   {
     accessorKey: "description",
     header: "Descripción",
-    cell: ({ row }) => <div className="max-w-xs truncate">{row.getValue("description")}</div>,
+    cell: ({ row }) => <div className="max-w-sm truncate">{row.getValue("description")}</div>,
   },
   {
     id: "actions",

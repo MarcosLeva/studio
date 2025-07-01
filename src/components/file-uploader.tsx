@@ -6,7 +6,7 @@ import { useDropzone, type DropzoneOptions } from "react-dropzone";
 import { twMerge } from "tailwind-merge";
 
 const variants = {
-  base: "relative rounded-md flex justify-center items-center flex-col cursor-pointer min-h-[150px] min-w-[200px] border-2 border-dashed border-muted-foreground/50 transition-colors duration-200 ease-in-out",
+  base: "relative rounded-md flex justify-center items-center flex-col cursor-pointer min-h-36 min-w-48 border-2 border-dashed border-muted-foreground/50 transition-colors duration-200 ease-in-out",
   image:
     "border-0 p-0 min-h-0 min-w-0 relative shadow-md bg-slate-200 rounded-md",
   active: "border-primary",

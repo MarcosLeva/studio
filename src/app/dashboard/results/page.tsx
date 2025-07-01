@@ -50,7 +50,7 @@ export default function ScannedResultsPage() {
                                     <CardDescription>Escaneado el: {result.dateScanned}</CardDescription>
                                 </CardHeader>
                                 <CardContent>
-                                    <p className="text-sm text-foreground/80">{result.analysis}</p>
+                                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{result.analysis}</p>
                                 </CardContent>
                              </Card>
                         ))}

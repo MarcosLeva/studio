@@ -151,7 +151,7 @@ export default function CategoriesPage() {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
-        <DialogContent className="sm:max-w-[625px]">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editingCategory ? 'Editar Categoría' : 'Añadir Nueva Categoría'}</DialogTitle>
             <DialogDescription>
@@ -235,7 +235,7 @@ export default function CategoriesPage() {
                     <FormControl>
                       <Textarea
                         placeholder="Indica a la IA qué extraer, ej., 'Extraer nombres de productos y precios.'"
-                        className="min-h-[100px]"
+                        rows={4}
                         {...field}
                       />
                     </FormControl>
@@ -252,7 +252,7 @@ export default function CategoriesPage() {
                     <FormControl>
                       <Textarea
                         placeholder="Proporciona instrucciones específicas, ej., 'Formatear la salida como JSON.'"
-                        className="min-h-[100px]"
+                        rows={4}
                         {...field}
                       />
                     </FormControl>

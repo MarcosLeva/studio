@@ -71,7 +71,7 @@ export default function LoginPage() {
                 Análisis COCOCO
             </h1>
         </div>
-        <p className="max-w-[600px] text-muted-foreground md:text-xl">
+        <p className="max-w-xl text-muted-foreground md:text-xl">
             Análisis de Catálogos con IA. Optimizado. Inteligente.
         </p>
       </div>
