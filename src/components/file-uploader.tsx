@@ -24,13 +24,25 @@ type FileUploaderProps = {
 
 const FileUploader = React.forwardRef<HTMLInputElement, FileUploaderProps>(
   ({ className, value, onChange, disabled, dropzoneOptions }, ref) => {
-    const [preview, setPreview] = React.useState<string | null>(null);
     const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+
+    const preview = React.useMemo(() => {
+        if (value && value.type.startsWith("image/")) {
+            return URL.createObjectURL(value);
+        }
+        return null;
+    }, [value]);
+
+    React.useEffect(() => {
+        return () => {
+            if (preview) {
+                URL.revokeObjectURL(preview);
+            }
+        };
+    }, [preview]);
 
     const onDrop = React.useCallback(
       (acceptedFiles: File[], fileRejections: FileRejection[]) => {
-        setErrorMessage(null);
-
         if (fileRejections.length > 0) {
           const firstError = fileRejections[0].errors[0];
           let message = firstError.message;
@@ -40,41 +52,24 @@ const FileUploader = React.forwardRef<HTMLInputElement, FileUploaderProps>(
             message = "Tipo de archivo no válido.";
           }
           setErrorMessage(message);
-          if (onChange) {
-            onChange(undefined);
-          }
+          onChange?.(undefined);
           return;
         }
 
         if (acceptedFiles.length > 0) {
-          if (onChange) {
-            onChange(acceptedFiles[0]);
-          }
+          onChange?.(acceptedFiles[0]);
+          setErrorMessage(null);
         }
       },
       [onChange, dropzoneOptions]
     );
-
+    
     React.useEffect(() => {
-      if (!value) {
-        setPreview(null);
-        setErrorMessage(null);
-        return;
-      }
-      
-      if (value.type.startsWith("image/")) {
-        const objectUrl = URL.createObjectURL(value);
-        setPreview(objectUrl);
-        setErrorMessage(null);
+        if (!value) {
+            setErrorMessage(null);
+        }
+    }, [value])
 
-        return () => {
-          URL.revokeObjectURL(objectUrl);
-        };
-      } else {
-        setPreview(null);
-        setErrorMessage(null);
-      }
-    }, [value]);
 
     const {
       getRootProps,
@@ -104,16 +99,16 @@ const FileUploader = React.forwardRef<HTMLInputElement, FileUploaderProps>(
 
     const removeFile = (e: React.MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
-      if (onChange) {
-        onChange(undefined);
-      }
+      onChange?.(undefined);
     };
+
+    const hasFile = value && !errorMessage;
 
     return (
       <div {...getRootProps({ className: dropZoneClassName })}>
         <input ref={ref} {...getInputProps()} />
 
-        {value && !errorMessage ? (
+        {hasFile && value ? (
           <div className="relative h-full w-full flex items-center justify-center">
             {preview ? (
               <Image
