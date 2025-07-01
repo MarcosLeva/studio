@@ -20,7 +20,7 @@ export function UserNav() {
   const router = useRouter();
 
   const handleLogout = () => {
-    router.push("/");
+    router.push("/login");
   };
 
   return (
