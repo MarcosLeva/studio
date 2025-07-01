@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -53,6 +54,7 @@ export default function CategoriesPage() {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [editingCategory, setEditingCategory] = React.useState<Category | null>(null);
   const [isSuggesting, setIsSuggesting] = React.useState(false);
+  const [isFiltering, setIsFiltering] = React.useState(false);
 
   const form = useForm<z.infer<typeof categorySchema>>({
     resolver: zodResolver(categorySchema),
@@ -134,6 +136,16 @@ export default function CategoriesPage() {
   }, [form]);
 
   const columns = React.useMemo(() => getColumns(handleEditClick), [handleEditClick]);
+  
+  const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>, table: any) => {
+    setIsFiltering(true);
+    const value = event.target.value;
+    table.getColumn("name")?.setFilterValue(value);
+
+    setTimeout(() => {
+      setIsFiltering(false);
+    }, 1000);
+  };
 
   return (
     <div>
@@ -269,20 +281,25 @@ export default function CategoriesPage() {
         </DialogContent>
       </Dialog>
 
-      <DataTable
-        columns={columns}
-        data={categories}
-        toolbar={(table) => (
-            <Input
-            placeholder="Filtrar categorías..."
-            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-                table.getColumn("name")?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-            />
+      <div className="relative">
+        <DataTable
+            columns={columns}
+            data={categories}
+            toolbar={(table) => (
+                <Input
+                placeholder="Filtrar categorías..."
+                value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+                onChange={(event) => handleFilterChange(event, table)}
+                className="max-w-sm"
+                />
+            )}
+        />
+        {isFiltering && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-card/80 backdrop-blur-sm">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
         )}
-      />
+      </div>
     </div>
   );
 }

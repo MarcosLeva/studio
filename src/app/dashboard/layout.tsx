@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from 'react';
@@ -73,7 +74,7 @@ export default function DashboardLayout({
             </div>
             <UserNav />
           </header>
-          <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+          <main key={pathname} className="flex-1 overflow-y-auto p-4 sm:p-6 animate-fade-in">
             {children}
           </main>
         </div>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -26,11 +27,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
 export default function ScannedResultsPage() {
   const { results, deleteScanResult } = useApp();
   const { toast } = useToast();
   const [resultToDelete, setResultToDelete] = React.useState<ScanResult | null>(null);
+  const [isFiltering, setIsFiltering] = React.useState(false);
 
   const handleDelete = React.useCallback((result: ScanResult) => {
     setResultToDelete(result);
@@ -65,6 +68,16 @@ export default function ScannedResultsPage() {
       description: `El resultado para "${result.catalogName}" ha sido exportado.`,
     });
   }, [toast]);
+  
+  const handleFilterChange = (value: string, table: any) => {
+    setIsFiltering(true);
+    const filterValue = value === "All" ? "" : value;
+    table.getColumn("category")?.setFilterValue(filterValue);
+
+    setTimeout(() => {
+        setIsFiltering(false);
+    }, 1000);
+  };
 
   const columns = React.useMemo(() => getColumns(handleExport, handleDelete), [handleExport, handleDelete]);
 
@@ -105,32 +118,36 @@ export default function ScannedResultsPage() {
         </p>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={results}
-        toolbar={(table) => (
-          <Select
-            value={
-              (table.getColumn("category")?.getFilterValue() as string) ?? "All"
-            }
-            onValueChange={(value) => {
-              const filterValue = value === "All" ? "" : value;
-              table.getColumn("category")?.setFilterValue(filterValue);
-            }}
-          >
-            <SelectTrigger className="w-full sm:w-[220px]">
-              <SelectValue placeholder="Filtrar por categoría" />
-            </SelectTrigger>
-            <SelectContent>
-              {categoryNames.map((category) => (
-                <SelectItem key={category} value={category}>
-                  {category === "All" ? "Todas las categorías" : category}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div className="relative">
+        <DataTable
+            columns={columns}
+            data={results}
+            toolbar={(table) => (
+            <Select
+                value={
+                (table.getColumn("category")?.getFilterValue() as string) ?? "All"
+                }
+                onValueChange={(value) => handleFilterChange(value, table)}
+            >
+                <SelectTrigger className="w-full sm:w-[220px]">
+                <SelectValue placeholder="Filtrar por categoría" />
+                </SelectTrigger>
+                <SelectContent>
+                {categoryNames.map((category) => (
+                    <SelectItem key={category} value={category}>
+                    {category === "All" ? "Todas las categorías" : category}
+                    </SelectItem>
+                ))}
+                </SelectContent>
+            </Select>
+            )}
+        />
+        {isFiltering && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-card/80 backdrop-blur-sm">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
         )}
-      />
+      </div>
 
       <AlertDialog
         open={!!resultToDelete}
