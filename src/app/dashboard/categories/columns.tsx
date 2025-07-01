@@ -20,6 +20,7 @@ export const getColumns = (
 ): ColumnDef<Category>[] => [
   {
     accessorKey: "name",
+    size: 250,
     header: ({ column }) => {
       return (
         <Button
@@ -36,6 +37,7 @@ export const getColumns = (
   {
     accessorKey: "aiModel",
     header: "Modelo de IA",
+    size: 150,
     cell: ({ row }) => {
         const model = row.getValue("aiModel");
         const variant = model === 'Gemini Pro' ? 'secondary' : 'default';
@@ -45,14 +47,17 @@ export const getColumns = (
   {
     accessorKey: "dateCreated",
     header: "Fecha de Creación",
+    size: 150,
   },
   {
     accessorKey: "description",
     header: "Descripción",
+    size: 350,
     cell: ({ row }) => <div className="max-w-sm truncate">{row.getValue("description")}</div>,
   },
   {
     id: "actions",
+    size: 80,
     cell: ({ row }) => {
       const category = row.original;
 
