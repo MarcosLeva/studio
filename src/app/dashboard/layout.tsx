@@ -13,10 +13,10 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarInset,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { UserNav } from '@/components/dashboard/user-nav';
+import { cn } from '@/lib/utils';
 
 export default function DashboardLayout({
   children,
@@ -65,8 +65,11 @@ export default function DashboardLayout({
           </SidebarContent>
         </Sidebar>
 
-        <SidebarInset>
-          <header className="flex h-14 items-center justify-between border-b bg-card px-4 lg:px-6">
+        <div className={cn(
+          "relative flex min-h-svh flex-1 flex-col bg-background min-w-0",
+          "peer-data-[variant=inset]:min-h-[calc(100svh-theme(spacing.4))] md:peer-data-[variant=inset]:m-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow"
+        )}>
+          <header className="flex h-14 shrink-0 items-center justify-between border-b bg-card px-4 lg:px-6">
             <SidebarTrigger className="md:hidden" />
             <div className="flex-1">
               {/* Optional: Add breadcrumbs or page title here */}
@@ -76,7 +79,7 @@ export default function DashboardLayout({
           <main className="flex-1 overflow-y-auto p-4 sm:p-6">
             {children}
           </main>
-        </SidebarInset>
+        </div>
       </div>
     </SidebarProvider>
   );
