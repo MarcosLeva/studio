@@ -27,7 +27,7 @@ export default function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen">
+      <div className="flex min-h-screen w-full">
         <Sidebar>
           <SidebarContent>
             <SidebarHeader>
@@ -65,7 +65,7 @@ export default function DashboardLayout({
           </SidebarContent>
         </Sidebar>
 
-        <div className="relative flex w-full flex-1 flex-col min-h-svh bg-background min-w-0">
+        <div className="relative flex flex-1 flex-col min-h-svh bg-background min-w-0">
           <header className="flex h-14 shrink-0 items-center justify-between border-b bg-card px-4 lg:px-6">
             <SidebarTrigger className="md:hidden" />
             <div className="flex-1">
