@@ -22,7 +22,7 @@ export default function ScannedResultsPage() {
   const defaultAccordionValue = Object.keys(groupedResults)[0] || "";
 
   return (
-    <div className="container mx-auto">
+    <div>
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Resultados Escaneados</h1>
         <p className="text-muted-foreground">

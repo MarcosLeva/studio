@@ -108,7 +108,7 @@ export default function AnalyzeCatalogPage() {
   }
 
   return (
-    <div className="container mx-auto">
+    <div>
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Analizar Catálogo</h1>
         <p className="text-muted-foreground">

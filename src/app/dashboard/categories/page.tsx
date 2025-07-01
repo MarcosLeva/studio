@@ -136,7 +136,7 @@ export default function CategoriesPage() {
   const columns = React.useMemo(() => getColumns(handleEditClick), [handleEditClick]);
 
   return (
-    <div className="container mx-auto">
+    <div>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold">Categorías</h1>
