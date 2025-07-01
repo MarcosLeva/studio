@@ -11,6 +11,7 @@ import {
   SortingState,
   ColumnFiltersState,
   getFilteredRowModel,
+  Table as ReactTable,
 } from "@tanstack/react-table";
 
 import {
@@ -22,16 +23,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  toolbar?: (table: ReactTable<TData>) => React.ReactNode;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  toolbar,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -53,16 +55,11 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="rounded-md border bg-card">
-       <div className="flex items-center p-4">
-        <Input
-          placeholder="Filtrar categorías..."
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("name")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
-      </div>
+       {toolbar && (
+        <div className="flex items-center p-4">
+          {toolbar(table)}
+        </div>
+      )}
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (

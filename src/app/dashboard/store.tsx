@@ -58,6 +58,8 @@ interface AppContextType {
   addCategory: (category: Omit<Category, 'id' | 'dateCreated'>) => void;
   editCategory: (id: string, data: Omit<Category, 'id' | 'dateCreated'>) => void;
   addScanResult: (result: Omit<ScanResult, 'id' | 'dateScanned'>) => void;
+  deleteScanResult: (id: string) => void;
+  editScanResult: (id: string, data: Partial<Omit<ScanResult, 'id' | 'dateScanned'>>) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -90,8 +92,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setResults(prev => [newResult, ...prev]);
   };
 
+  const deleteScanResult = (id: string) => {
+    setResults(prev => prev.filter(res => res.id !== id));
+  };
+
+  const editScanResult = (id: string, data: Partial<Omit<ScanResult, 'id' | 'dateScanned'>>) => {
+    setResults(prev => 
+      prev.map(res => (res.id === id ? { ...res, ...data } : res))
+    );
+  };
+
+
   return (
-    <AppContext.Provider value={{ categories, setCategories, results, setResults, addCategory, editCategory, addScanResult }}>
+    <AppContext.Provider value={{ categories, setCategories, results, setResults, addCategory, editCategory, addScanResult, deleteScanResult, editScanResult }}>
       {children}
     </AppContext.Provider>
   );

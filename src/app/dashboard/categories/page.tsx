@@ -269,7 +269,20 @@ export default function CategoriesPage() {
         </DialogContent>
       </Dialog>
 
-      <DataTable columns={columns} data={categories} />
+      <DataTable
+        columns={columns}
+        data={categories}
+        toolbar={(table) => (
+            <Input
+            placeholder="Filtrar categorías..."
+            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+            onChange={(event) =>
+                table.getColumn("name")?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm"
+            />
+        )}
+      />
     </div>
   );
 }

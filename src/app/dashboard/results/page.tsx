@@ -1,77 +1,154 @@
 "use client";
 
+import React from "react";
 import { useApp } from "../store";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { DataTable } from "../categories/data-table";
+import { getColumns } from "./columns";
 import type { ScanResult } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function ScannedResultsPage() {
-  const { results } = useApp();
+  const { results, deleteScanResult } = useApp();
+  const { toast } = useToast();
+  const [resultToDelete, setResultToDelete] = React.useState<ScanResult | null>(null);
 
-  const groupedResults = results.reduce((acc, result) => {
-    (acc[result.category] = acc[result.category] || []).push(result);
-    return acc;
-  }, {} as Record<string, ScanResult[]>);
+  const handleDelete = React.useCallback((result: ScanResult) => {
+    setResultToDelete(result);
+  }, []);
 
-  const defaultAccordionValue = Object.keys(groupedResults)[0] || "";
+  const confirmDelete = () => {
+    if (resultToDelete) {
+      deleteScanResult(resultToDelete.id);
+      toast({
+        title: "Resultado Eliminado",
+        description: `El resultado para "${resultToDelete.catalogName}" ha sido eliminado.`,
+      });
+      setResultToDelete(null);
+    }
+  };
+
+  const handleEdit = React.useCallback((result: ScanResult) => {
+    // Placeholder for edit functionality
+    toast({
+      title: "Función no implementada",
+      description: `La edición para "${result.catalogName}" estará disponible próximamente.`,
+    });
+  }, [toast]);
+
+  const columns = React.useMemo(() => getColumns(handleEdit, handleDelete), [handleEdit, handleDelete]);
+
+  const categoryNames = React.useMemo(() => [
+    "All",
+    ...Array.from(new Set(results.map((r) => r.category))),
+  ], [results]);
+
+  if (results.length === 0) {
+    return (
+      <div>
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold">Resultados Escaneados</h1>
+          <p className="text-muted-foreground">
+            Revisa el análisis de tus catálogos escaneados previamente.
+          </p>
+        </div>
+        <Card className="flex flex-col items-center justify-center py-20">
+          <CardHeader>
+            <CardTitle className="text-2xl">Aún no hay resultados</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              Realiza un análisis desde el panel de control para ver los resultados aquí.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div>
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Resultados Escaneados</h1>
         <p className="text-muted-foreground">
-          Revisa el análisis de tus catálogos escaneados previamente.
+          Revisa y gestiona el análisis de tus catálogos escaneados.
         </p>
       </div>
-      
-      {Object.keys(groupedResults).length > 0 ? (
-        <Accordion type="single" collapsible defaultValue={defaultAccordionValue} className="w-full space-y-4">
-          {Object.entries(groupedResults).map(([category, categoryResults]) => (
-            <AccordionItem value={category} key={category} className="border-b-0">
-               <Card>
-                <AccordionTrigger className="p-6 text-xl font-headline hover:no-underline">
-                  <div className="flex items-center gap-4">
-                    {category}
-                    <Badge variant="secondary">{categoryResults.length} escaneos</Badge>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="p-0">
-                    <div className="px-6 pb-6 space-y-4">
-                        {categoryResults.map(result => (
-                             <Card key={result.id} className="bg-background/50">
-                                <CardHeader>
-                                    <CardTitle>{result.catalogName}</CardTitle>
-                                    <CardDescription>Escaneado el: {result.dateScanned}</CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{result.analysis}</p>
-                                </CardContent>
-                             </Card>
-                        ))}
-                    </div>
-                </AccordionContent>
-               </Card>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      ) : (
-         <Card className="flex flex-col items-center justify-center py-20">
-            <CardHeader>
-                <CardTitle className="text-2xl">Aún no hay resultados</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p className="text-muted-foreground">
-                    Realiza un análisis desde el panel de control para ver los resultados aquí.
-                </p>
-            </CardContent>
-         </Card>
-      )}
+
+      <DataTable
+        columns={columns}
+        data={results}
+        toolbar={(table) => (
+          <Select
+            value={
+              (table.getColumn("category")?.getFilterValue() as string) ?? "All"
+            }
+            onValueChange={(value) => {
+              const filterValue = value === "All" ? "" : value;
+              table.getColumn("category")?.setFilterValue(filterValue);
+            }}
+          >
+            <SelectTrigger className="w-full sm:w-[220px]">
+              <SelectValue placeholder="Filtrar por categoría" />
+            </SelectTrigger>
+            <SelectContent>
+              {categoryNames.map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category === "All" ? "Todas las categorías" : category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      />
+
+      <AlertDialog
+        open={!!resultToDelete}
+        onOpenChange={(open) => !open && setResultToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás realmente seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Esto eliminará permanentemente
+              el resultado del análisis para{' '}
+              <span className="font-semibold">
+                {resultToDelete?.catalogName}
+              </span>
+              .
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setResultToDelete(null)}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
