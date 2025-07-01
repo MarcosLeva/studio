@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import type { Category, ScanResult } from '@/lib/types';
+import type { Category, ScanResult, User } from '@/lib/types';
 
 // Mock Data
 const initialCategories: Category[] = [
@@ -49,6 +49,13 @@ const initialScanResults: ScanResult[] = [
   },
 ];
 
+const initialUser: User = {
+    id: 'user-1',
+    name: 'Usuario de Demostración',
+    email: 'user@cococo.com',
+    avatar: 'https://placehold.co/100x100',
+};
+
 
 interface AppContextType {
   categories: Category[];
@@ -60,6 +67,8 @@ interface AppContextType {
   addScanResult: (result: Omit<ScanResult, 'id' | 'dateScanned'>) => void;
   deleteScanResult: (id: string) => void;
   editScanResult: (id: string, data: Partial<Omit<ScanResult, 'id' | 'dateScanned'>>) => void;
+  user: User;
+  editUser: (data: Partial<Omit<User, 'id' | 'avatar'>>) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -67,6 +76,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [results, setResults] = useState<ScanResult[]>(initialScanResults);
+  const [user, setUser] = useState<User>(initialUser);
   
   const addCategory = (category: Omit<Category, 'id' | 'dateCreated'>) => {
     const newCategory: Category = {
@@ -102,9 +112,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
+  const editUser = (data: Partial<Omit<User, 'id' | 'avatar'>>) => {
+    setUser(prev => ({ ...prev, ...data }));
+  };
+
 
   return (
-    <AppContext.Provider value={{ categories, setCategories, results, setResults, addCategory, editCategory, addScanResult, deleteScanResult, editScanResult }}>
+    <AppContext.Provider value={{ categories, setCategories, results, setResults, addCategory, editCategory, addScanResult, deleteScanResult, editScanResult, user, editUser }}>
       {children}
     </AppContext.Provider>
   );

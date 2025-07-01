@@ -15,3 +15,10 @@ export interface ScanResult {
   dateScanned: string;
   analysis: string;
 }
+
+export interface User {
+    id: string;
+    name: string;
+    email: string;
+    avatar: string;
+}
