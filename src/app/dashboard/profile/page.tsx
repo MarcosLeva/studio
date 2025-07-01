@@ -32,6 +32,7 @@ export default function ProfilePage() {
   const { user, editUser } = useApp();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -53,13 +54,41 @@ export default function ProfilePage() {
     setIsLoading(true);
     // Simulate API call
     setTimeout(() => {
-      editUser(data);
+      editUser({ name: data.name, email: data.email });
       toast({
         title: "Perfil Actualizado",
         description: "Tu información ha sido actualizada con éxito.",
       });
       setIsLoading(false);
     }, 1000);
+  };
+
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        toast({
+          variant: "destructive",
+          title: "Archivo no válido",
+          description: "Por favor, selecciona un archivo de imagen.",
+        });
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUrl = reader.result as string;
+        editUser({ avatar: dataUrl });
+        toast({
+          title: "Foto de perfil actualizada",
+          description: "Tu nueva foto ha sido guardada.",
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleButtonClick = () => {
+    fileInputRef.current?.click();
   };
 
   return (
@@ -75,7 +104,7 @@ export default function ProfilePage() {
         <CardHeader>
           <CardTitle>Detalles del Perfil</CardTitle>
           <CardDescription>
-            Edita tu nombre y correo electrónico.
+            Edita tu nombre, correo electrónico y foto de perfil.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -86,7 +115,14 @@ export default function ProfilePage() {
                   <AvatarImage src={user.avatar} alt={user.name} data-ai-hint="user avatar" />
                   <AvatarFallback>{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
-                <Button type="button" variant="outline" disabled>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                  accept="image/*"
+                />
+                <Button type="button" variant="outline" onClick={handleButtonClick}>
                   Cambiar Foto
                 </Button>
               </div>

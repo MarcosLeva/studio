@@ -68,7 +68,7 @@ interface AppContextType {
   deleteScanResult: (id: string) => void;
   editScanResult: (id: string, data: Partial<Omit<ScanResult, 'id' | 'dateScanned'>>) => void;
   user: User;
-  editUser: (data: Partial<Omit<User, 'id' | 'avatar'>>) => void;
+  editUser: (data: Partial<Omit<User, 'id'>>) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -112,7 +112,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
-  const editUser = (data: Partial<Omit<User, 'id' | 'avatar'>>) => {
+  const editUser = (data: Partial<Omit<User, 'id'>>) => {
     setUser(prev => ({ ...prev, ...data }));
   };
 
