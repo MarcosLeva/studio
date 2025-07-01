@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import * as XLSX from "xlsx";
 import { useApp } from "../store";
 import { DataTable } from "../categories/data-table";
 import { getColumns } from "./columns";
@@ -46,15 +47,26 @@ export default function ScannedResultsPage() {
     }
   };
 
-  const handleEdit = React.useCallback((result: ScanResult) => {
-    // Placeholder for edit functionality
+  const handleExport = React.useCallback((result: ScanResult) => {
+    const data = [
+      {
+        "Nombre del Catálogo": result.catalogName,
+        "Categoría": result.category,
+        "Fecha de Escaneo": result.dateScanned,
+        "Análisis": result.analysis,
+      },
+    ];
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Resultado");
+    XLSX.writeFile(workbook, `${result.catalogName}.xlsx`);
     toast({
-      title: "Función no implementada",
-      description: `La edición para "${result.catalogName}" estará disponible próximamente.`,
+      title: "Exportación Exitosa",
+      description: `El resultado para "${result.catalogName}" ha sido exportado.`,
     });
   }, [toast]);
 
-  const columns = React.useMemo(() => getColumns(handleEdit, handleDelete), [handleEdit, handleDelete]);
+  const columns = React.useMemo(() => getColumns(handleExport, handleDelete), [handleExport, handleDelete]);
 
   const categoryNames = React.useMemo(() => [
     "All",

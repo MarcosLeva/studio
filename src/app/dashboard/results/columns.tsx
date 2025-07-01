@@ -15,7 +15,7 @@ import {
 import type { ScanResult } from "@/lib/types";
 
 export const getColumns = (
-  onEdit: (result: ScanResult) => void,
+  onExport: (result: ScanResult) => void,
   onDelete: (result: ScanResult) => void
 ): ColumnDef<ScanResult>[] => [
     {
@@ -65,7 +65,10 @@ export const getColumns = (
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => onEdit(result)}>Editar</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onExport(result)}>
+                            Exportar como Excel
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem
                         onClick={() => onDelete(result)}
                         className="text-destructive focus:bg-destructive/10 focus:text-destructive"
