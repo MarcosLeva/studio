@@ -7,8 +7,8 @@ import { twMerge } from "tailwind-merge";
 import Image from "next/image";
 
 const variants = {
-  base: "relative rounded-md flex justify-center items-center flex-col cursor-pointer min-h-36 min-w-48 border-2 border-dashed border-muted-foreground/50 transition-colors duration-200 ease-in-out",
-  image: "border-0 p-0 min-h-0 min-w-0 relative shadow-md bg-transparent",
+  base: "relative rounded-md flex justify-center items-center flex-col cursor-pointer min-h-36 w-full border-2 border-dashed border-muted-foreground/50 transition-colors duration-200 ease-in-out",
+  image: "border-0 p-0 relative shadow-md bg-transparent",
   active: "border-primary",
   disabled: "bg-muted cursor-default pointer-events-none bg-opacity-30",
   accept: "border-green-500 bg-green-500 bg-opacity-10",
@@ -16,8 +16,6 @@ const variants = {
 };
 
 type InputProps = {
-  width?: number;
-  height?: number;
   className?: string;
   value?: File;
   onChange?: (file?: File) => void | Promise<void>;
@@ -29,8 +27,6 @@ const FileUploader = React.forwardRef<HTMLInputElement, InputProps>(
   (
     {
       dropzoneOptions,
-      width,
-      height,
       value: file,
       className,
       disabled,
@@ -75,8 +71,9 @@ const FileUploader = React.forwardRef<HTMLInputElement, InputProps>(
             return () => {
                 URL.revokeObjectURL(objectUrl);
             };
+        } else {
+            setPreview(null);
         }
-        setPreview(null);
     }, [file]);
     
     React.useEffect(() => {
@@ -126,54 +123,42 @@ const FileUploader = React.forwardRef<HTMLInputElement, InputProps>(
 
     return (
       <div
-        className="relative"
-        style={{
-          width,
-          height,
-        }}
+        {...getRootProps({
+          className: dropZoneClassName,
+        })}
       >
-        <div
-          {...getRootProps({
-            className: dropZoneClassName,
-            style: {
-              width: '100%',
-              height: '100%',
-            },
-          })}
-        >
-          <input ref={ref} {...getInputProps()} />
+        <input ref={ref} {...getInputProps()} />
 
-          {file && !errorMessage ? (
-            preview ? (
-              <Image
-                  src={preview}
-                  alt={file.name || "Vista previa"}
-                  fill
-                  className="rounded-md object-cover"
-              />
-            ) : (
-              <div className="flex h-full w-full flex-col items-center justify-center text-center p-4 bg-background rounded-md">
-                <FileIcon className="h-12 w-12 text-muted-foreground" />
-                <p className="mt-2 text-sm font-medium text-foreground">{file.name}</p>
-                <p className="text-xs text-muted-foreground">{Math.round(file.size / 1024)} KB</p>
-              </div>
-            )
+        {file && !errorMessage ? (
+          preview ? (
+            <Image
+                src={preview}
+                alt={file.name || "Vista previa"}
+                fill
+                className="rounded-md object-cover"
+            />
           ) : (
-            <div className="flex flex-col items-center justify-center text-center p-4">
-              <UploadCloud className="h-12 w-12 text-muted-foreground" />
-              <p className="mt-2 text-sm text-foreground">
-                <span className="font-semibold">Arrastra y suelta</span> un archivo aquí o
-                haz clic para seleccionar un archivo
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Soporta TXT, PDF e imágenes.
-              </p>
-              {errorMessage && (
-                  <p className="mt-2 text-xs text-destructive">{errorMessage}</p>
-              )}
+            <div className="flex h-full w-full flex-col items-center justify-center text-center p-4 bg-background rounded-md">
+              <FileIcon className="h-12 w-12 text-muted-foreground" />
+              <p className="mt-2 text-sm font-medium text-foreground">{file.name}</p>
+              <p className="text-xs text-muted-foreground">{Math.round(file.size / 1024)} KB</p>
             </div>
-          )}
-        </div>
+          )
+        ) : (
+          <div className="flex flex-col items-center justify-center text-center p-4">
+            <UploadCloud className="h-12 w-12 text-muted-foreground" />
+            <p className="mt-2 text-sm text-foreground">
+              <span className="font-semibold">Arrastra y suelta</span> un archivo aquí o
+              haz clic para seleccionar un archivo
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Soporta TXT, PDF e imágenes.
+            </p>
+            {errorMessage && (
+                <p className="mt-2 text-xs text-destructive">{errorMessage}</p>
+            )}
+          </div>
+        )}
         
         {file && !disabled && (
             <button
