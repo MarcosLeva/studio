@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from 'react';
-import { Bot, FileScan, LayoutGrid, List, BarChart2 } from 'lucide-react';
+import { ScanLine, FileScan, LayoutGrid, List, BarChart2 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
@@ -32,7 +32,7 @@ export default function DashboardLayout({
           <SidebarContent>
             <SidebarHeader>
               <div className="flex items-center gap-2 p-2">
-                <Bot className="h-8 w-8 text-primary" />
+                <ScanLine className="h-8 w-8 text-primary" />
                 <span className="text-xl font-headline font-semibold">COCOCO Scan</span>
               </div>
             </SidebarHeader>
