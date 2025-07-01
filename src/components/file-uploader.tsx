@@ -4,6 +4,7 @@ import { UploadCloud, File as FileIcon, X } from "lucide-react";
 import * as React from "react";
 import { useDropzone, type DropzoneOptions, type FileRejection } from "react-dropzone";
 import { twMerge } from "tailwind-merge";
+import { Button } from "./ui/button";
 
 const variants = {
   base: "relative rounded-lg p-4 flex justify-center items-center flex-col cursor-pointer min-h-[6rem] w-full border-2 border-dashed border-muted-foreground/50 text-center transition-colors duration-200 ease-in-out",
@@ -12,6 +13,8 @@ const variants = {
   accept: "border-green-500 bg-green-500/10",
   reject: "border-red-500 bg-red-500/10",
 };
+
+type FileWithPreview = File & { preview: string };
 
 type FileUploaderProps = {
   className?: string;
@@ -24,6 +27,7 @@ type FileUploaderProps = {
 const FileUploader = React.forwardRef<HTMLInputElement, FileUploaderProps>(
   ({ className, value = [], onChange, disabled, dropzoneOptions }, ref) => {
     const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+    const [filesWithPreview, setFilesWithPreview] = React.useState<FileWithPreview[]>([]);
 
     const onDrop = React.useCallback(
       (acceptedFiles: File[], fileRejections: FileRejection[]) => {
@@ -41,7 +45,7 @@ const FileUploader = React.forwardRef<HTMLInputElement, FileUploaderProps>(
         }
 
         if (acceptedFiles.length > 0) {
-          const newFiles = [...(value || []), ...acceptedFiles];
+          const newFiles = [...value, ...acceptedFiles];
           onChange?.(newFiles);
         }
       },
@@ -61,9 +65,21 @@ const FileUploader = React.forwardRef<HTMLInputElement, FileUploaderProps>(
     });
     
     React.useEffect(() => {
-      if (!value?.length) {
-        setErrorMessage(null);
+      // This effect handles creating and revoking preview URLs
+      if (!value || value.length === 0) {
+        setFilesWithPreview([]);
+        return;
       }
+      
+      const newFilesWithPreview = value.map(file => Object.assign(file, {
+          preview: URL.createObjectURL(file)
+      }));
+      setFilesWithPreview(newFilesWithPreview);
+
+      // Cleanup function to revoke the object URLs to avoid memory leaks
+      return () => {
+        newFilesWithPreview.forEach(file => URL.revokeObjectURL(file.preview));
+      };
     }, [value]);
 
 
@@ -103,28 +119,39 @@ const FileUploader = React.forwardRef<HTMLInputElement, FileUploaderProps>(
                 )}
             </div>
         </div>
-        {value && value.length > 0 && (
+        {filesWithPreview.length > 0 && (
           <div className="space-y-2">
             <h3 className="text-sm font-medium">Archivos subidos</h3>
-            <div className="flex flex-col gap-2">
-              {value.map((file, index) => (
-                <div key={`${file.name}-${index}`} className="flex items-center justify-between gap-2 rounded-lg border bg-card p-2">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <FileIcon className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
-                    <div className="flex min-w-0 flex-col text-sm">
-                      <span className="font-medium truncate">{file.name}</span>
-                      <span className="text-muted-foreground text-xs">{Math.round(file.size / 1024)} KB</span>
-                    </div>
-                  </div>
-                  {!disabled && (
-                    <button
-                      type="button"
-                      onClick={() => removeFile(index)}
-                      className="p-1 text-destructive rounded-full hover:bg-destructive/10 flex-shrink-0"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {filesWithPreview.map((file, index) => (
+                <div key={`${file.name}-${index}`} className="relative group aspect-square rounded-lg border bg-card overflow-hidden">
+                    {file.type.startsWith("image/") ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                            src={file.preview}
+                            alt={file.name}
+                            className="h-full w-full object-cover"
+                        />
+                    ) : (
+                        <div className="flex flex-col items-center justify-center h-full p-2">
+                            <FileIcon className="h-10 w-10 text-muted-foreground" />
+                            <p className="text-xs text-muted-foreground mt-2 break-all">{file.name}</p>
+                        </div>
+                    )}
+                    {!disabled && (
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                removeFile(index);
+                            }}
+                            className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                    )}
                 </div>
               ))}
             </div>
