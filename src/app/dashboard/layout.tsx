@@ -33,7 +33,7 @@ export default function DashboardLayout({
             <SidebarHeader>
               <div className="flex items-center gap-2 p-2">
                 <Bot className="h-8 w-8 text-primary" />
-                <span className="text-xl font-headline font-semibold">COCOCO Scan</span>
+                <span className="text-xl font-headline font-semibold">Análisis COCOCO</span>
               </div>
             </SidebarHeader>
             <SidebarMenu>
@@ -41,7 +41,7 @@ export default function DashboardLayout({
                 <SidebarMenuButton asChild isActive={pathname === '/dashboard'}>
                   <Link href="/dashboard">
                     <FileScan />
-                    <span>Analyze Catalog</span>
+                    <span>Analizar Catálogo</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -49,7 +49,7 @@ export default function DashboardLayout({
                 <SidebarMenuButton asChild isActive={pathname === '/dashboard/categories'}>
                    <Link href="/dashboard/categories">
                     <LayoutGrid />
-                    <span>Categories</span>
+                    <span>Categorías</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -57,7 +57,7 @@ export default function DashboardLayout({
                 <SidebarMenuButton asChild isActive={pathname === '/dashboard/results'}>
                   <Link href="/dashboard/results">
                     <BarChart2 />
-                    <span>Scanned Results</span>
+                    <span>Resultados Escaneados</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

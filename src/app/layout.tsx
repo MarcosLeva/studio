@@ -5,8 +5,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { AppProvider } from '@/app/dashboard/store';
 
 export const metadata: Metadata = {
-  title: 'COCOCO Scan',
-  description: 'AI-powered document analysis',
+  title: 'Análisis COCOCO',
+  description: 'Análisis de documentos con IA',
 };
 
 export default function RootLayout({
@@ -15,7 +15,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

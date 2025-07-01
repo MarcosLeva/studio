@@ -7,45 +7,45 @@ import type { Category, ScanResult } from '@/lib/types';
 const initialCategories: Category[] = [
   {
     id: 'cat-1',
-    name: 'Product Descriptions',
+    name: 'Descripciones de Productos',
     aiModel: 'Gemini 2.0 Flash',
     dateCreated: '2023-10-26',
-    description: 'Analyzes product descriptions for keywords and sentiment.',
-    prompt: 'Extract product names, features, and overall sentiment from the catalog.',
-    instructions: 'Focus on identifying marketing language and key selling points mentioned in the text.',
+    description: 'Analiza las descripciones de los productos en busca de palabras clave y sentimiento.',
+    prompt: 'Extraer nombres de productos, características y sentimiento general del catálogo.',
+    instructions: 'Centrarse en identificar el lenguaje de marketing y los puntos de venta clave mencionados en el texto.',
   },
   {
     id: 'cat-2',
-    name: 'Invoice Processing',
+    name: 'Procesamiento de Facturas',
     aiModel: 'Gemini Pro',
     dateCreated: '2023-11-15',
-    description: 'Extracts data from invoices.',
-    prompt: 'Extract the invoice number, date, total amount, and line items from the provided document.',
-    instructions: 'The model should handle various invoice formats and return a structured JSON object.',
+    description: 'Extrae datos de las facturas.',
+    prompt: 'Extraer el número de factura, la fecha, el importe total y las partidas del documento proporcionado.',
+    instructions: 'El modelo debe manejar varios formatos de factura y devolver un objeto JSON estructurado.',
   },
 ];
 
 const initialScanResults: ScanResult[] = [
   {
     id: 'res-1',
-    category: 'Product Descriptions',
-    catalogName: 'Fall_2023_Collection.pdf',
+    category: 'Descripciones de Productos',
+    catalogName: 'Coleccion_Otono_2023.pdf',
     dateScanned: '2023-10-27',
-    analysis: 'The analysis of Fall_2023_Collection.pdf found 15 new products. Key themes include "cozy comfort" and "autumn colors". Sentiment is overwhelmingly positive. Highlighted products: "The Aspen Sweater" and "Harvest Moon Boots".',
+    analysis: 'El análisis de Coleccion_Otono_2023.pdf encontró 15 productos nuevos. Los temas clave incluyen "comodidad acogedora" y "colores de otoño". El sentimiento es abrumadoramente positivo. Productos destacados: "El Suéter Aspen" y "Botas Luna de Cosecha".',
   },
     {
     id: 'res-2',
-    category: 'Product Descriptions',
-    catalogName: 'Winter_Specials.txt',
+    category: 'Descripciones de Productos',
+    catalogName: 'Especiales_Invierno.txt',
     dateScanned: '2023-12-01',
-    analysis: 'Winter_Specials.txt analysis complete. Identified 5 promotional items. Sentiment analysis indicates high excitement for the "Glacier Parka". Pricing strategy seems aggressive with an average discount of 25%.',
+    analysis: 'Análisis de Especiales_Invierno.txt completado. Se identificaron 5 artículos promocionales. El análisis de sentimiento indica un gran entusiasmo por la "Parka Glaciar". La estrategia de precios parece agresiva con un descuento promedio del 25%.',
   },
   {
     id: 'res-3',
-    category: 'Invoice Processing',
-    catalogName: 'INV-2023-001.pdf',
+    category: 'Procesamiento de Facturas',
+    catalogName: 'FAC-2023-001.pdf',
     dateScanned: '2023-11-16',
-    analysis: 'Successfully extracted data from INV-2023-001.pdf. Invoice Number: 2023-001, Date: 2023-11-15, Total Amount: $1,250.50. Line items: 5.',
+    analysis: 'Datos extraídos con éxito de FAC-2023-001.pdf. Número de factura: 2023-001, Fecha: 2023-11-15, Importe total: $1,250.50. Partidas: 5.',
   },
 ];
 

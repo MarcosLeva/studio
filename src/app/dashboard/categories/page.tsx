@@ -40,11 +40,11 @@ import { useToast } from "@/hooks/use-toast";
 import { suggestCategoryPrompt } from "@/ai/flows/suggest-category-prompt";
 
 const categorySchema = z.object({
-  name: z.string().min(3, { message: "Category name must be at least 3 characters." }),
-  description: z.string().min(10, { message: "Description must be at least 10 characters." }),
-  aiModel: z.string({ required_error: "Please select an AI model." }),
-  prompt: z.string().min(10, { message: "Prompt must be at least 10 characters." }),
-  instructions: z.string().min(10, { message: "Instructions must be at least 10 characters." }),
+  name: z.string().min(3, { message: "El nombre de la categoría debe tener al menos 3 caracteres." }),
+  description: z.string().min(10, { message: "La descripción debe tener al menos 10 caracteres." }),
+  aiModel: z.string({ required_error: "Por favor, selecciona un modelo de IA." }),
+  prompt: z.string().min(10, { message: "El prompt debe tener al menos 10 caracteres." }),
+  instructions: z.string().min(10, { message: "Las instrucciones deben tener al menos 10 caracteres." }),
 });
 
 export default function CategoriesPage() {
@@ -66,8 +66,8 @@ export default function CategoriesPage() {
   async function onSubmit(values: z.infer<typeof categorySchema>) {
     addCategory(values);
     toast({
-      title: "Category Created",
-      description: `The category "${values.name}" has been added successfully.`,
+      title: "Categoría Creada",
+      description: `La categoría "${values.name}" ha sido añadida con éxito.`,
     });
     setOpen(false);
     form.reset();
@@ -78,8 +78,8 @@ export default function CategoriesPage() {
     if (!categoryName) {
       toast({
         variant: "destructive",
-        title: "Cannot Suggest",
-        description: "Please enter a category name first.",
+        title: "No se puede sugerir",
+        description: "Por favor, introduce primero un nombre de categoría.",
       });
       return;
     }
@@ -89,15 +89,15 @@ export default function CategoriesPage() {
       const result = await suggestCategoryPrompt({ categoryName });
       form.setValue("prompt", result.suggestedPrompt, { shouldValidate: true });
       toast({
-        title: "Prompt Suggested!",
-        description: "The AI has generated a prompt for you."
+        title: "¡Prompt Sugerido!",
+        description: "La IA ha generado un prompt para ti."
       });
     } catch (error) {
       console.error(error);
       toast({
         variant: "destructive",
-        title: "Suggestion Failed",
-        description: "Could not generate a prompt. Please try again.",
+        title: "Sugerencia Fallida",
+        description: "No se pudo generar un prompt. Por favor, inténtalo de nuevo.",
       });
     } finally {
       setIsSuggesting(false);
@@ -108,23 +108,23 @@ export default function CategoriesPage() {
     <div className="container mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Categories</h1>
+          <h1 className="text-3xl font-bold">Categorías</h1>
           <p className="text-muted-foreground">
-            Manage your analysis categories here.
+            Gestiona tus categorías de análisis aquí.
           </p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button>
               <PlusCircle className="mr-2 h-4 w-4" />
-              New Category
+              Nueva Categoría
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[625px]">
             <DialogHeader>
-              <DialogTitle>Add New Category</DialogTitle>
+              <DialogTitle>Añadir Nueva Categoría</DialogTitle>
               <DialogDescription>
-                Create a new category to classify and analyze your catalogs.
+                Crea una nueva categoría para clasificar y analizar tus catálogos.
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
@@ -135,9 +135,9 @@ export default function CategoriesPage() {
                       name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Category Name</FormLabel>
+                          <FormLabel>Nombre de la Categoría</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g., Product Descriptions" {...field} />
+                            <Input placeholder="ej., Descripciones de Productos" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -148,11 +148,11 @@ export default function CategoriesPage() {
                       name="aiModel"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>AI Model</FormLabel>
+                          <FormLabel>Modelo de IA</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select a model" />
+                                <SelectValue placeholder="Selecciona un modelo" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -170,9 +170,9 @@ export default function CategoriesPage() {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <FormLabel>Descripción</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="A brief description of what this category is for." {...field} />
+                        <Textarea placeholder="Una breve descripción para qué sirve esta categoría." {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -184,7 +184,7 @@ export default function CategoriesPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center justify-between">
-                        <span>AI Prompt</span>
+                        <span>Prompt de IA</span>
                         <Button
                             type="button"
                             variant="link"
@@ -198,12 +198,12 @@ export default function CategoriesPage() {
                             ) : (
                                 <Lightbulb className="mr-2 h-4 w-4"/>
                             )}
-                            Suggest with AI
+                            Sugerir con IA
                         </Button>
                       </FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Tell the AI what to extract, e.g., 'Extract product names and prices.'"
+                          placeholder="Indica a la IA qué extraer, ej., 'Extraer nombres de productos y precios.'"
                           className="min-h-[100px]"
                           {...field}
                         />
@@ -217,10 +217,10 @@ export default function CategoriesPage() {
                   name="instructions"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>AI Instructions</FormLabel>
+                      <FormLabel>Instrucciones para la IA</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Provide specific instructions, e.g., 'Format output as JSON.'"
+                          placeholder="Proporciona instrucciones específicas, ej., 'Formatear la salida como JSON.'"
                           className="min-h-[100px]"
                           {...field}
                         />
@@ -230,8 +230,8 @@ export default function CategoriesPage() {
                   )}
                 />
                 <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                  <Button type="submit">Save Category</Button>
+                  <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+                  <Button type="submit">Guardar Categoría</Button>
                 </DialogFooter>
               </form>
             </Form>

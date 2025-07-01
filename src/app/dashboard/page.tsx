@@ -31,9 +31,9 @@ import { analyzeCatalogInput } from "@/ai/flows/analyze-catalog-input";
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
-  category: z.string().min(1, { message: "Please select a category." }),
-  catalogName: z.string().min(1, { message: "Catalog name is required." }),
-  file: z.instanceof(File).refine(file => file.size > 0, "A file is required."),
+  category: z.string().min(1, { message: "Por favor, selecciona una categoría." }),
+  catalogName: z.string().min(1, { message: "El nombre del catálogo es obligatorio." }),
+  file: z.instanceof(File).refine(file => file.size > 0, "Se requiere un archivo."),
 });
 
 const readFileAsDataURI = (file: File): Promise<string> => {
@@ -66,7 +66,7 @@ export default function AnalyzeCatalogPage() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Selected category not found.",
+        description: "Categoría seleccionada no encontrada.",
       });
       setIsLoading(false);
       return;
@@ -90,8 +90,8 @@ export default function AnalyzeCatalogPage() {
       });
 
       toast({
-        title: "Analysis Complete",
-        description: "Your catalog has been successfully analyzed.",
+        title: "Análisis Completo",
+        description: "Tu catálogo ha sido analizado con éxito.",
       });
       router.push("/dashboard/results");
 
@@ -99,8 +99,8 @@ export default function AnalyzeCatalogPage() {
       console.error("Analysis failed:", error);
       toast({
         variant: "destructive",
-        title: "Analysis Failed",
-        description: "An unexpected error occurred. Please try again.",
+        title: "Análisis Fallido",
+        description: "Ocurrió un error inesperado. Por favor, inténtalo de nuevo.",
       });
     } finally {
       setIsLoading(false);
@@ -110,17 +110,17 @@ export default function AnalyzeCatalogPage() {
   return (
     <div className="container mx-auto">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Analyze Catalog</h1>
+        <h1 className="text-3xl font-bold">Analizar Catálogo</h1>
         <p className="text-muted-foreground">
-          Select a category, upload a catalog file, and let our AI do the rest.
+          Selecciona una categoría, sube un archivo de catálogo y deja que nuestra IA haga el resto.
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>New Analysis</CardTitle>
+          <CardTitle>Nuevo Análisis</CardTitle>
           <CardDescription>
-            Fill in the details below to start a new catalog analysis.
+            Completa los detalles a continuación para iniciar un nuevo análisis de catálogo.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -133,11 +133,11 @@ export default function AnalyzeCatalogPage() {
                       name="category"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Category</FormLabel>
+                          <FormLabel>Categoría</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select a category for analysis" />
+                                <SelectValue placeholder="Selecciona una categoría para el análisis" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -157,9 +157,9 @@ export default function AnalyzeCatalogPage() {
                       name="catalogName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Catalog Name</FormLabel>
+                          <FormLabel>Nombre del Catálogo</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g., Spring 2024 Collection" {...field} />
+                            <Input placeholder="ej., Colección Primavera 2024" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -171,7 +171,7 @@ export default function AnalyzeCatalogPage() {
                   name="file"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Catalog File</FormLabel>
+                      <FormLabel>Archivo de Catálogo</FormLabel>
                       <FormControl>
                          <FileUploader
                             value={field.value}
@@ -197,7 +197,7 @@ export default function AnalyzeCatalogPage() {
                   <div className="flex items-center gap-3">
                       <Lightbulb className="h-8 w-8 text-accent-foreground/80" />
                       <p className="text-sm text-muted-foreground">
-                        The AI will analyze the file based on the prompt and instructions defined in the selected category.
+                        La IA analizará el archivo basándose en el prompt y las instrucciones definidas en la categoría seleccionada.
                       </p>
                   </div>
               </div>
@@ -205,7 +205,7 @@ export default function AnalyzeCatalogPage() {
 
               <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isLoading ? "Analyzing..." : "Analyze Catalog"}
+                {isLoading ? "Analizando..." : "Analizar Catálogo"}
               </Button>
             </form>
           </Form>

@@ -119,11 +119,11 @@ const FileUploader = React.forwardRef<HTMLInputElement, InputProps>(
           <div className="flex flex-col items-center justify-center text-center p-4">
             <UploadCloud className="h-12 w-12 text-muted-foreground" />
             <p className="mt-2 text-sm text-foreground">
-              <span className="font-semibold">Drag & drop</span> a file here or
-              click to select a file
+              <span className="font-semibold">Arrastra y suelta</span> un archivo aquí o
+              haz clic para seleccionar un archivo
             </p>
             <p className="text-xs text-muted-foreground">
-              Supports TXT, PDF, and images.
+              Soporta TXT, PDF e imágenes.
             </p>
           </div>
         )}

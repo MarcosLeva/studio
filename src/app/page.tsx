@@ -21,8 +21,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 
 const loginSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address." }),
-  password: z.string().min(1, { message: "Password is required." }),
+  email: z.string().email({ message: "Por favor, introduce una dirección de correo electrónico válida." }),
+  password: z.string().min(1, { message: "La contraseña es obligatoria." }),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -47,15 +47,15 @@ export default function LoginPage() {
       // Basic validation check for demo purposes
       if (data.email && data.password) {
         toast({
-          title: "Login Successful",
-          description: "Welcome back!",
+          title: "Inicio de Sesión Exitoso",
+          description: "¡Bienvenido de nuevo!",
         });
         router.push("/dashboard");
       } else {
         toast({
           variant: "destructive",
-          title: "Login Failed",
-          description: "Please check your credentials and try again.",
+          title: "Error al Iniciar Sesión",
+          description: "Por favor, comprueba tus credenciales e inténtalo de nuevo.",
         });
       }
       setIsLoading(false);
@@ -68,17 +68,17 @@ export default function LoginPage() {
         <div className="flex items-center gap-2">
             <Bot className="h-10 w-10 text-primary" />
             <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl">
-                COCOCO Scan
+                Análisis COCOCO
             </h1>
         </div>
         <p className="max-w-[600px] text-muted-foreground md:text-xl">
-            AI-Powered Catalog Analysis. Streamlined. Intelligent.
+            Análisis de Catálogos con IA. Optimizado. Inteligente.
         </p>
       </div>
       <Card className="mt-8 w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>Enter your email below to login to your account.</CardDescription>
+          <CardTitle className="text-2xl">Iniciar Sesión</CardTitle>
+          <CardDescription>Introduce tu correo electrónico para iniciar sesión.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -88,9 +88,9 @@ export default function LoginPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Correo Electrónico</FormLabel>
                     <FormControl>
-                      <Input placeholder="name@example.com" {...field} />
+                      <Input placeholder="nombre@ejemplo.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -101,7 +101,7 @@ export default function LoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>Contraseña</FormLabel>
                     <FormControl>
                       <Input type="password" placeholder="••••••••" {...field} />
                     </FormControl>
@@ -110,7 +110,7 @@ export default function LoginPage() {
                 )}
               />
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Signing In..." : "Sign In"}
+                {isLoading ? "Iniciando Sesión..." : "Iniciar Sesión"}
               </Button>
             </form>
           </Form>

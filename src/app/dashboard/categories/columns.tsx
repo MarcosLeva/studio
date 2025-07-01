@@ -24,7 +24,7 @@ export const columns: ColumnDef<Category>[] = [
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Name
+          Nombre
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
@@ -33,7 +33,7 @@ export const columns: ColumnDef<Category>[] = [
   },
   {
     accessorKey: "aiModel",
-    header: "AI Model",
+    header: "Modelo de IA",
     cell: ({ row }) => {
         const model = row.getValue("aiModel");
         const variant = model === 'Gemini Pro' ? 'secondary' : 'default';
@@ -42,11 +42,11 @@ export const columns: ColumnDef<Category>[] = [
   },
   {
     accessorKey: "dateCreated",
-    header: "Date Created",
+    header: "Fecha de Creación",
   },
   {
     accessorKey: "description",
-    header: "Description",
+    header: "Descripción",
     cell: ({ row }) => <div className="max-w-xs truncate">{row.getValue("description")}</div>,
   },
   {
@@ -59,20 +59,20 @@ export const columns: ColumnDef<Category>[] = [
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Open menu</span>
+                  <span className="sr-only">Abrir menú</span>
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                 <DropdownMenuItem
                   onClick={() => navigator.clipboard.writeText(category.id)}
                 >
-                  Copy Category ID
+                  Copiar ID de Categoría
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Edit</DropdownMenuItem>
-                <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive">Delete</DropdownMenuItem>
+                <DropdownMenuItem>Editar</DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive">Eliminar</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
         </div>

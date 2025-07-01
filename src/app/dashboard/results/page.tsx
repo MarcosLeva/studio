@@ -24,9 +24,9 @@ export default function ScannedResultsPage() {
   return (
     <div className="container mx-auto">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Scanned Results</h1>
+        <h1 className="text-3xl font-bold">Resultados Escaneados</h1>
         <p className="text-muted-foreground">
-          Review the analysis from your previously scanned catalogs.
+          Revisa el análisis de tus catálogos escaneados previamente.
         </p>
       </div>
       
@@ -38,7 +38,7 @@ export default function ScannedResultsPage() {
                 <AccordionTrigger className="p-6 text-xl font-headline hover:no-underline">
                   <div className="flex items-center gap-4">
                     {category}
-                    <Badge variant="secondary">{categoryResults.length} scans</Badge>
+                    <Badge variant="secondary">{categoryResults.length} escaneos</Badge>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="p-0">
@@ -47,7 +47,7 @@ export default function ScannedResultsPage() {
                              <Card key={result.id} className="bg-background/50">
                                 <CardHeader>
                                     <CardTitle>{result.catalogName}</CardTitle>
-                                    <CardDescription>Scanned on: {result.dateScanned}</CardDescription>
+                                    <CardDescription>Escaneado el: {result.dateScanned}</CardDescription>
                                 </CardHeader>
                                 <CardContent>
                                     <p className="text-sm text-foreground/80">{result.analysis}</p>
@@ -63,11 +63,11 @@ export default function ScannedResultsPage() {
       ) : (
          <Card className="flex flex-col items-center justify-center py-20">
             <CardHeader>
-                <CardTitle className="text-2xl">No Results Yet</CardTitle>
+                <CardTitle className="text-2xl">Aún no hay resultados</CardTitle>
             </CardHeader>
             <CardContent>
                 <p className="text-muted-foreground">
-                    Perform an analysis from the dashboard to see results here.
+                    Realiza un análisis desde el panel de control para ver los resultados aquí.
                 </p>
             </CardContent>
          </Card>
