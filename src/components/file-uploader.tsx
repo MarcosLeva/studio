@@ -6,9 +6,10 @@ import { useDropzone, type DropzoneOptions, type FileRejection } from "react-dro
 import { twMerge } from "tailwind-merge";
 import Image from "next/image";
 
+// Make the uploader area larger and define a cleaner style for when a file is selected.
 const variants = {
-  base: "relative rounded-md flex justify-center items-center flex-col cursor-pointer min-h-36 w-full border-2 border-dashed border-muted-foreground/50 transition-colors duration-200 ease-in-out",
-  image: "border-0 p-0 relative shadow-md bg-transparent",
+  base: "relative rounded-lg flex justify-center items-center flex-col cursor-pointer min-h-48 w-full border-2 border-dashed border-muted-foreground/50 transition-colors duration-200 ease-in-out",
+  image: "border-solid border-border bg-muted/10 p-0", // Cleaner style for the container when a file is present
   active: "border-primary",
   disabled: "bg-muted cursor-default pointer-events-none bg-opacity-30",
   accept: "border-green-500 bg-green-500 bg-opacity-10",
@@ -64,6 +65,12 @@ const FileUploader = React.forwardRef<HTMLInputElement, InputProps>(
     );
 
     React.useEffect(() => {
+        if(!file) {
+          setErrorMessage(null);
+        }
+    }, [file]);
+
+    React.useEffect(() => {
         if (file && file.type.startsWith("image/")) {
             const objectUrl = URL.createObjectURL(file);
             setPreview(objectUrl);
@@ -74,12 +81,6 @@ const FileUploader = React.forwardRef<HTMLInputElement, InputProps>(
         } else {
             setPreview(null);
         }
-    }, [file]);
-    
-    React.useEffect(() => {
-      if(!file) {
-        setErrorMessage(null);
-      }
     }, [file]);
 
     const {
@@ -131,17 +132,23 @@ const FileUploader = React.forwardRef<HTMLInputElement, InputProps>(
 
         {file && !errorMessage ? (
           preview ? (
-            <Image
-                src={preview}
-                alt={file.name || "Vista previa"}
-                fill
-                className="rounded-md object-cover"
-            />
+            <div className="relative h-full w-full">
+              <Image
+                  src={preview}
+                  alt={file.name || "Vista previa"}
+                  fill
+                  className="rounded-md object-contain p-2"
+              />
+            </div>
           ) : (
-            <div className="flex h-full w-full flex-col items-center justify-center text-center p-4 bg-background rounded-md">
-              <FileIcon className="h-12 w-12 text-muted-foreground" />
-              <p className="mt-2 text-sm font-medium text-foreground">{file.name}</p>
-              <p className="text-xs text-muted-foreground">{Math.round(file.size / 1024)} KB</p>
+            <div className="flex h-full w-full flex-col items-center justify-center space-y-4 text-center p-4 rounded-md">
+              <div className="flex items-center justify-center rounded-full bg-muted p-5">
+                  <FileIcon className="h-10 w-10 text-muted-foreground" />
+              </div>
+              <div className="max-w-full truncate px-2">
+                  <p className="text-sm font-medium text-foreground truncate">{file.name}</p>
+                  <p className="text-xs text-muted-foreground">{Math.round(file.size / 1024)} KB</p>
+              </div>
             </div>
           )
         ) : (
