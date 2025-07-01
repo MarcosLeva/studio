@@ -190,133 +190,135 @@ export default function CategoriesPage() {
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nombre de la Categoría</FormLabel>
-                        <FormControl>
-                          <Input placeholder="ej., Descripciones de Productos" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="aiModel"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Modelo de IA</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+              <div className="max-h-[60vh] space-y-4 overflow-y-auto p-1 pr-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nombre de la Categoría</FormLabel>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecciona un modelo" />
-                            </SelectTrigger>
+                            <Input placeholder="ej., Descripciones de Productos" {...field} />
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Gemini 2.0 Flash">Gemini 2.0 Flash</SelectItem>
-                            <SelectItem value="Gemini Pro">Gemini Pro</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="aiModel"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Modelo de IA</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecciona un modelo" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Gemini 2.0 Flash">Gemini 2.0 Flash</SelectItem>
+                              <SelectItem value="Gemini Pro">Gemini Pro</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                </div>
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Descripción</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Una breve descripción para qué sirve esta categoría." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="files"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Archivos de Ejemplo (Opcional)</FormLabel>
+                      <FormDescription>
+                        Sube uno o más archivos de ejemplo para ayudar a la IA a sugerir un prompt más preciso.
+                      </FormDescription>
+                      <FormControl>
+                        <FileUploader
+                          value={field.value ?? []}
+                          onChange={field.onChange}
+                          dropzoneOptions={{
+                            accept: {
+                              "application/pdf": [".pdf"],
+                              "text/plain": [".txt"],
+                              "image/jpeg": [".jpeg", ".jpg"],
+                              "image/png": [".png"],
+                            },
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="prompt"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center justify-between">
+                        <span>Prompt de IA</span>
+                        <Button
+                            type="button"
+                            variant="link"
+                            size="sm"
+                            className="p-0 h-auto text-primary"
+                            onClick={handleSuggestPrompt}
+                            disabled={isSuggesting}
+                        >
+                            {isSuggesting ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                            ) : (
+                                <Lightbulb className="mr-2 h-4 w-4"/>
+                            )}
+                            Sugerir con IA
+                        </Button>
+                      </FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Indica a la IA qué extraer, ej., 'Extraer nombres de productos y precios.'"
+                          rows={4}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="instructions"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Instrucciones para la IA</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Proporciona instrucciones específicas, ej., 'Formatear la salida como JSON.'"
+                          rows={4}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Descripción</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Una breve descripción para qué sirve esta categoría." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="files"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Archivos de Ejemplo (Opcional)</FormLabel>
-                    <FormDescription>
-                      Sube uno o más archivos de ejemplo para ayudar a la IA a sugerir un prompt más preciso.
-                    </FormDescription>
-                    <FormControl>
-                      <FileUploader
-                        value={field.value ?? []}
-                        onChange={field.onChange}
-                        dropzoneOptions={{
-                          accept: {
-                            "application/pdf": [".pdf"],
-                            "text/plain": [".txt"],
-                            "image/jpeg": [".jpeg", ".jpg"],
-                            "image/png": [".png"],
-                          },
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="prompt"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center justify-between">
-                      <span>Prompt de IA</span>
-                      <Button
-                          type="button"
-                          variant="link"
-                          size="sm"
-                          className="p-0 h-auto text-primary"
-                          onClick={handleSuggestPrompt}
-                          disabled={isSuggesting}
-                      >
-                          {isSuggesting ? (
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                          ) : (
-                              <Lightbulb className="mr-2 h-4 w-4"/>
-                          )}
-                          Sugerir con IA
-                      </Button>
-                    </FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Indica a la IA qué extraer, ej., 'Extraer nombres de productos y precios.'"
-                        rows={4}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="instructions"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Instrucciones para la IA</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Proporciona instrucciones específicas, ej., 'Formatear la salida como JSON.'"
-                        rows={4}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
                 <Button type="submit">{editingCategory ? 'Guardar Cambios' : 'Guardar Categoría'}</Button>
