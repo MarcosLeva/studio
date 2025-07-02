@@ -54,6 +54,7 @@ const initialUser: User = {
     name: 'Usuario de Demostración',
     email: 'user@cococo.com',
     avatar: 'https://placehold.co/100x100',
+    role: 'Administrador',
 };
 
 
@@ -69,6 +70,8 @@ interface AppContextType {
   editScanResult: (id: string, data: Partial<Omit<ScanResult, 'id' | 'dateScanned'>>) => void;
   user: User;
   editUser: (data: Partial<Omit<User, 'id'>>) => void;
+  managedUsers: User[];
+  addManagedUser: (user: Omit<User, 'id' | 'avatar'>) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -77,6 +80,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [results, setResults] = useState<ScanResult[]>(initialScanResults);
   const [user, setUser] = useState<User>(initialUser);
+  const [managedUsers, setManagedUsers] = useState<User[]>([]);
   
   const addCategory = (category: Omit<Category, 'id' | 'dateCreated'>) => {
     const newCategory: Category = {
@@ -116,9 +120,18 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setUser(prev => ({ ...prev, ...data }));
   };
 
+  const addManagedUser = (userData: Omit<User, 'id' | 'avatar'>) => {
+    const newUser: User = {
+      ...userData,
+      id: `user-${new Date().getTime()}`,
+      avatar: `https://placehold.co/100x100`,
+    };
+    setManagedUsers(prev => [...prev, newUser]);
+  };
+
 
   return (
-    <AppContext.Provider value={{ categories, setCategories, results, setResults, addCategory, editCategory, addScanResult, deleteScanResult, editScanResult, user, editUser }}>
+    <AppContext.Provider value={{ categories, setCategories, results, setResults, addCategory, editCategory, addScanResult, deleteScanResult, editScanResult, user, editUser, managedUsers, addManagedUser }}>
       {children}
     </AppContext.Provider>
   );

@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from 'react';
-import { QrCode, FileScan, LayoutGrid, List, BarChart2 } from 'lucide-react';
+import { QrCode, FileScan, LayoutGrid, BarChart2, UserPlus } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
@@ -59,6 +59,14 @@ export default function DashboardLayout({
                   <Link href="/dashboard/results">
                     <BarChart2 />
                     <span>Resultados Escaneados</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === '/dashboard/add-user'}>
+                  <Link href="/dashboard/add-user">
+                    <UserPlus />
+                    <span>Agregar Usuario</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
