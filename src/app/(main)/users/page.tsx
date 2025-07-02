@@ -80,8 +80,8 @@ export default function UsersPage() {
     } else {
       addManagedUser(data);
       toast({
-        title: "Usuario Agregado",
-        description: `El usuario "${data.name}" ha sido agregado con éxito.`,
+        title: "Invitación Enviada",
+        description: `Se ha enviado una invitación por correo electrónico a ${data.email}.`,
       });
     }
     setIsDialogOpen(false);
