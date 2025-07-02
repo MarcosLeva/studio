@@ -35,20 +35,21 @@ Aquí tienes la estructura completa para que te sirva de guía (he omitido la ca
     │       ├── analyze-catalog-input.ts
     │       └── suggest-category-prompt.ts
     ├── app
-    │   ├── analyze-catalog
-    │   │   └── page.tsx
-    │   ├── categories
-    │   │   ├── columns.tsx
-    │   │   └── page.tsx
-    │   ├── profile
-    │   │   └── page.tsx
-    │   ├── results
-    │   │   ├── columns.tsx
-    │   │   └── page.tsx
-    │   ├── users
-    │   │   ├── columns.tsx
-    │   │   └── page.tsx
-    │   ├── layout.tsx
+    │   ├── (main)
+    │   │   ├── analyze-catalog
+    │   │   │   └── page.tsx
+    │   │   ├── categories
+    │   │   │   ├── columns.tsx
+    │   │   │   └── page.tsx
+    │   │   ├── profile
+    │   │   │   └── page.tsx
+    │   │   ├── results
+    │   │   │   ├── columns.tsx
+    │   │   │   └── page.tsx
+    │   │   ├── users
+    │   │   │   ├── columns.tsx
+    │   │   │   └── page.tsx
+    │   │   └── layout.tsx
     │   ├── forgot-password
     │   │   └── page.tsx
     │   ├── globals.css
@@ -63,9 +64,8 @@ Aquí tienes la estructura completa para que te sirva de guía (he omitido la ca
     │   └── store.tsx
     ├── components
     │   ├── data-table.tsx
-    │   ├── dashboard
-    │   │   └── user-nav.tsx
     │   ├── file-uploader.tsx
+    │   ├── user-nav.tsx
     │   └── ui
     │       ├── accordion.tsx
     │       ├── alert-dialog.tsx
