@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -51,7 +52,7 @@ export default function LoginPage() {
           title: "Inicio de Sesión Exitoso",
           description: "¡Bienvenido de nuevo!",
         });
-        router.push("/dashboard");
+        router.push("/analyze-catalog");
       } else {
         toast({
           variant: "destructive",

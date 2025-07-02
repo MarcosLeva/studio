@@ -1,3 +1,4 @@
+
 "use client";
 
 import { CreditCard, LogOut, Settings, User } from "lucide-react";
@@ -16,7 +17,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useApp } from "@/app/dashboard/store";
+import { useApp } from "@/app/store";
 
 export function UserNav() {
   const router = useRouter();
@@ -49,7 +50,7 @@ export function UserNav() {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href="/dashboard/profile">
+            <Link href="/profile">
                 <User className="mr-2 h-4 w-4" />
                 <span>Perfil</span>
                 <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>

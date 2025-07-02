@@ -14,7 +14,7 @@ Hola, lamento que el botón de descarga no esté visible. Como solución alterna
 
 ## Lista de Archivos y Carpetas del Proyecto
 
-Aquí tienes la estructura completa para que te sirva de guía:
+Aquí tienes la estructura completa para que te sirva de guía (he omitido la carpeta `(main)` para mayor claridad, ya que no afecta a las rutas):
 
 ```
 .
@@ -35,24 +35,20 @@ Aquí tienes la estructura completa para que te sirva de guía:
     │       ├── analyze-catalog-input.ts
     │       └── suggest-category-prompt.ts
     ├── app
-    │   ├── dashboard
-    │   │   ├── add-user
-    │   │   │   └── page.tsx
-    │   │   ├── categories
-    │   │   │   ├── columns.tsx
-    │   │   │   ├── data-table.tsx
-    │   │   │   └── page.tsx
-    │   │   ├── profile
-    │   │   │   └── page.tsx
-    │   │   ├── results
-    │   │   │   ├── columns.tsx
-    │   │   │   └── page.tsx
-    │   │   ├── users
-    │   │   │   ├── columns.tsx
-    │   │   │   └── page.tsx
-    │   │   ├── layout.tsx
-    │   │   ├── page.tsx
-    │   │   └── store.tsx
+    │   ├── analyze-catalog
+    │   │   └── page.tsx
+    │   ├── categories
+    │   │   ├── columns.tsx
+    │   │   └── page.tsx
+    │   ├── profile
+    │   │   └── page.tsx
+    │   ├── results
+    │   │   ├── columns.tsx
+    │   │   └── page.tsx
+    │   ├── users
+    │   │   ├── columns.tsx
+    │   │   └── page.tsx
+    │   ├── layout.tsx
     │   ├── forgot-password
     │   │   └── page.tsx
     │   ├── globals.css
@@ -64,7 +60,9 @@ Aquí tienes la estructura completa para que te sirva de guía:
     │   │   └── page.tsx
     │   ├── set-password
     │   │   └── page.tsx
+    │   └── store.tsx
     ├── components
+    │   ├── data-table.tsx
     │   ├── dashboard
     │   │   └── user-nav.tsx
     │   ├── file-uploader.tsx
