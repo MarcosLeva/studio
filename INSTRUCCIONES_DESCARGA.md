@@ -1,3 +1,4 @@
+
 # Instrucciones para Descargar el Código Manualmente
 
 Hola, lamento que el botón de descarga no esté visible. Como solución alternativa, puedes seguir estos pasos para guardar una copia completa de tu proyecto en tu computadora.
@@ -44,6 +45,9 @@ Aquí tienes la estructura completa para que te sirva de guía:
     │   │   ├── profile
     │   │   │   └── page.tsx
     │   │   ├── results
+    │   │   │   ├── columns.tsx
+    │   │   │   └── page.tsx
+    │   │   ├── users
     │   │   │   ├── columns.tsx
     │   │   │   └── page.tsx
     │   │   ├── layout.tsx

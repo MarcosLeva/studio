@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
@@ -53,9 +54,26 @@ const initialUser: User = {
     id: 'user-1',
     name: 'Usuario de Demostración',
     email: 'user@cococo.com',
-    avatar: 'https://placehold.co/100x100',
+    avatar: 'https://placehold.co/100x100.png',
     role: 'Administrador',
 };
+
+const initialManagedUsers: User[] = [
+    {
+        id: 'user-2',
+        name: 'Ana García',
+        email: 'ana.garcia@cococo.com',
+        avatar: 'https://placehold.co/100x100.png',
+        role: 'Miembro',
+    },
+    {
+        id: 'user-3',
+        name: 'Carlos Rodriguez',
+        email: 'carlos.rodriguez@cococo.com',
+        avatar: 'https://placehold.co/100x100.png',
+        role: 'Miembro',
+    }
+];
 
 
 interface AppContextType {
@@ -72,6 +90,8 @@ interface AppContextType {
   editUser: (data: Partial<Omit<User, 'id'>>) => void;
   managedUsers: User[];
   addManagedUser: (user: Omit<User, 'id' | 'avatar'>) => void;
+  editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar'>>) => void;
+  deleteManagedUser: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -80,7 +100,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [results, setResults] = useState<ScanResult[]>(initialScanResults);
   const [user, setUser] = useState<User>(initialUser);
-  const [managedUsers, setManagedUsers] = useState<User[]>([]);
+  const [managedUsers, setManagedUsers] = useState<User[]>(initialManagedUsers);
   
   const addCategory = (category: Omit<Category, 'id' | 'dateCreated'>) => {
     const newCategory: Category = {
@@ -124,14 +144,24 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const newUser: User = {
       ...userData,
       id: `user-${new Date().getTime()}`,
-      avatar: `https://placehold.co/100x100`,
+      avatar: `https://placehold.co/100x100.png`,
     };
     setManagedUsers(prev => [...prev, newUser]);
   };
 
+  const editManagedUser = (id: string, data: Partial<Omit<User, 'id' | 'avatar'>>) => {
+    setManagedUsers(prev => 
+      prev.map(u => (u.id === id ? { ...u, ...data } : u))
+    );
+  };
+  
+  const deleteManagedUser = (id: string) => {
+    setManagedUsers(prev => prev.filter(u => u.id !== id));
+  };
+
 
   return (
-    <AppContext.Provider value={{ categories, setCategories, results, setResults, addCategory, editCategory, addScanResult, deleteScanResult, editScanResult, user, editUser, managedUsers, addManagedUser }}>
+    <AppContext.Provider value={{ categories, setCategories, results, setResults, addCategory, editCategory, addScanResult, deleteScanResult, editScanResult, user, editUser, managedUsers, addManagedUser, editManagedUser, deleteManagedUser }}>
       {children}
     </AppContext.Provider>
   );
