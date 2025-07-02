@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { PlusCircle, Loader2, Lightbulb } from "lucide-react";
+import { PlusCircle, Lightbulb, Loader2 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -41,6 +41,7 @@ import { useToast } from "@/hooks/use-toast";
 import { suggestCategoryPrompt } from "@/ai/flows/suggest-category-prompt";
 import type { Category } from "@/lib/types";
 import { FileUploader } from "@/components/file-uploader";
+import { LogoSpinner } from "@/components/ui/logo-spinner";
 
 const categorySchema = z.object({
   name: z.string().min(3, { message: "El nombre de la categoría debe tener al menos 3 caracteres." }),
@@ -343,7 +344,7 @@ export default function CategoriesPage() {
         />
         {isFiltering && (
             <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-card/80 backdrop-blur-sm">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <LogoSpinner />
             </div>
         )}
       </div>

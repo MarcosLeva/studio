@@ -84,6 +84,7 @@ Aquí tienes la estructura completa para que te sirva de guía (he omitido la ca
     │       ├── form.tsx
     │       ├── input.tsx
     │       ├── label.tsx
+    │       ├── logo-spinner.tsx
     │       ├── menubar.tsx
     │       ├── popover.tsx
     │       ├── progress.tsx

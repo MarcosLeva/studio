@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { LogoSpinner } from "@/components/ui/logo-spinner";
 
 export default function ScannedResultsPage() {
   const { results, deleteScanResult } = useApp();
@@ -144,7 +144,7 @@ export default function ScannedResultsPage() {
         />
         {isFiltering && (
             <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-card/80 backdrop-blur-sm">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <LogoSpinner />
             </div>
         )}
       </div>

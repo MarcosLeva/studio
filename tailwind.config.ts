@@ -93,11 +93,27 @@ export default {
           'from': { opacity: '0', transform: 'translateY(10px)' },
           'to': { opacity: '1', transform: 'translateY(0)' },
         },
+        'spinner-pulse': {
+          '0%, 100%': {
+            opacity: '1',
+            transform: 'scale(1)',
+            fill: 'hsl(var(--primary))',
+          },
+          '50%': {
+            opacity: '0.6',
+            transform: 'scale(0.9)',
+            fill: 'hsl(var(--accent))',
+          },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'fade-in': 'fade-in 0.5s ease-out',
+        'spinner-pulse-1': 'spinner-pulse 1.6s infinite ease-in-out',
+        'spinner-pulse-2': 'spinner-pulse 1.6s 0.2s infinite ease-in-out',
+        'spinner-pulse-3': 'spinner-pulse 1.6s 0.4s infinite ease-in-out',
+        'spinner-pulse-4': 'spinner-pulse 1.6s 0.6s infinite ease-in-out',
       },
     },
   },
