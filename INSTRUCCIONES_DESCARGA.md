@@ -35,6 +35,8 @@ Aquí tienes la estructura completa para que te sirva de guía:
     │       └── suggest-category-prompt.ts
     ├── app
     │   ├── dashboard
+    │   │   ├── add-user
+    │   │   │   └── page.tsx
     │   │   ├── categories
     │   │   │   ├── columns.tsx
     │   │   │   ├── data-table.tsx
@@ -47,11 +49,17 @@ Aquí tienes la estructura completa para que te sirva de guía:
     │   │   ├── layout.tsx
     │   │   ├── page.tsx
     │   │   └── store.tsx
+    │   ├── forgot-password
+    │   │   └── page.tsx
     │   ├── globals.css
     │   ├── layout.tsx
     │   ├── login
     │   │   └── page.tsx
-    │   └── page.tsx
+    │   ├── page.tsx
+    │   ├── reset-password
+    │   │   └── page.tsx
+    │   ├── set-password
+    │   │   └── page.tsx
     ├── components
     │   ├── dashboard
     │   │   └── user-nav.tsx
