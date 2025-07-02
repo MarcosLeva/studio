@@ -39,32 +39,32 @@ export default function DashboardLayout({
             </SidebarHeader>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === '/dashboard'}>
-                  <Link href="/dashboard">
+                <SidebarMenuButton asChild isActive={pathname === '/analyze-catalog'}>
+                  <Link href="/analyze-catalog">
                     <FileScan />
                     <span>Analizar Catálogo</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === '/dashboard/categories'}>
-                   <Link href="/dashboard/categories">
+                <SidebarMenuButton asChild isActive={pathname === '/categories'}>
+                   <Link href="/categories">
                     <LayoutGrid />
                     <span>Categorías</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === '/dashboard/results'}>
-                  <Link href="/dashboard/results">
+                <SidebarMenuButton asChild isActive={pathname === '/results'}>
+                  <Link href="/results">
                     <BarChart2 />
                     <span>Resultados Escaneados</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname.startsWith('/dashboard/users')}>
-                  <Link href="/dashboard/users">
+                <SidebarMenuButton asChild isActive={pathname.startsWith('/users')}>
+                  <Link href="/users">
                     <Users />
                     <span>Usuarios</span>
                   </Link>

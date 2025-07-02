@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,7 +27,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileUploader } from "@/components/file-uploader";
-import { useApp } from "./store";
+import { useApp } from "@/app/store";
 import { analyzeCatalogInput } from "@/ai/flows/analyze-catalog-input";
 import { useToast } from "@/hooks/use-toast";
 
@@ -96,7 +97,7 @@ export default function AnalyzeCatalogPage() {
         title: "Análisis Completo",
         description: "Tu catálogo ha sido analizado con éxito.",
       });
-      router.push("/dashboard/results");
+      router.push("/results");
 
     } catch (error) {
       console.error("Analysis failed:", error);

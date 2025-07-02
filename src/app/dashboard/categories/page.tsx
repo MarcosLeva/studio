@@ -36,7 +36,7 @@ import {
 } from "@/components/ui/select";
 import { DataTable } from "./data-table";
 import { getColumns } from "./columns";
-import { useApp } from "../store";
+import { useApp } from "@/app/store";
 import { useToast } from "@/hooks/use-toast";
 import { suggestCategoryPrompt } from "@/ai/flows/suggest-category-prompt";
 import type { Category } from "@/lib/types";

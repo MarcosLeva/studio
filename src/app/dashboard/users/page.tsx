@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/select";
 import { DataTable } from "../categories/data-table";
 import { getColumns } from "./columns";
-import { useApp } from "../store";
+import { useApp } from "@/app/store";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@/lib/types";
 import {
