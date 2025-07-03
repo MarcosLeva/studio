@@ -16,7 +16,7 @@ import {
   SidebarMenuButton,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { UserNav } from '@/components/dashboard/user-nav';
+import { UserNav } from '@/components/user-nav';
 import { cn } from '@/lib/utils';
 
 export default function DashboardLayout({
@@ -78,7 +78,12 @@ export default function DashboardLayout({
           <header className="flex h-14 shrink-0 items-center justify-between border-b bg-card px-4 lg:px-6">
             <SidebarTrigger className="md:hidden" />
             <div className="flex-1">
-              {/* Optional: Add breadcrumbs or page title here */}
+              <div className="flex justify-center md:hidden">
+                  <Link href="/analyze-catalog" className="flex items-center gap-2">
+                      <QrCode className="h-6 w-6 text-primary" />
+                      <span className="font-headline font-semibold">COCOCO Scan</span>
+                  </Link>
+              </div>
             </div>
             <UserNav />
           </header>
