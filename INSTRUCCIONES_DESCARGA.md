@@ -113,3 +113,4 @@ Aquí tienes la estructura completa para que te sirva de guía (he omitido la ca
 Una vez que tengas todos los archivos en tu computadora, puedes ejecutar `npm install` y luego `npm run dev` para iniciar el servidor de desarrollo local.
 
 Espero que esto te ayude a resolver el problema. ¡Lamento las molestias!
+
