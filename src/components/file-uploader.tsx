@@ -1,3 +1,4 @@
+
 "use client";
 
 import { UploadCloud, File as FileIcon, X } from "lucide-react";
@@ -147,7 +148,7 @@ const FileUploader = React.forwardRef<HTMLInputElement, FileUploaderProps>(
                                 e.stopPropagation();
                                 removeFile(index);
                             }}
-                            className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-1 right-1 h-6 w-6 transition-opacity opacity-100 md:opacity-0 md:group-hover:opacity-100"
                         >
                             <X className="h-4 w-4" />
                         </Button>
