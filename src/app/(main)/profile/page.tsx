@@ -201,6 +201,10 @@ export default function ProfilePage() {
                     <Label className="text-sm font-medium text-muted-foreground">Correo Electrónico</Label>
                     <p className="text-lg">{user.email}</p>
                   </div>
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">Rol</Label>
+                    <p className="text-lg">{user.role}</p>
+                  </div>
               </div>
             </CardContent>
             <CardFooter className="border-t px-6 py-4 flex flex-col sm:flex-row sm:justify-end gap-3">
@@ -262,7 +266,7 @@ export default function ProfilePage() {
                                     </FormItem>
                                     )}
                                 />
-                                <DialogFooter>
+                                <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2 sm:gap-0">
                                     <Button type="button" variant="outline" onClick={() => setIsPasswordDialogOpen(false)}>Cancelar</Button>
                                     <Button type="submit" disabled={isPasswordLoading}>
                                         {isPasswordLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -319,7 +323,7 @@ export default function ProfilePage() {
                                         </FormItem>
                                     )}
                                 />
-                                <DialogFooter>
+                                <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2 sm:gap-0">
                                     <Button type="button" variant="outline" onClick={() => setIsProfileDialogOpen(false)}>Cancelar</Button>
                                     <Button type="submit" disabled={isProfileLoading}>
                                         {isProfileLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
