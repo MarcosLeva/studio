@@ -126,9 +126,12 @@ export default function UsersPage() {
   }, [newlyAddedUserId]);
 
   React.useEffect(() => {
+    setIsFiltering(true);
     const timeout = setTimeout(() => {
       setGlobalFilter(filterValue);
-      setIsFiltering(false);
+       if (isMounted.current) {
+        setIsFiltering(false);
+      }
     }, 300);
     return () => clearTimeout(timeout);
   }, [filterValue]);
@@ -282,7 +285,6 @@ export default function UsersPage() {
         placeholder="Filtrar por nombre o correo..."
         value={filterValue}
         onChange={(event) => {
-          setIsFiltering(true);
           setFilterValue(event.target.value);
         }}
         className="w-full sm:max-w-sm"
@@ -522,7 +524,7 @@ export default function UsersPage() {
                   </FormItem>
                 )}
               />
-              <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2 sm:gap-0">
+              <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-3 sm:gap-0">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
                 <Button type="submit">{editingUser ? "Guardar Cambios" : "Agregar Usuario"}</Button>
               </DialogFooter>
@@ -543,7 +545,7 @@ export default function UsersPage() {
               <span className="font-semibold">{userToDelete?.name}</span>.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2 sm:gap-0">
+          <AlertDialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-3 sm:gap-0">
             <AlertDialogCancel onClick={() => setUserToDelete(null)}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
@@ -563,7 +565,7 @@ export default function UsersPage() {
                 Esta acción no se puede deshacer. Esto eliminará permanentemente a los {table.getFilteredSelectedRowModel().rows.length} usuarios seleccionados.
                 </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2 sm:gap-0">
+            <AlertDialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-3 sm:gap-0">
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
                 <AlertDialogAction onClick={confirmBulkDelete} className="bg-destructive hover:bg-destructive/90">
                     Eliminar

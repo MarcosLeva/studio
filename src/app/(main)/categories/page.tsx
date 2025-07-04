@@ -265,16 +265,18 @@ export default function CategoriesPage() {
   });
 
   React.useEffect(() => {
+    setIsFiltering(true);
     const timeout = setTimeout(() => {
       table.getColumn("name")?.setFilterValue(filterValue);
-      setIsFiltering(false);
+      if (isMounted.current) {
+          setIsFiltering(false);
+      }
     }, 300);
 
     return () => clearTimeout(timeout);
   }, [filterValue, table]);
 
   const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setIsFiltering(true);
     setFilterValue(event.target.value);
   };
 
@@ -481,7 +483,7 @@ export default function CategoriesPage() {
                   )}
                 />
               </div>
-              <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2 sm:gap-0">
+              <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-3 sm:gap-0">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
                 <Button type="submit">{editingCategory ? "Guardar Cambios" : "Guardar Categoría"}</Button>
               </DialogFooter>
@@ -502,7 +504,7 @@ export default function CategoriesPage() {
               <span className="font-semibold">{categoryToDelete?.name}</span>.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2 sm:gap-0">
+          <AlertDialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-3 sm:gap-0">
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
@@ -522,7 +524,7 @@ export default function CategoriesPage() {
                 Esta acción no se puede deshacer. Esto eliminará permanentemente las {table.getFilteredSelectedRowModel().rows.length} categorías seleccionadas.
                 </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2 sm:gap-0">
+            <AlertDialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-3 sm:gap-0">
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
                 <AlertDialogAction onClick={confirmBulkDelete} className="bg-destructive hover:bg-destructive/90">
                     Eliminar
