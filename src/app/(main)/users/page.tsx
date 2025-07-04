@@ -159,6 +159,7 @@ export default function UsersPage() {
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [globalFilter, setGlobalFilter] = React.useState("");
   const [rowSelection, setRowSelection] = React.useState({});
 
   const table = useReactTable({
@@ -171,18 +172,20 @@ export default function UsersPage() {
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onRowSelectionChange: setRowSelection,
+    onGlobalFilterChange: setGlobalFilter,
     state: {
       sorting,
       columnFilters,
       rowSelection,
+      globalFilter,
     },
   });
 
   const toolbar = (
     <Input
-        placeholder="Filtrar por nombre..."
-        value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-        onChange={(event) => table.getColumn("name")?.setFilterValue(event.target.value)}
+        placeholder="Filtrar por nombre o correo..."
+        value={globalFilter ?? ""}
+        onChange={(event) => setGlobalFilter(event.target.value)}
         className="max-w-sm"
     />
   );
@@ -280,9 +283,9 @@ export default function UsersPage() {
           table={table}
           toolbar={(table) => (
               <Input
-                placeholder="Filtrar por nombre..."
-                value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-                onChange={(event) => table.getColumn("name")?.setFilterValue(event.target.value)}
+                placeholder="Filtrar por nombre o correo..."
+                value={globalFilter ?? ""}
+                onChange={(event) => setGlobalFilter(event.target.value)}
                 className="max-w-sm"
               />
           )}
