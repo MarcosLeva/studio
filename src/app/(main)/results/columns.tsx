@@ -62,6 +62,7 @@ export const getColumns = (
             );
         },
         size: 200,
+        filterFn: 'arrIncludesSome',
     },
     {
         accessorKey: "dateScanned",

@@ -9,13 +9,6 @@ import { getColumns } from "./columns";
 import type { ScanResult } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -48,6 +41,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 import { ScrollToTopButton } from "@/components/scroll-to-top-button";
+import { MultiSelectCombobox } from "@/components/ui/multi-select-combobox";
 
 export default function ScannedResultsPage() {
   const { results, deleteScanResult } = useApp();
@@ -102,6 +96,21 @@ export default function ScannedResultsPage() {
     },
   });
 
+  const isInitialMount = React.useRef(true);
+  React.useEffect(() => {
+    if (isInitialMount.current) {
+        isInitialMount.current = false;
+        return;
+    }
+    setIsFiltering(true);
+    const timer = setTimeout(() => {
+        setIsFiltering(false);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [columnFilters]);
+
+
   const confirmDelete = () => {
     if (resultToDelete) {
       deleteScanResult(resultToDelete.id);
@@ -144,40 +153,22 @@ export default function ScannedResultsPage() {
     });
     table.resetRowSelection();
   }, [table, toast]);
-  
-  const handleFilterChange = (value: string) => {
-    setIsFiltering(true);
-    const filterValue = value === "All" ? "" : value;
-    table.getColumn("category")?.setFilterValue(filterValue);
+    
+  const categoryOptions = React.useMemo(() => 
+    Array.from(new Set(results.map((r) => r.category))).map(cat => ({
+      value: cat,
+      label: cat,
+    })),
+  [results]);
 
-    setTimeout(() => {
-        setIsFiltering(false);
-    }, 500);
-  };
-  
-  const categoryNames = React.useMemo(() => [
-    "All",
-    ...Array.from(new Set(results.map((r) => r.category))),
-  ], [results]);
-  
   const toolbar = (
-    <Select
-        value={
-        (table.getColumn("category")?.getFilterValue() as string) ?? "All"
-        }
-        onValueChange={handleFilterChange}
-    >
-        <SelectTrigger className="w-full sm:w-[220px]">
-        <SelectValue placeholder="Filtrar por categoría" />
-        </SelectTrigger>
-        <SelectContent>
-        {categoryNames.map((category) => (
-            <SelectItem key={category} value={category}>
-            {category === "All" ? "Todas las categorías" : category}
-            </SelectItem>
-        ))}
-        </SelectContent>
-    </Select>
+    <MultiSelectCombobox
+      options={categoryOptions}
+      selected={(table.getColumn("category")?.getFilterValue() as string[]) ?? []}
+      onChange={(value) => table.getColumn("category")?.setFilterValue(value.length > 0 ? value : undefined)}
+      className="w-full sm:w-[320px]"
+      placeholder="Filtrar por categorías..."
+    />
   );
 
   const MobileResultCard = ({ result }: { result: ScanResult }) => (
