@@ -86,6 +86,7 @@ export const getColumns = (
         const role = row.getValue("role") as string;
         return <Badge variant={role === 'Administrador' ? 'default' : 'secondary'}>{role}</Badge>
     },
+    filterFn: 'equalsString',
     size: 120,
   },
   {
@@ -103,6 +104,7 @@ export const getColumns = (
         </div>
       )
     },
+    filterFn: 'equalsString',
     size: 120,
   },
   {
