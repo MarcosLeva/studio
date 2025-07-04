@@ -72,7 +72,25 @@ const initialManagedUsers: User[] = [
         email: 'carlos.rodriguez@cococo.com',
         avatar: 'https://placehold.co/100x100.png',
         role: 'Miembro',
-    }
+    },
+    { id: 'user-4', name: 'Luisa Martinez', email: 'luisa.martinez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
+    { id: 'user-5', name: 'Javier Fernandez', email: 'javier.fernandez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
+    { id: 'user-6', name: 'Sofia Lopez', email: 'sofia.lopez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
+    { id: 'user-7', name: 'David Gomez', email: 'david.gomez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
+    { id: 'user-8', name: 'Elena Perez', email: 'elena.perez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
+    { id: 'user-9', name: 'Daniel Sanchez', email: 'daniel.sanchez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
+    { id: 'user-10', name: 'Paula Romero', email: 'paula.romero@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
+    { id: 'user-11', name: 'Adrian Vazquez', email: 'adrian.vazquez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
+    { id: 'user-12', name: 'Claudia Diaz', email: 'claudia.diaz@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
+    { id: 'user-13', name: 'Hugo Moreno', email: 'hugo.moreno@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
+    { id: 'user-14', name: 'Alba Alvarez', email: 'alba.alvarez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
+    { id: 'user-15', name: 'Mario Jimenez', email: 'mario.jimenez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
+    { id: 'user-16', name: 'Laura Ruiz', email: 'laura.ruiz@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
+    { id: 'user-17', name: 'Sergio Hernandez', email: 'sergio.hernandez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
+    { id: 'user-18', name: 'Marta Gil', email: 'marta.gil@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
+    { id: 'user-19', name: 'Pablo Cano', email: 'pablo.cano@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
+    { id: 'user-20', name: 'Lucia Serrano', email: 'lucia.serrano@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
+    { id: 'user-21', name: 'Marcos Molina', email: 'marcos.molina@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
 ];
 
 
