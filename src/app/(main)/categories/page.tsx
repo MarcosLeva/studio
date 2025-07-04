@@ -72,6 +72,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ScrollToTopButton } from "@/components/scroll-to-top-button";
+import { LogoSpinner } from "@/components/ui/logo-spinner";
 
 const readFileAsDataURI = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -105,6 +106,7 @@ export default function CategoriesPage() {
   
   // Filter state
   const [filterValue, setFilterValue] = React.useState("");
+  const [isFiltering, setIsFiltering] = React.useState(false);
 
   React.useEffect(() => {
     isMounted.current = true;
@@ -265,10 +267,16 @@ export default function CategoriesPage() {
   React.useEffect(() => {
     const timeout = setTimeout(() => {
       table.getColumn("name")?.setFilterValue(filterValue);
+      setIsFiltering(false);
     }, 300);
 
     return () => clearTimeout(timeout);
   }, [filterValue, table]);
+
+  const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setIsFiltering(true);
+    setFilterValue(event.target.value);
+  };
 
   const selectedRowCount = table.getFilteredSelectedRowModel().rows.length;
 
@@ -276,7 +284,7 @@ export default function CategoriesPage() {
     <Input
     placeholder="Filtrar categorías..."
     value={filterValue}
-    onChange={(e) => setFilterValue(e.target.value)}
+    onChange={handleFilterChange}
     className="max-w-sm"
     />
   );
@@ -528,7 +536,7 @@ export default function CategoriesPage() {
           <Input
             placeholder="Filtrar categorías..."
             value={filterValue}
-            onChange={(e) => setFilterValue(e.target.value)}
+            onChange={handleFilterChange}
             className="max-w-sm"
           />
           {table.getRowModel().rows?.length ? (
@@ -568,6 +576,11 @@ export default function CategoriesPage() {
           </div>
           <div className="relative">
             <DataTable table={table} />
+            {isFiltering && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-b-md bg-card/80 backdrop-blur-sm">
+                    <LogoSpinner />
+                </div>
+            )}
           </div>
         </div>
       )}

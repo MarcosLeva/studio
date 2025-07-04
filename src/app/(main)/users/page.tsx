@@ -70,6 +70,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollToTopButton } from "@/components/scroll-to-top-button";
 import { cn } from "@/lib/utils";
+import { LogoSpinner } from "@/components/ui/logo-spinner";
 
 const userSchema = z.object({
   name: z.string().min(3, { message: "El nombre debe tener al menos 3 caracteres." }),
@@ -102,6 +103,7 @@ export default function UsersPage() {
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [filterValue, setFilterValue] = React.useState("");
   const [rowSelection, setRowSelection] = React.useState({});
+  const [isFiltering, setIsFiltering] = React.useState(false);
   const isMounted = React.useRef(true);
   
   React.useEffect(() => {
@@ -126,6 +128,7 @@ export default function UsersPage() {
   React.useEffect(() => {
     const timeout = setTimeout(() => {
       setGlobalFilter(filterValue);
+      setIsFiltering(false);
     }, 300);
     return () => clearTimeout(timeout);
   }, [filterValue]);
@@ -279,6 +282,7 @@ export default function UsersPage() {
         placeholder="Filtrar por nombre o correo..."
         value={filterValue}
         onChange={(event) => {
+          setIsFiltering(true);
           setFilterValue(event.target.value);
         }}
         className="w-full sm:max-w-sm"
@@ -451,6 +455,11 @@ export default function UsersPage() {
                 table={table}
                 getRowClassName={(row) => row.original.id === newlyAddedUserId ? 'animate-fireworks' : ''}
             />
+            {isFiltering && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-b-md bg-card/80 backdrop-blur-sm">
+                    <LogoSpinner />
+                </div>
+            )}
           </div>
         </div>
       )}

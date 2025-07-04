@@ -41,6 +41,7 @@ import {
 import { MoreHorizontal, FileDown, Trash2 } from "lucide-react";
 import { ScrollToTopButton } from "@/components/scroll-to-top-button";
 import { MultiSelectCombobox } from "@/components/ui/multi-select-combobox";
+import { LogoSpinner } from "@/components/ui/logo-spinner";
 
 export default function ScannedResultsPage() {
   const { results, deleteScanResult } = useApp();
@@ -50,6 +51,7 @@ export default function ScannedResultsPage() {
   const isMobile = useIsMobile();
   const [visibleRows, setVisibleRows] = React.useState(10);
   const isMounted = React.useRef(true);
+  const [isFiltering, setIsFiltering] = React.useState(false);
 
   React.useEffect(() => {
     isMounted.current = true;
@@ -104,6 +106,18 @@ export default function ScannedResultsPage() {
       rowSelection,
     },
   });
+
+  React.useEffect(() => {
+    setIsFiltering(true);
+    const timer = setTimeout(() => {
+      if (isMounted.current) {
+        setIsFiltering(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [columnFilters]);
+
 
   const confirmDelete = () => {
     if (resultToDelete) {
@@ -287,6 +301,11 @@ export default function ScannedResultsPage() {
           </div>
           <div className="relative">
             <DataTable table={table} />
+            {isFiltering && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-b-md bg-card/80 backdrop-blur-sm">
+                    <LogoSpinner />
+                </div>
+            )}
           </div>
         </div>
       )}
