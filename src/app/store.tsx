@@ -56,6 +56,7 @@ const initialUser: User = {
     email: 'user@cococo.com',
     avatar: 'https://placehold.co/100x100.png',
     role: 'Administrador',
+    status: 'activo',
 };
 
 const initialManagedUsers: User[] = [
@@ -65,6 +66,7 @@ const initialManagedUsers: User[] = [
         email: 'ana.garcia@cococo.com',
         avatar: 'https://placehold.co/100x100.png',
         role: 'Miembro',
+        status: 'activo',
     },
     {
         id: 'user-3',
@@ -72,25 +74,26 @@ const initialManagedUsers: User[] = [
         email: 'carlos.rodriguez@cococo.com',
         avatar: 'https://placehold.co/100x100.png',
         role: 'Miembro',
+        status: 'inactivo',
     },
-    { id: 'user-4', name: 'Luisa Martinez', email: 'luisa.martinez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
-    { id: 'user-5', name: 'Javier Fernandez', email: 'javier.fernandez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
-    { id: 'user-6', name: 'Sofia Lopez', email: 'sofia.lopez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
-    { id: 'user-7', name: 'David Gomez', email: 'david.gomez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
-    { id: 'user-8', name: 'Elena Perez', email: 'elena.perez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
-    { id: 'user-9', name: 'Daniel Sanchez', email: 'daniel.sanchez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
-    { id: 'user-10', name: 'Paula Romero', email: 'paula.romero@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
-    { id: 'user-11', name: 'Adrian Vazquez', email: 'adrian.vazquez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
-    { id: 'user-12', name: 'Claudia Diaz', email: 'claudia.diaz@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
-    { id: 'user-13', name: 'Hugo Moreno', email: 'hugo.moreno@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
-    { id: 'user-14', name: 'Alba Alvarez', email: 'alba.alvarez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
-    { id: 'user-15', name: 'Mario Jimenez', email: 'mario.jimenez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
-    { id: 'user-16', name: 'Laura Ruiz', email: 'laura.ruiz@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
-    { id: 'user-17', name: 'Sergio Hernandez', email: 'sergio.hernandez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
-    { id: 'user-18', name: 'Marta Gil', email: 'marta.gil@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
-    { id: 'user-19', name: 'Pablo Cano', email: 'pablo.cano@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
-    { id: 'user-20', name: 'Lucia Serrano', email: 'lucia.serrano@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
-    { id: 'user-21', name: 'Marcos Molina', email: 'marcos.molina@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro' },
+    { id: 'user-4', name: 'Luisa Martinez', email: 'luisa.martinez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'activo' },
+    { id: 'user-5', name: 'Javier Fernandez', email: 'javier.fernandez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'activo' },
+    { id: 'user-6', name: 'Sofia Lopez', email: 'sofia.lopez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'inactivo' },
+    { id: 'user-7', name: 'David Gomez', email: 'david.gomez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'activo' },
+    { id: 'user-8', name: 'Elena Perez', email: 'elena.perez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'activo' },
+    { id: 'user-9', name: 'Daniel Sanchez', email: 'daniel.sanchez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'activo' },
+    { id: 'user-10', name: 'Paula Romero', email: 'paula.romero@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'inactivo' },
+    { id: 'user-11', name: 'Adrian Vazquez', email: 'adrian.vazquez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'activo' },
+    { id: 'user-12', name: 'Claudia Diaz', email: 'claudia.diaz@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'activo' },
+    { id: 'user-13', name: 'Hugo Moreno', email: 'hugo.moreno@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'inactivo' },
+    { id: 'user-14', name: 'Alba Alvarez', email: 'alba.alvarez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'activo' },
+    { id: 'user-15', name: 'Mario Jimenez', email: 'mario.jimenez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'activo' },
+    { id: 'user-16', name: 'Laura Ruiz', email: 'laura.ruiz@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'activo' },
+    { id: 'user-17', name: 'Sergio Hernandez', email: 'sergio.hernandez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'inactivo' },
+    { id: 'user-18', name: 'Marta Gil', email: 'marta.gil@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'activo' },
+    { id: 'user-19', name: 'Pablo Cano', email: 'pablo.cano@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'activo' },
+    { id: 'user-20', name: 'Lucia Serrano', email: 'lucia.serrano@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'activo' },
+    { id: 'user-21', name: 'Marcos Molina', email: 'marcos.molina@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'inactivo' },
 ];
 
 
@@ -107,9 +110,10 @@ interface AppContextType {
   user: User;
   editUser: (data: Partial<Omit<User, 'id'>>) => void;
   managedUsers: User[];
-  addManagedUser: (user: Omit<User, 'id' | 'avatar'>) => void;
-  editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar'>>) => void;
+  addManagedUser: (user: Omit<User, 'id' | 'avatar' | 'status'>) => void;
+  editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'status'>>) => void;
   deleteManagedUser: (id: string) => void;
+  toggleUserStatus: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -158,16 +162,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setUser(prev => ({ ...prev, ...data }));
   };
 
-  const addManagedUser = (userData: Omit<User, 'id' | 'avatar'>) => {
+  const addManagedUser = (userData: Omit<User, 'id' | 'avatar' | 'status'>) => {
     const newUser: User = {
       ...userData,
       id: `user-${new Date().getTime()}`,
       avatar: `https://placehold.co/100x100.png`,
+      status: 'activo',
     };
     setManagedUsers(prev => [...prev, newUser]);
   };
 
-  const editManagedUser = (id: string, data: Partial<Omit<User, 'id' | 'avatar'>>) => {
+  const editManagedUser = (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'status'>>) => {
     setManagedUsers(prev => 
       prev.map(u => (u.id === id ? { ...u, ...data } : u))
     );
@@ -177,9 +182,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setManagedUsers(prev => prev.filter(u => u.id !== id));
   };
 
+  const toggleUserStatus = (id: string) => {
+    setManagedUsers(prev => 
+      prev.map(u => (u.id === id ? { ...u, status: u.status === 'activo' ? 'inactivo' : 'activo' } : u))
+    );
+  };
+
 
   return (
-    <AppContext.Provider value={{ categories, setCategories, results, setResults, addCategory, editCategory, addScanResult, deleteScanResult, editScanResult, user, editUser, managedUsers, addManagedUser, editManagedUser, deleteManagedUser }}>
+    <AppContext.Provider value={{ categories, setCategories, results, setResults, addCategory, editCategory, addScanResult, deleteScanResult, editScanResult, user, editUser, managedUsers, addManagedUser, editManagedUser, deleteManagedUser, toggleUserStatus }}>
       {children}
     </AppContext.Provider>
   );

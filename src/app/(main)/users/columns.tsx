@@ -16,10 +16,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { User } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 export const getColumns = (
   onEdit: (user: User) => void,
-  onDelete: (user: User) => void
+  onDelete: (user: User) => void,
+  onToggleStatus: (user: User) => void
 ): ColumnDef<User>[] => [
   {
     accessorKey: "name",
@@ -46,12 +48,12 @@ export const getColumns = (
         </div>
       )
     },
-    size: 250,
+    size: 220,
   },
   {
     accessorKey: "email",
     header: "Correo Electrónico",
-    size: 300,
+    size: 250,
   },
   {
     accessorKey: "role",
@@ -60,7 +62,24 @@ export const getColumns = (
         const role = row.getValue("role") as string;
         return <Badge variant={role === 'Administrador' ? 'default' : 'secondary'}>{role}</Badge>
     },
-    size: 150,
+    size: 120,
+  },
+  {
+    accessorKey: "status",
+    header: "Estado",
+    cell: ({ row }) => {
+      const status = row.getValue("status") as string;
+      return (
+        <div className="flex items-center gap-2">
+          <span className={cn(
+              "h-2 w-2 rounded-full",
+              status === 'activo' ? 'bg-green-500' : 'bg-gray-400'
+          )} />
+          <span className="capitalize">{status}</span>
+        </div>
+      )
+    },
+    size: 120,
   },
   {
     id: "actions",
@@ -79,6 +98,9 @@ export const getColumns = (
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                 <DropdownMenuItem onClick={() => onEdit(user)}>Editar Usuario</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onToggleStatus(user)}>
+                  {user.status === 'activo' ? 'Desactivar Usuario' : 'Activar Usuario'}
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => onDelete(user)}

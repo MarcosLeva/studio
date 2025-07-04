@@ -70,6 +70,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollToTopButton } from "@/components/scroll-to-top-button";
+import { cn } from "@/lib/utils";
 
 const userSchema = z.object({
   name: z.string().min(3, { message: "El nombre debe tener al menos 3 caracteres." }),
@@ -80,7 +81,7 @@ const userSchema = z.object({
 type UserFormValues = z.infer<typeof userSchema>;
 
 export default function UsersPage() {
-  const { managedUsers, addManagedUser, editManagedUser, deleteManagedUser } = useApp();
+  const { managedUsers, addManagedUser, editManagedUser, deleteManagedUser, toggleUserStatus } = useApp();
   const { toast } = useToast();
   const isMobile = useIsMobile();
   
@@ -135,6 +136,14 @@ export default function UsersPage() {
     setUserToDelete(user);
   }, []);
 
+  const handleToggleStatusClick = React.useCallback((user: User) => {
+    toggleUserStatus(user.id);
+    toast({
+      title: `Usuario ${user.status === 'activo' ? 'Desactivado' : 'Activado'}`,
+      description: `El estado de "${user.name}" ha sido actualizado.`,
+    });
+  }, [toggleUserStatus, toast]);
+
   const confirmDelete = () => {
     if (userToDelete) {
       deleteManagedUser(userToDelete.id);
@@ -146,7 +155,7 @@ export default function UsersPage() {
     }
   };
 
-  const columns = React.useMemo(() => getColumns(handleEditClick, handleDeleteClick), [handleEditClick, handleDeleteClick]);
+  const columns = React.useMemo(() => getColumns(handleEditClick, handleDeleteClick, handleToggleStatusClick), [handleEditClick, handleDeleteClick, handleToggleStatusClick]);
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -189,7 +198,16 @@ export default function UsersPage() {
             <div className="space-y-1">
               <p className="font-medium">{user.name}</p>
               <p className="text-sm text-muted-foreground">{user.email}</p>
-              <Badge variant={user.role === 'Administrador' ? 'default' : 'secondary'}>{user.role}</Badge>
+              <div className="flex items-center gap-4 pt-1">
+                <Badge variant={user.role === 'Administrador' ? 'default' : 'secondary'}>{user.role}</Badge>
+                <div className="flex items-center gap-1.5">
+                    <span className={cn(
+                        "h-2 w-2 rounded-full",
+                        user.status === 'activo' ? 'bg-green-500' : 'bg-gray-400'
+                    )} />
+                    <span className="text-xs text-muted-foreground capitalize">{user.status}</span>
+                </div>
+              </div>
             </div>
         </div>
         <div className="flex-shrink-0">
@@ -203,6 +221,9 @@ export default function UsersPage() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Acciones</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => handleEditClick(user)}>Editar Usuario</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleToggleStatusClick(user)}>
+                  {user.status === 'activo' ? 'Desactivar Usuario' : 'Activar Usuario'}
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => handleDeleteClick(user)}
