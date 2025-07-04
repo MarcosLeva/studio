@@ -6,6 +6,7 @@ import {
   flexRender,
   Table as ReactTable,
 } from "@tanstack/react-table";
+import { useTranslations } from "next-intl";
 
 import {
   Table,
@@ -24,6 +25,8 @@ interface DataTableProps<TData> {
 export function DataTable<TData>({
   table,
 }: DataTableProps<TData>) {
+  const t = useTranslations("DataTable");
+  
   return (
     <div className="rounded-b-md border-x border-b bg-card">
       <div className="relative w-full overflow-auto">
@@ -63,7 +66,7 @@ export function DataTable<TData>({
             ) : (
               <TableRow>
                 <TableCell colSpan={table.getAllColumns().length} className="h-24 text-center">
-                  No hay resultados.
+                  {t('noResults')}
                 </TableCell>
               </TableRow>
             )}
@@ -77,7 +80,7 @@ export function DataTable<TData>({
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
         >
-          Anterior
+          {t('previous')}
         </Button>
         <Button
           variant="outline"
@@ -85,7 +88,7 @@ export function DataTable<TData>({
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
         >
-          Siguiente
+          {t('next')}
         </Button>
       </div>
     </div>

@@ -5,6 +5,8 @@ import { UploadCloud, File as FileIcon, X } from "lucide-react";
 import * as React from "react";
 import { useDropzone, type DropzoneOptions, type FileRejection } from "react-dropzone";
 import { twMerge } from "tailwind-merge";
+import { useTranslations } from "next-intl";
+
 import { Button } from "./ui/button";
 
 const variants = {
@@ -27,6 +29,7 @@ type FileUploaderProps = {
 
 const FileUploader = React.forwardRef<HTMLInputElement, FileUploaderProps>(
   ({ className, value = [], onChange, disabled, dropzoneOptions }, ref) => {
+    const t = useTranslations("FileUploader");
     const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
     const [filesWithPreview, setFilesWithPreview] = React.useState<FileWithPreview[]>([]);
 
@@ -37,9 +40,9 @@ const FileUploader = React.forwardRef<HTMLInputElement, FileUploaderProps>(
           const firstError = fileRejections[0].errors[0];
           let message = firstError.message;
           if (firstError.code === 'file-too-large' && dropzoneOptions?.maxSize) {
-            message = `El archivo es demasiado grande. El tamaño máximo es ${Math.round(dropzoneOptions.maxSize / 1024 / 1024)}MB.`;
+            message = t('fileTooLargeError', { maxSize: Math.round(dropzoneOptions.maxSize / 1024 / 1024) });
           } else if (firstError.code === 'file-invalid-type') {
-            message = "Tipo de archivo no válido.";
+            message = t('invalidFileTypeError');
           }
           setErrorMessage(message);
           return;
@@ -50,7 +53,7 @@ const FileUploader = React.forwardRef<HTMLInputElement, FileUploaderProps>(
           onChange?.(newFiles);
         }
       },
-      [value, onChange, dropzoneOptions]
+      [value, onChange, dropzoneOptions, t]
     );
 
     const {
@@ -110,10 +113,12 @@ const FileUploader = React.forwardRef<HTMLInputElement, FileUploaderProps>(
             <div className="flex flex-col items-center justify-center text-center">
                 <UploadCloud className="h-6 w-6 text-muted-foreground" />
                 <p className="mt-2 text-sm text-foreground">
-                <span className="font-semibold">Arrastra y suelta</span> o haz clic para añadir
+                  <span className="font-semibold">{t.rich('dropzoneText', {
+                    span: (chunks) => <span className="font-semibold">{chunks}</span>
+                  })}</span>
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                Soporta TXT, PDF e imágenes.
+                {t('supportedFiles')}
                 </p>
                 {errorMessage && (
                 <p className="mt-2 text-xs font-semibold text-destructive">{errorMessage}</p>
@@ -122,7 +127,7 @@ const FileUploader = React.forwardRef<HTMLInputElement, FileUploaderProps>(
         </div>
         {filesWithPreview.length > 0 && (
           <div className="space-y-2">
-            <h3 className="text-sm font-medium">Archivos subidos</h3>
+            <h3 className="text-sm font-medium">{t('uploadedFiles')}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {filesWithPreview.map((file, index) => (
                 <div key={`${file.name}-${index}`} className="relative group aspect-square rounded-lg border bg-card overflow-hidden">

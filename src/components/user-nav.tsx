@@ -4,6 +4,7 @@
 import { CreditCard, LogOut, Settings, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import { useApp } from "@/app/store";
 export function UserNav() {
   const router = useRouter();
   const { user } = useApp();
+  const t = useTranslations("UserNav");
 
   const handleLogout = () => {
     router.push("/login");
@@ -52,25 +54,25 @@ export function UserNav() {
           <DropdownMenuItem asChild>
             <Link href="/profile">
                 <User className="mr-2 h-4 w-4" />
-                <span>Perfil</span>
+                <span>{t('profile')}</span>
                 <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem>
             <CreditCard className="mr-2 h-4 w-4" />
-            <span>Facturación</span>
+            <span>{t('billing')}</span>
             <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
           </DropdownMenuItem>
           <DropdownMenuItem>
             <Settings className="mr-2 h-4 w-4" />
-            <span>Configuración</span>
+            <span>{t('settings')}</span>
             <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Cerrar sesión</span>
+          <span>{t('logout')}</span>
           <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
         </DropdownMenuItem>
       </DropdownMenuContent>

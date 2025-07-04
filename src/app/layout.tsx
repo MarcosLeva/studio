@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter, Space_Grotesk } from 'next/font/google';
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { AppProvider } from '@/app/store';
@@ -19,28 +21,34 @@ const spaceGrotesk = Space_Grotesk({
 
 export const metadata: Metadata = {
   title: 'COCOCO Scan',
-  description: 'Análisis de Catálogos con IA',
+  description: 'AI-Powered Catalog Analysis',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
+  params: { locale },
 }: Readonly<{
   children: React.ReactNode;
+  params: { locale: string };
 }>) {
+  const messages = await getMessages();
+
   return (
-    <html lang="es" suppressHydrationWarning className={`${inter.variable} ${spaceGrotesk.variable}`}>
+    <html lang={locale} suppressHydrationWarning className={`${inter.variable} ${spaceGrotesk.variable}`}>
       <body>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <AppProvider>
-            {children}
-            <Toaster />
-          </AppProvider>
-        </ThemeProvider>
+        <NextIntlClientProvider messages={messages}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <AppProvider>
+              {children}
+              <Toaster />
+            </AppProvider>
+          </ThemeProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );
