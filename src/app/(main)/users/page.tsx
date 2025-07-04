@@ -126,12 +126,13 @@ export default function UsersPage() {
   }, [newlyAddedUserId]);
 
   React.useEffect(() => {
+    setIsFiltering(true);
     const timeout = setTimeout(() => {
       setGlobalFilter(filterValue);
       if (isMounted.current) {
         setIsFiltering(false);
       }
-    }, 300);
+    }, 500);
     return () => clearTimeout(timeout);
   }, [filterValue]);
 
@@ -295,7 +296,6 @@ export default function UsersPage() {
         placeholder="Filtrar por nombre o correo..."
         value={filterValue}
         onChange={(event) => {
-          setIsFiltering(true);
           setFilterValue(event.target.value);
         }}
         className="w-full sm:max-w-sm"
@@ -589,3 +589,5 @@ export default function UsersPage() {
     </div>
   );
 }
+
+    

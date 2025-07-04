@@ -265,16 +265,18 @@ export default function CategoriesPage() {
   });
 
   React.useEffect(() => {
+    setIsFiltering(true);
     const timeout = setTimeout(() => {
       table.getColumn("name")?.setFilterValue(filterValue);
-      setIsFiltering(false);
-    }, 300);
+      if (isMounted.current) {
+        setIsFiltering(false);
+      }
+    }, 500);
 
     return () => clearTimeout(timeout);
   }, [filterValue, table]);
 
   const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setIsFiltering(true);
     setFilterValue(event.target.value);
   };
   
@@ -588,3 +590,5 @@ export default function CategoriesPage() {
     </div>
   );
 }
+
+    
