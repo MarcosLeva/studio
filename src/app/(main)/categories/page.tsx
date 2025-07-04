@@ -329,14 +329,14 @@ export default function CategoriesPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold">Categorías</h1>
           <p className="text-muted-foreground">
             Gestiona tus categorías de análisis aquí.
           </p>
         </div>
-        <Button onClick={handleCreateClick}>
+        <Button onClick={handleCreateClick} className="w-full sm:w-auto">
             <PlusCircle className="mr-2 h-4 w-4" />
             Nueva Categoría
         </Button>

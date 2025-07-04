@@ -203,13 +203,13 @@ export default function ProfilePage() {
                   </div>
               </div>
             </CardContent>
-            <CardFooter className="border-t px-6 py-4 flex justify-end gap-2">
+            <CardFooter className="border-t px-6 py-4 flex flex-col sm:flex-row sm:justify-end gap-2">
                   <Dialog open={isPasswordDialogOpen} onOpenChange={(isOpen) => {
                     setIsPasswordDialogOpen(isOpen);
                     if (!isOpen) passwordForm.reset();
                   }}>
                     <DialogTrigger asChild>
-                        <Button type="button" variant="outline">
+                        <Button type="button" variant="outline" className="w-full sm:w-auto">
                             <KeyRound className="mr-2 h-4 w-4" />
                             Cambiar Contraseña
                         </Button>
@@ -279,7 +279,7 @@ export default function ProfilePage() {
                   if (!isOpen) form.reset();
                 }}>
                     <DialogTrigger asChild>
-                        <Button>
+                        <Button className="w-full sm:w-auto">
                             <Pencil className="mr-2 h-4 w-4" />
                             Editar Perfil
                         </Button>
