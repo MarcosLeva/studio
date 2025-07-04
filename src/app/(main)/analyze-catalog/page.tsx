@@ -211,7 +211,7 @@ export default function AnalyzeCatalogPage() {
 
               <div className="flex items-center justify-between rounded-lg border bg-secondary/50 p-4">
                   <div className="flex items-center gap-3">
-                      <Lightbulb className="h-8 w-8 text-accent-foreground/80" />
+                      <Lightbulb className="h-8 w-8 text-accent" />
                       <p className="text-sm text-muted-foreground">
                         La IA analizará el archivo basándose en el prompt y las instrucciones definidas en la categoría seleccionada.
                       </p>
