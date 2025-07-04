@@ -71,6 +71,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollToTopButton } from "@/components/scroll-to-top-button";
 import { cn } from "@/lib/utils";
+import { LogoSpinner } from "@/components/ui/logo-spinner";
 
 const userSchema = z.object({
   name: z.string().min(3, { message: "El nombre debe tener al menos 3 caracteres." }),
@@ -90,6 +91,7 @@ export default function UsersPage() {
   const [userToDelete, setUserToDelete] = React.useState<User | null>(null);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = React.useState(false);
   const [visibleRows, setVisibleRows] = React.useState(10);
+  const [isFiltering, setIsFiltering] = React.useState(false);
   
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
@@ -108,6 +110,22 @@ export default function UsersPage() {
         isMounted.current = false;
     };
   }, []);
+
+  const isInitialMount = React.useRef(true);
+  React.useEffect(() => {
+    if (isInitialMount.current) {
+        isInitialMount.current = false;
+        return;
+    }
+    setIsFiltering(true);
+    const timer = setTimeout(() => {
+        if (isMounted.current) {
+            setIsFiltering(false);
+        }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [globalFilter, columnFilters]);
 
   const handleEditClick = React.useCallback((user: User) => {
     setEditingUser(user);
@@ -365,41 +383,48 @@ export default function UsersPage() {
         </Button>
       </div>
 
-      {isMobile ? (
-        <div className="space-y-4">
-          {toolbarContent}
-          {table.getRowModel().rows?.length ? (
-            <div className="space-y-4">
-              {table.getRowModel().rows.slice(0, visibleRows).map((row) => (
-                <MobileUserCard key={row.id} user={row.original} />
-              ))}
-               {visibleRows < table.getRowModel().rows.length && (
-                <Button
-                  onClick={() => setVisibleRows(prev => prev + 10)}
-                  variant="outline"
-                  className="w-full"
-                >
-                  Cargar más
-                </Button>
-              )}
+      <div className="relative">
+        {isMobile ? (
+          <div className="space-y-4">
+            {toolbarContent}
+            {table.getRowModel().rows?.length ? (
+              <div className="space-y-4">
+                {table.getRowModel().rows.slice(0, visibleRows).map((row) => (
+                  <MobileUserCard key={row.id} user={row.original} />
+                ))}
+                {visibleRows < table.getRowModel().rows.length && (
+                  <Button
+                    onClick={() => setVisibleRows(prev => prev + 10)}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Cargar más
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-10 text-muted-foreground">No hay usuarios.</div>
+            )}
+          </div>
+        ) : (
+          <DataTable
+            table={table}
+            toolbar={() => toolbarContent}
+            bulkActions={(table) => (
+              <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={() => handleBulkToggleStatus('activo')}>Activar</Button>
+                  <Button variant="outline" size="sm" onClick={() => handleBulkToggleStatus('inactivo')}>Desactivar</Button>
+                  <Button variant="destructive" size="sm" onClick={() => setIsBulkDeleteOpen(true)}>Eliminar</Button>
+              </div>
+            )}
+          />
+        )}
+        {isFiltering && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-card/80 backdrop-blur-sm">
+                <LogoSpinner />
             </div>
-          ) : (
-             <div className="text-center py-10 text-muted-foreground">No hay usuarios.</div>
-          )}
-        </div>
-      ) : (
-        <DataTable
-          table={table}
-          toolbar={() => toolbarContent}
-          bulkActions={(table) => (
-            <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => handleBulkToggleStatus('activo')}>Activar</Button>
-                <Button variant="outline" size="sm" onClick={() => handleBulkToggleStatus('inactivo')}>Desactivar</Button>
-                <Button variant="destructive" size="sm" onClick={() => setIsBulkDeleteOpen(true)}>Eliminar</Button>
-            </div>
-          )}
-        />
-      )}
+        )}
+      </div>
 
 
       <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>

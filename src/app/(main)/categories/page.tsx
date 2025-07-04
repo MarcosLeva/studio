@@ -260,16 +260,25 @@ export default function CategoriesPage() {
       rowSelection,
     },
   });
+
+  const isInitialMount = React.useRef(true);
+  React.useEffect(() => {
+    if (isInitialMount.current) {
+        isInitialMount.current = false;
+        return;
+    }
+    setIsFiltering(true);
+    const timer = setTimeout(() => {
+      if (isMounted.current) {
+        setIsFiltering(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [columnFilters]);
   
   const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setIsFiltering(true);
-    const value = event.target.value;
-    table.getColumn("name")?.setFilterValue(value);
-
-    // Debounce effect
-    setTimeout(() => {
-      setIsFiltering(false);
-    }, 500);
+    table.getColumn("name")?.setFilterValue(event.target.value);
   };
 
   const MobileCategoryCard = ({ category }: { category: Category }) => (
