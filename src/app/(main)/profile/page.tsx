@@ -31,6 +31,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { PasswordInput } from "@/components/ui/password-input";
 
 const profileSchema = z.object({
   name: z.string().min(3, { message: "El nombre debe tener al menos 3 caracteres." }),
@@ -207,7 +208,7 @@ export default function ProfilePage() {
                   </div>
               </div>
             </CardContent>
-            <CardFooter className="border-t px-6 py-4 flex flex-col sm:flex-row sm:justify-end gap-4">
+            <CardFooter className="flex-col sm:flex-row sm:justify-end gap-3 sm:gap-4">
                   <Dialog open={isPasswordDialogOpen} onOpenChange={(isOpen) => {
                     setIsPasswordDialogOpen(isOpen);
                     if (!isOpen) passwordForm.reset();
@@ -234,7 +235,7 @@ export default function ProfilePage() {
                                     <FormItem>
                                         <FormLabel>Contraseña Actual</FormLabel>
                                         <FormControl>
-                                        <Input type="password" placeholder="••••••••" {...field} />
+                                        <PasswordInput placeholder="••••••••" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -247,7 +248,7 @@ export default function ProfilePage() {
                                     <FormItem>
                                         <FormLabel>Nueva Contraseña</FormLabel>
                                         <FormControl>
-                                        <Input type="password" placeholder="••••••••" {...field} />
+                                        <PasswordInput placeholder="••••••••" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -260,7 +261,7 @@ export default function ProfilePage() {
                                     <FormItem>
                                         <FormLabel>Confirmar Nueva Contraseña</FormLabel>
                                         <FormControl>
-                                        <Input type="password" placeholder="••••••••" {...field} />
+                                        <PasswordInput placeholder="••••••••" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

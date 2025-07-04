@@ -15,6 +15,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarTrigger,
+  SidebarClose,
 } from '@/components/ui/sidebar';
 import { UserNav } from '@/components/user-nav';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -46,9 +47,12 @@ export default function DashboardLayout({
         <Sidebar>
           <SidebarContent>
             <SidebarHeader>
-              <div className="flex items-center gap-2 p-2">
-                <QrCode className="h-8 w-8 text-primary" />
-                <span className="text-xl font-headline font-semibold">COCOCO Scan</span>
+              <div className="flex items-center justify-between p-2">
+                <div className='flex items-center gap-2'>
+                    <QrCode className="h-8 w-8 text-primary" />
+                    <span className="text-xl font-headline font-semibold">COCOCO Scan</span>
+                </div>
+                <SidebarClose />
               </div>
             </SidebarHeader>
             <SidebarMenu>
