@@ -20,7 +20,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { useApp } from "@/app/store";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, CheckCircle2, AlertTriangle, KeyRound } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle, KeyRound, Pencil } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -52,9 +52,10 @@ type PasswordFormValues = z.infer<typeof passwordSchema>;
 export default function ProfilePage() {
   const { user, editUser } = useApp();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = React.useState(false);
+  const [isProfileLoading, setIsProfileLoading] = React.useState(false);
   const [isPasswordLoading, setIsPasswordLoading] = React.useState(false);
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = React.useState(false);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = React.useState(false);
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const isMounted = React.useRef(true);
@@ -91,9 +92,8 @@ export default function ProfilePage() {
   }, [user, form]);
 
 
-  const onSubmit = (data: ProfileFormValues) => {
-    setIsLoading(true);
-    // Simulate API call
+  const onProfileSubmit = (data: ProfileFormValues) => {
+    setIsProfileLoading(true);
     setTimeout(() => {
       if (isMounted.current) {
         editUser({ name: data.name, email: data.email });
@@ -102,14 +102,14 @@ export default function ProfilePage() {
           description: "Tu información ha sido actualizada con éxito.",
           icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
         });
-        setIsLoading(false);
+        setIsProfileLoading(false);
+        setIsProfileDialogOpen(false);
       }
     }, 1000);
   };
 
   const onPasswordSubmit = (data: PasswordFormValues) => {
     setIsPasswordLoading(true);
-    // Simulate API call for password change
     setTimeout(() => {
         if(isMounted.current){
             console.log("Password change data:", data);
@@ -166,148 +166,171 @@ export default function ProfilePage() {
         </p>
       </div>
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-            <Card>
-                <CardHeader>
-                <CardTitle>Detalles del Perfil</CardTitle>
-                <CardDescription>
-                    Edita tu nombre, correo electrónico y foto de perfil.
-                </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-8">
-                <div className="flex items-center space-x-6">
-                    <Avatar className="h-24 w-24">
-                    <AvatarImage src={user.avatar} alt={user.name} data-ai-hint="user avatar" />
-                    <AvatarFallback>{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleAvatarChange}
-                    className="hidden"
-                    accept="image/*"
-                    />
-                    <Button type="button" variant="outline" onClick={handleButtonClick}>
-                    Cambiar Foto
-                    </Button>
-                </div>
+        <Card>
+            <CardHeader>
+            <CardTitle>Detalles del Perfil</CardTitle>
+            <CardDescription>
+                Edita tu nombre, correo electrónico y foto de perfil.
+            </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center space-x-6">
+                  <Avatar className="h-24 w-24">
+                  <AvatarImage src={user.avatar} alt={user.name} data-ai-hint="user avatar" />
+                  <AvatarFallback>{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                  accept="image/*"
+                  />
+                  <Button type="button" variant="outline" onClick={handleButtonClick}>
+                  Cambiar Foto
+                  </Button>
+              </div>
 
-                <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Nombre</FormLabel>
-                        <FormControl>
-                        <Input placeholder="Tu nombre" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-
-                <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Correo Electrónico</FormLabel>
-                        <FormControl>
-                        <Input type="email" placeholder="tu@email.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                </CardContent>
-                <CardFooter className="border-t px-6 py-4 flex justify-between">
-                     <Dialog open={isPasswordDialogOpen} onOpenChange={(isOpen) => {
-                        setIsPasswordDialogOpen(isOpen);
-                        if (!isOpen) {
-                            passwordForm.reset();
-                        }
-                    }}>
-                        <DialogTrigger asChild>
-                            <Button type="button" variant="outline">
-                                <KeyRound className="mr-2 h-4 w-4" />
-                                Cambiar Contraseña
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-md">
-                            <DialogHeader>
-                                <DialogTitle>Cambiar Contraseña</DialogTitle>
-                                <DialogDescription>
-                                    Usa una contraseña segura para proteger tu cuenta.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <Form {...passwordForm}>
-                                <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
-                                    <FormField
-                                        control={passwordForm.control}
-                                        name="currentPassword"
-                                        render={({ field }) => (
+              <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">Nombre</Label>
+                    <p className="text-lg">{user.name}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">Correo Electrónico</Label>
+                    <p className="text-lg">{user.email}</p>
+                  </div>
+              </div>
+            </CardContent>
+            <CardFooter className="border-t px-6 py-4 flex justify-end gap-2">
+                  <Dialog open={isPasswordDialogOpen} onOpenChange={(isOpen) => {
+                    setIsPasswordDialogOpen(isOpen);
+                    if (!isOpen) passwordForm.reset();
+                  }}>
+                    <DialogTrigger asChild>
+                        <Button type="button" variant="outline">
+                            <KeyRound className="mr-2 h-4 w-4" />
+                            Cambiar Contraseña
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Cambiar Contraseña</DialogTitle>
+                            <DialogDescription>
+                                Usa una contraseña segura para proteger tu cuenta.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <Form {...passwordForm}>
+                            <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
+                                <FormField
+                                    control={passwordForm.control}
+                                    name="currentPassword"
+                                    render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Contraseña Actual</FormLabel>
+                                        <FormControl>
+                                        <Input type="password" placeholder="••••••••" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={passwordForm.control}
+                                    name="newPassword"
+                                    render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Nueva Contraseña</FormLabel>
+                                        <FormControl>
+                                        <Input type="password" placeholder="••••••••" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={passwordForm.control}
+                                    name="confirmPassword"
+                                    render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Confirmar Nueva Contraseña</FormLabel>
+                                        <FormControl>
+                                        <Input type="password" placeholder="••••••••" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                    )}
+                                />
+                                <DialogFooter>
+                                    <Button type="button" variant="outline" onClick={() => setIsPasswordDialogOpen(false)}>Cancelar</Button>
+                                    <Button type="submit" disabled={isPasswordLoading}>
+                                        {isPasswordLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        Guardar Contraseña
+                                    </Button>
+                                </DialogFooter>
+                            </form>
+                        </Form>
+                    </DialogContent>
+                </Dialog>
+                
+                <Dialog open={isProfileDialogOpen} onOpenChange={(isOpen) => {
+                  setIsProfileDialogOpen(isOpen);
+                  if (!isOpen) form.reset();
+                }}>
+                    <DialogTrigger asChild>
+                        <Button>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Editar Perfil
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Editar Perfil</DialogTitle>
+                            <DialogDescription>
+                                Actualiza tu nombre y correo electrónico.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <Form {...form}>
+                            <form onSubmit={form.handleSubmit(onProfileSubmit)} className="space-y-4">
+                                <FormField
+                                    control={form.control}
+                                    name="name"
+                                    render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Contraseña Actual</FormLabel>
+                                            <FormLabel>Nombre</FormLabel>
                                             <FormControl>
-                                            <Input type="password" placeholder="••••••••" {...field} />
+                                                <Input placeholder="Tu nombre" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={passwordForm.control}
-                                        name="newPassword"
-                                        render={({ field }) => (
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="email"
+                                    render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Nueva Contraseña</FormLabel>
+                                            <FormLabel>Correo Electrónico</FormLabel>
                                             <FormControl>
-                                            <Input type="password" placeholder="••••••••" {...field} />
+                                                <Input type="email" placeholder="tu@email.com" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={passwordForm.control}
-                                        name="confirmPassword"
-                                        render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Confirmar Nueva Contraseña</FormLabel>
-                                            <FormControl>
-                                            <Input type="password" placeholder="••••••••" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                        )}
-                                    />
-                                    <DialogFooter>
-                                        <Button type="button" variant="outline" onClick={() => setIsPasswordDialogOpen(false)}>Cancelar</Button>
-                                        <Button type="submit" disabled={isPasswordLoading}>
-                                            {isPasswordLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                            Guardar Contraseña
-                                        </Button>
-                                    </DialogFooter>
-                                </form>
-                            </Form>
-                        </DialogContent>
-                    </Dialog>
-
-                    <Button type="submit" disabled={isLoading}>
-                        {isLoading ? (
-                        <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Guardando...
-                        </>
-                        ) : (
-                        "Guardar Cambios"
-                        )}
-                    </Button>
-                </CardFooter>
-            </Card>
-        </form>
-      </Form>
+                                    )}
+                                />
+                                <DialogFooter>
+                                    <Button type="button" variant="outline" onClick={() => setIsProfileDialogOpen(false)}>Cancelar</Button>
+                                    <Button type="submit" disabled={isProfileLoading}>
+                                        {isProfileLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        Guardar Cambios
+                                    </Button>
+                                </DialogFooter>
+                            </form>
+                        </Form>
+                    </DialogContent>
+                </Dialog>
+            </CardFooter>
+        </Card>
     </div>
   );
 }
