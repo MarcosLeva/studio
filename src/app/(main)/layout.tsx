@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/sidebar';
 import { UserNav } from '@/components/user-nav';
 import { cn } from '@/lib/utils';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function DashboardLayout({
   children,
@@ -85,7 +86,10 @@ export default function DashboardLayout({
                   </Link>
               </div>
             </div>
-            <UserNav />
+            <div className="flex items-center gap-4">
+                <ThemeToggle />
+                <UserNav />
+            </div>
           </header>
           <main key={pathname} className="flex-1 overflow-y-auto p-4 sm:p-6 animate-fade-in">
             {children}
