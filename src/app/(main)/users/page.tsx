@@ -2,10 +2,20 @@
 "use client";
 
 import React from "react";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, MoreHorizontal } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import {
+  useReactTable,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  type SortingState,
+  type ColumnFiltersState,
+} from "@tanstack/react-table";
+
 
 import { Button } from "@/components/ui/button";
 import {
@@ -47,6 +57,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const userSchema = z.object({
   name: z.string().min(3, { message: "El nombre debe tener al menos 3 caracteres." }),
@@ -59,10 +81,10 @@ type UserFormValues = z.infer<typeof userSchema>;
 export default function UsersPage() {
   const { managedUsers, addManagedUser, editManagedUser, deleteManagedUser } = useApp();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [editingUser, setEditingUser] = React.useState<User | null>(null);
-  
   const [userToDelete, setUserToDelete] = React.useState<User | null>(null);
   
   const form = useForm<UserFormValues>({
@@ -124,6 +146,72 @@ export default function UsersPage() {
 
   const columns = React.useMemo(() => getColumns(handleEditClick, handleDeleteClick), [handleEditClick, handleDeleteClick]);
 
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+
+  const table = useReactTable({
+    data: managedUsers,
+    columns,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    state: {
+      sorting,
+      columnFilters,
+    },
+  });
+
+  const toolbar = (
+    <Input
+        placeholder="Filtrar por nombre..."
+        value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+        onChange={(event) => table.getColumn("name")?.setFilterValue(event.target.value)}
+        className="max-w-sm"
+    />
+  );
+  
+  const MobileUserCard = ({ user }: { user: User }) => (
+    <Card>
+      <CardContent className="p-4 flex justify-between items-start gap-4">
+        <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={user.avatar} alt={user.name} data-ai-hint="user avatar" />
+              <AvatarFallback>{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <div className="space-y-1">
+              <p className="font-medium">{user.name}</p>
+              <p className="text-sm text-muted-foreground">{user.email}</p>
+              <Badge variant={user.role === 'Administrador' ? 'default' : 'secondary'}>{user.role}</Badge>
+            </div>
+        </div>
+        <div className="flex-shrink-0">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Abrir menú</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => handleEditClick(user)}>Editar Usuario</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => handleDeleteClick(user)}
+                className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+              >
+                Eliminar Usuario
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -139,18 +227,33 @@ export default function UsersPage() {
         </Button>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={managedUsers}
-        toolbar={(table) => (
-            <Input
-              placeholder="Filtrar por nombre..."
-              value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-              onChange={(event) => table.getColumn("name")?.setFilterValue(event.target.value)}
-              className="max-w-sm"
-            />
-        )}
-      />
+      {isMobile ? (
+        <div className="space-y-4">
+          {toolbar}
+          {table.getRowModel().rows?.length ? (
+            <div className="space-y-4">
+              {table.getRowModel().rows.map((row) => (
+                <MobileUserCard key={row.id} user={row.original} />
+              ))}
+            </div>
+          ) : (
+             <div className="text-center py-10 text-muted-foreground">No hay usuarios.</div>
+          )}
+        </div>
+      ) : (
+        <DataTable
+          table={table}
+          toolbar={(table) => (
+              <Input
+                placeholder="Filtrar por nombre..."
+                value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+                onChange={(event) => table.getColumn("name")?.setFilterValue(event.target.value)}
+                className="max-w-sm"
+              />
+          )}
+        />
+      )}
+
 
       <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
         <DialogContent className="sm:max-w-lg">

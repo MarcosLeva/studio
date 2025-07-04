@@ -2,10 +2,19 @@
 "use client";
 
 import React from "react";
-import { PlusCircle, Lightbulb, Loader2 } from "lucide-react";
+import { PlusCircle, Lightbulb, Loader2, MoreHorizontal } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import {
+  useReactTable,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  type SortingState,
+  type ColumnFiltersState,
+} from "@tanstack/react-table";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -42,6 +51,17 @@ import { suggestCategoryPrompt } from "@/ai/flows/suggest-category-prompt";
 import type { Category } from "@/lib/types";
 import { FileUploader } from "@/components/file-uploader";
 import { LogoSpinner } from "@/components/ui/logo-spinner";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const categorySchema = z.object({
   name: z.string().min(3, { message: "El nombre de la categoría debe tener al menos 3 caracteres." }),
@@ -68,6 +88,7 @@ export default function CategoriesPage() {
   const [editingCategory, setEditingCategory] = React.useState<Category | null>(null);
   const [isSuggesting, setIsSuggesting] = React.useState(false);
   const [isFiltering, setIsFiltering] = React.useState(false);
+  const isMobile = useIsMobile();
 
   const form = useForm<z.infer<typeof categorySchema>>({
     resolver: zodResolver(categorySchema),
@@ -156,15 +177,68 @@ export default function CategoriesPage() {
 
   const columns = React.useMemo(() => getColumns(handleEditClick), [handleEditClick]);
   
-  const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>, table: any) => {
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+
+  const table = useReactTable({
+    data: categories,
+    columns,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    state: {
+      sorting,
+      columnFilters,
+    },
+  });
+  
+  const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setIsFiltering(true);
     const value = event.target.value;
     table.getColumn("name")?.setFilterValue(value);
 
+    // Debounce effect
     setTimeout(() => {
       setIsFiltering(false);
-    }, 1000);
+    }, 500);
   };
+
+  const MobileCategoryCard = ({ category }: { category: Category }) => (
+    <Card>
+      <CardContent className="p-4 flex justify-between items-start gap-4">
+        <div className="space-y-2 flex-grow">
+          <p className="font-bold">{category.name}</p>
+          <p className="text-sm text-muted-foreground line-clamp-2">{category.description}</p>
+          <div className="flex items-center gap-2 pt-1">
+             <Badge variant={category.aiModel === 'Gemini Pro' ? 'secondary' : 'default'}>{category.aiModel}</Badge>
+             <span className="text-xs text-muted-foreground">{category.dateCreated}</span>
+          </div>
+        </div>
+        <div className="flex-shrink-0">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Abrir menú</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => navigator.clipboard.writeText(category.id)}>
+                Copiar ID de Categoría
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleEditClick(category)}>Editar</DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive">Eliminar</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <div>
@@ -330,18 +404,37 @@ export default function CategoriesPage() {
       </Dialog>
 
       <div className="relative">
-        <DataTable
-            columns={columns}
-            data={categories}
-            toolbar={(table) => (
-                <Input
-                placeholder="Filtrar categorías..."
-                value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-                onChange={(event) => handleFilterChange(event, table)}
-                className="max-w-sm"
-                />
+        {isMobile ? (
+          <div className="space-y-4">
+            <Input
+              placeholder="Filtrar categorías..."
+              value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+              onChange={handleFilterChange}
+              className="max-w-sm"
+            />
+            {table.getRowModel().rows?.length ? (
+                <div className="space-y-4">
+                    {table.getRowModel().rows.map((row) => (
+                        <MobileCategoryCard key={row.id} category={row.original} />
+                    ))}
+                </div>
+            ) : (
+              <div className="text-center py-10 text-muted-foreground">No hay categorías.</div>
             )}
-        />
+          </div>
+        ) : (
+            <DataTable
+                table={table}
+                toolbar={(table) => (
+                    <Input
+                    placeholder="Filtrar categorías..."
+                    value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+                    onChange={handleFilterChange}
+                    className="max-w-sm"
+                    />
+                )}
+            />
+        )}
         {isFiltering && (
             <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-card/80 backdrop-blur-sm">
                 <LogoSpinner />

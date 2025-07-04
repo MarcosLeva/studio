@@ -28,12 +28,32 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LogoSpinner } from "@/components/ui/logo-spinner";
+import {
+  useReactTable,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  type SortingState,
+  type ColumnFiltersState,
+} from "@tanstack/react-table";
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal } from "lucide-react";
 
 export default function ScannedResultsPage() {
   const { results, deleteScanResult } = useApp();
   const { toast } = useToast();
   const [resultToDelete, setResultToDelete] = React.useState<ScanResult | null>(null);
   const [isFiltering, setIsFiltering] = React.useState(false);
+  const isMobile = useIsMobile();
 
   const handleDelete = React.useCallback((result: ScanResult) => {
     setResultToDelete(result);
@@ -69,22 +89,98 @@ export default function ScannedResultsPage() {
     });
   }, [toast]);
   
-  const handleFilterChange = (value: string, table: any) => {
+  const columns = React.useMemo(() => getColumns(handleExport, handleDelete), [handleExport, handleDelete]);
+
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  
+  const table = useReactTable({
+    data: results,
+    columns,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    state: {
+      sorting,
+      columnFilters,
+    },
+  });
+
+  const handleFilterChange = (value: string) => {
     setIsFiltering(true);
     const filterValue = value === "All" ? "" : value;
     table.getColumn("category")?.setFilterValue(filterValue);
 
     setTimeout(() => {
         setIsFiltering(false);
-    }, 1000);
+    }, 500);
   };
-
-  const columns = React.useMemo(() => getColumns(handleExport, handleDelete), [handleExport, handleDelete]);
-
+  
   const categoryNames = React.useMemo(() => [
     "All",
     ...Array.from(new Set(results.map((r) => r.category))),
   ], [results]);
+  
+  const toolbar = (
+    <Select
+        value={
+        (table.getColumn("category")?.getFilterValue() as string) ?? "All"
+        }
+        onValueChange={handleFilterChange}
+    >
+        <SelectTrigger className="w-full sm:w-[220px]">
+        <SelectValue placeholder="Filtrar por categoría" />
+        </SelectTrigger>
+        <SelectContent>
+        {categoryNames.map((category) => (
+            <SelectItem key={category} value={category}>
+            {category === "All" ? "Todas las categorías" : category}
+            </SelectItem>
+        ))}
+        </SelectContent>
+    </Select>
+  );
+
+  const MobileResultCard = ({ result }: { result: ScanResult }) => (
+    <Card>
+      <CardContent className="p-4 flex justify-between items-start gap-4">
+        <div className="space-y-2 flex-grow">
+          <p className="font-bold">{result.catalogName}</p>
+          <p className="text-sm text-muted-foreground line-clamp-3">{result.analysis}</p>
+          <div className="flex items-center gap-2 pt-1">
+             <span className="text-xs font-medium bg-secondary text-secondary-foreground px-2 py-1 rounded-full">{result.category}</span>
+             <span className="text-xs text-muted-foreground">{result.dateScanned}</span>
+          </div>
+        </div>
+        <div className="flex-shrink-0">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Abrir menú</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => handleExport(result)}>
+                Exportar como Excel
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => handleDelete(result)}
+                className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+              >
+                Eliminar
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   if (results.length === 0) {
     return (
@@ -119,29 +215,23 @@ export default function ScannedResultsPage() {
       </div>
 
       <div className="relative">
-        <DataTable
-            columns={columns}
-            data={results}
-            toolbar={(table) => (
-            <Select
-                value={
-                (table.getColumn("category")?.getFilterValue() as string) ?? "All"
-                }
-                onValueChange={(value) => handleFilterChange(value, table)}
-            >
-                <SelectTrigger className="w-full sm:w-[220px]">
-                <SelectValue placeholder="Filtrar por categoría" />
-                </SelectTrigger>
-                <SelectContent>
-                {categoryNames.map((category) => (
-                    <SelectItem key={category} value={category}>
-                    {category === "All" ? "Todas las categorías" : category}
-                    </SelectItem>
-                ))}
-                </SelectContent>
-            </Select>
+        {isMobile ? (
+          <div className="space-y-4">
+            {toolbar}
+            {table.getRowModel().rows?.length ? (
+                <div className="space-y-4">
+                    {table.getRowModel().rows.map((row) => (
+                        <MobileResultCard key={row.id} result={row.original} />
+                    ))}
+                </div>
+            ) : (
+              <div className="text-center py-10 text-muted-foreground">No hay resultados.</div>
             )}
-        />
+          </div>
+        ) : (
+          <DataTable table={table} toolbar={() => toolbar} />
+        )}
+
         {isFiltering && (
             <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-card/80 backdrop-blur-sm">
                 <LogoSpinner />
