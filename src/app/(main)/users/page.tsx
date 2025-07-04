@@ -205,13 +205,63 @@ export default function UsersPage() {
     });
   }
 
-  const toolbar = (
-    <Input
+  const roles = [
+    { value: "Administrador", label: "Administrador" },
+    { value: "Miembro", label: "Miembro" },
+  ];
+  
+  const statuses = [
+    { value: "activo", label: "Activo" },
+    { value: "inactivo", label: "Inactivo" },
+  ];
+
+  const toolbarContent = (
+    <div className="flex w-full flex-col items-center gap-2 sm:flex-row">
+      <Input
         placeholder="Filtrar por nombre o correo..."
         value={globalFilter ?? ""}
         onChange={(event) => setGlobalFilter(event.target.value)}
-        className="max-w-sm"
-    />
+        className="w-full sm:max-w-sm"
+      />
+      <div className="flex w-full gap-2 sm:ml-auto sm:w-auto sm:flex-shrink-0">
+        <Select
+          value={(table.getColumn("role")?.getFilterValue() as string) ?? ""}
+          onValueChange={(value) =>
+            table.getColumn("role")?.setFilterValue(value || undefined)
+          }
+        >
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder="Filtrar por rol" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Todos los roles</SelectItem>
+            {roles.map((role) => (
+              <SelectItem key={role.value} value={role.value}>
+                {role.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={(table.getColumn("status")?.getFilterValue() as string) ?? ""}
+          onValueChange={(value) =>
+            table.getColumn("status")?.setFilterValue(value || undefined)
+          }
+        >
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder="Filtrar por estado" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Todos los estados</SelectItem>
+            {statuses.map((status) => (
+              <SelectItem key={status.value} value={status.value}>
+                {status.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
   );
   
   const MobileUserCard = ({ user }: { user: User }) => (
@@ -282,13 +332,13 @@ export default function UsersPage() {
 
       {isMobile ? (
         <div className="space-y-4">
-          {toolbar}
-          {table.getFilteredRowModel().rows?.length ? (
+          {toolbarContent}
+          {table.getRowModel().rows?.length ? (
             <div className="space-y-4">
-              {table.getFilteredRowModel().rows.slice(0, visibleRows).map((row) => (
+              {table.getRowModel().rows.slice(0, visibleRows).map((row) => (
                 <MobileUserCard key={row.id} user={row.original} />
               ))}
-               {visibleRows < table.getFilteredRowModel().rows.length && (
+               {visibleRows < table.getRowModel().rows.length && (
                 <Button
                   onClick={() => setVisibleRows(prev => prev + 10)}
                   variant="outline"
@@ -305,14 +355,7 @@ export default function UsersPage() {
       ) : (
         <DataTable
           table={table}
-          toolbar={(table) => (
-              <Input
-                placeholder="Filtrar por nombre o correo..."
-                value={globalFilter ?? ""}
-                onChange={(event) => setGlobalFilter(event.target.value)}
-                className="max-w-sm"
-              />
-          )}
+          toolbar={() => toolbarContent}
           bulkActions={(table) => (
             <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" onClick={() => handleBulkToggleStatus('activo')}>Activar</Button>
