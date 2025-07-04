@@ -1,21 +1,8 @@
-"use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { redirect } from 'next/navigation';
 
-/**
- * The root page of the application. Redirects to the login page.
- */
+// This page now redirects to the default locale's root.
+// The localized root page at /src/app/[locale]/page.tsx will then handle further redirects (e.g., to the login page).
 export default function RootPage() {
-  const router = useRouter();
-
-  useEffect(() => {
-    router.replace("/login");
-  }, [router]);
-
-  return (
-    <main className="flex min-h-svh flex-col items-center justify-center bg-background p-4">
-      <p>Redirigiendo a la página de inicio de sesión...</p>
-    </main>
-  );
+  redirect('/es');
 }
