@@ -203,7 +203,7 @@ export default function ProfilePage() {
                   </div>
               </div>
             </CardContent>
-            <CardFooter className="border-t px-6 py-4 flex flex-col sm:flex-row sm:justify-end gap-2">
+            <CardFooter className="border-t px-6 py-4 flex flex-col sm:flex-row sm:justify-end gap-3">
                   <Dialog open={isPasswordDialogOpen} onOpenChange={(isOpen) => {
                     setIsPasswordDialogOpen(isOpen);
                     if (!isOpen) passwordForm.reset();
