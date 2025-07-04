@@ -73,9 +73,7 @@
     --sidebar-border: 224 71% 10%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
-}
 
-@layer base {
   * {
     @apply border-border transition-colors duration-300;
   }
@@ -83,6 +81,7 @@
     @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
   }
 
   /* Smooth animations for interactive elements */
