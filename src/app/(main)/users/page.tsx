@@ -349,10 +349,15 @@ export default function UsersPage() {
               <div className="flex items-center gap-4 pt-1">
                 <Badge variant={user.role === 'Administrador' ? 'default' : 'secondary'}>{user.role}</Badge>
                 <div className="flex items-center gap-1.5">
-                    <span className={cn(
-                        "h-2 w-2 rounded-full",
-                        user.status === 'activo' ? 'bg-green-500' : 'bg-gray-400'
-                    )} />
+                    <div className="relative flex h-2 w-2">
+                        {user.status === 'activo' && (
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+                        )}
+                        <span className={cn(
+                            "relative inline-flex h-2 w-2 rounded-full",
+                            user.status === 'activo' ? 'bg-green-500' : 'bg-gray-400'
+                        )} />
+                    </div>
                     <span className="text-xs text-muted-foreground capitalize">{user.status}</span>
                 </div>
               </div>

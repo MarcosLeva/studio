@@ -94,12 +94,18 @@ export const getColumns = (
     header: "Estado",
     cell: ({ row }) => {
       const status = row.getValue("status") as string;
+      const isActive = status === 'activo';
       return (
         <div className="flex items-center gap-2">
-          <span className={cn(
-              "h-2 w-2 rounded-full",
-              status === 'activo' ? 'bg-green-500' : 'bg-gray-400'
-          )} />
+          <div className="relative flex h-2 w-2">
+            {isActive && (
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+            )}
+            <span className={cn(
+                "relative inline-flex h-2 w-2 rounded-full",
+                isActive ? 'bg-green-500' : 'bg-gray-400'
+            )} />
+          </div>
           <span className="capitalize">{status}</span>
         </div>
       )
