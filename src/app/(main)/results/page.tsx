@@ -222,12 +222,12 @@ export default function ScannedResultsPage() {
         {isMobile ? (
           <div className="space-y-4">
             {toolbar}
-            {table.getRowModel().rows?.length ? (
+            {table.getFilteredRowModel().rows?.length ? (
                 <div className="space-y-4">
-                    {table.getRowModel().rows.slice(0, visibleRows).map((row) => (
+                    {table.getFilteredRowModel().rows.slice(0, visibleRows).map((row) => (
                         <MobileResultCard key={row.id} result={row.original} />
                     ))}
-                    {visibleRows < table.getRowModel().rows.length && (
+                    {visibleRows < table.getFilteredRowModel().rows.length && (
                         <Button
                             onClick={() => setVisibleRows(prev => prev + 10)}
                             variant="outline"
