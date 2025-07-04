@@ -20,19 +20,30 @@ import { Button } from "./ui/button";
 interface DataTableProps<TData> {
   table: ReactTable<TData>;
   toolbar?: (table: ReactTable<TData>) => React.ReactNode;
+  bulkActions?: (table: ReactTable<TData>) => React.ReactNode;
 }
 
 export function DataTable<TData>({
   table,
   toolbar,
+  bulkActions,
 }: DataTableProps<TData>) {
+  const selectedRowCount = table.getFilteredSelectedRowModel().rows.length;
+
   return (
     <div className="rounded-md border bg-card">
-       {toolbar && (
-        <div className="flex items-center p-4">
-          {toolbar(table)}
-        </div>
-      )}
+       <div className="flex items-center p-4">
+        {selectedRowCount > 0 && bulkActions ? (
+          <div className="flex w-full items-center justify-between gap-4">
+            <div className="text-sm text-muted-foreground">
+              {selectedRowCount} de {table.getCoreRowModel().rows.length} fila(s) seleccionadas.
+            </div>
+            {bulkActions(table)}
+          </div>
+        ) : toolbar ? (
+          toolbar(table)
+        ) : null}
+      </div>
       <div className="relative w-full overflow-auto">
         <Table>
           <TableHeader>
@@ -77,29 +88,23 @@ export function DataTable<TData>({
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-between p-4">
-        <div className="text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} de{" "}
-          {table.getFilteredRowModel().rows.length} fila(s) seleccionadas.
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Anterior
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Siguiente
-          </Button>
-        </div>
+      <div className="flex items-center justify-end space-x-2 p-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+        >
+          Anterior
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+        >
+          Siguiente
+        </Button>
       </div>
     </div>
   );

@@ -53,9 +53,31 @@ export default function ScannedResultsPage() {
   const { results, deleteScanResult } = useApp();
   const { toast } = useToast();
   const [resultToDelete, setResultToDelete] = React.useState<ScanResult | null>(null);
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = React.useState(false);
   const [isFiltering, setIsFiltering] = React.useState(false);
   const isMobile = useIsMobile();
   const [visibleRows, setVisibleRows] = React.useState(10);
+
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [rowSelection, setRowSelection] = React.useState({});
+  
+  const table = useReactTable({
+    data: results,
+    columns: React.useMemo(() => getColumns(handleExport, handleDelete), []),
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onRowSelectionChange: setRowSelection,
+    state: {
+      sorting,
+      columnFilters,
+      rowSelection,
+    },
+  });
 
   const handleDelete = React.useCallback((result: ScanResult) => {
     setResultToDelete(result);
@@ -71,6 +93,19 @@ export default function ScannedResultsPage() {
       setResultToDelete(null);
     }
   };
+  
+  const confirmBulkDelete = () => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    selectedRows.forEach(row => {
+        deleteScanResult(row.original.id);
+    });
+    table.resetRowSelection();
+    toast({
+        title: "Resultados Eliminados",
+        description: `${selectedRows.length} resultados han sido eliminados.`
+    });
+    setIsBulkDeleteOpen(false);
+  }
 
   const handleExport = React.useCallback((result: ScanResult) => {
     const data = [
@@ -90,30 +125,26 @@ export default function ScannedResultsPage() {
       description: `El resultado para "${result.catalogName}" ha sido exportado.`,
     });
   }, [toast]);
-  
-  const columns = React.useMemo(() => getColumns(handleExport, handleDelete), [handleExport, handleDelete]);
 
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-  const [rowSelection, setRowSelection] = React.useState({});
+  const handleBulkExport = React.useCallback(() => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    const data = selectedRows.map(row => ({
+        "Nombre del Catálogo": row.original.catalogName,
+        "Categoría": row.original.category,
+        "Fecha de Escaneo": row.original.dateScanned,
+        "Análisis": row.original.analysis,
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Resultados Seleccionados");
+    XLSX.writeFile(workbook, `Resultados_Seleccionados.xlsx`);
+    toast({
+      title: "Exportación Exitosa",
+      description: `${selectedRows.length} resultados han sido exportados.`,
+    });
+    table.resetRowSelection();
+  }, [table, toast]);
   
-  const table = useReactTable({
-    data: results,
-    columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onRowSelectionChange: setRowSelection,
-    state: {
-      sorting,
-      columnFilters,
-      rowSelection,
-    },
-  });
-
   const handleFilterChange = (value: string) => {
     setIsFiltering(true);
     const filterValue = value === "All" ? "" : value;
@@ -243,7 +274,16 @@ export default function ScannedResultsPage() {
             )}
           </div>
         ) : (
-          <DataTable table={table} toolbar={() => toolbar} />
+          <DataTable 
+            table={table} 
+            toolbar={() => toolbar}
+            bulkActions={(table) => (
+              <div className="flex items-center gap-2">
+                <Button variant="outline" onClick={handleBulkExport}>Exportar</Button>
+                <Button variant="destructive" onClick={() => setIsBulkDeleteOpen(true)}>Eliminar</Button>
+              </div>
+            )}
+          />
         )}
 
         {isFiltering && (
@@ -280,6 +320,23 @@ export default function ScannedResultsPage() {
               Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={isBulkDeleteOpen} onOpenChange={setIsBulkDeleteOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>¿Estás realmente seguro?</AlertDialogTitle>
+                <AlertDialogDescription>
+                Esta acción no se puede deshacer. Esto eliminará permanentemente
+                los {table.getFilteredSelectedRowModel().rows.length} resultados seleccionados.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={confirmBulkDelete} className="bg-destructive hover:bg-destructive/90">
+                    Eliminar
+                </AlertDialogAction>
+            </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
       <ScrollToTopButton />

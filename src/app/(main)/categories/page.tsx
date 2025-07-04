@@ -62,6 +62,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ScrollToTopButton } from "@/components/scroll-to-top-button";
 
 const categorySchema = z.object({
@@ -83,10 +93,12 @@ const readFileAsDataURI = (file: File): Promise<string> => {
 };
 
 export default function CategoriesPage() {
-  const { categories, addCategory, editCategory } = useApp();
+  const { categories, addCategory, editCategory, deleteCategory } = useApp();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [editingCategory, setEditingCategory] = React.useState<Category | null>(null);
+  const [categoryToDelete, setCategoryToDelete] = React.useState<Category | null>(null);
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = React.useState(false);
   const [isSuggesting, setIsSuggesting] = React.useState(false);
   const [isFiltering, setIsFiltering] = React.useState(false);
   const isMobile = useIsMobile();
@@ -177,7 +189,35 @@ export default function CategoriesPage() {
     setIsDialogOpen(true);
   }, [form]);
 
-  const columns = React.useMemo(() => getColumns(handleEditClick), [handleEditClick]);
+  const handleDeleteClick = React.useCallback((category: Category) => {
+    setCategoryToDelete(category);
+  }, []);
+  
+  const confirmDelete = () => {
+    if (categoryToDelete) {
+      deleteCategory(categoryToDelete.id);
+      toast({
+        title: "Categoría Eliminada",
+        description: `La categoría "${categoryToDelete.name}" ha sido eliminada.`,
+      });
+      setCategoryToDelete(null);
+    }
+  };
+
+  const confirmBulkDelete = () => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    selectedRows.forEach(row => {
+        deleteCategory(row.original.id);
+    });
+    table.resetRowSelection();
+    toast({
+        title: "Categorías Eliminadas",
+        description: `${selectedRows.length} categorías han sido eliminadas.`
+    });
+    setIsBulkDeleteOpen(false);
+  }
+
+  const columns = React.useMemo(() => getColumns(handleEditClick, handleDeleteClick), [handleEditClick, handleDeleteClick]);
   
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -237,7 +277,7 @@ export default function CategoriesPage() {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => handleEditClick(category)}>Editar</DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive">Eliminar</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleDeleteClick(category)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">Eliminar</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -408,6 +448,48 @@ export default function CategoriesPage() {
         </DialogContent>
       </Dialog>
 
+      <AlertDialog
+        open={!!categoryToDelete}
+        onOpenChange={(open) => !open && setCategoryToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás realmente seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Esto eliminará permanentemente la categoría{' '}
+              <span className="font-semibold">{categoryToDelete?.name}</span>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isBulkDeleteOpen} onOpenChange={setIsBulkDeleteOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>¿Estás realmente seguro?</AlertDialogTitle>
+                <AlertDialogDescription>
+                Esta acción no se puede deshacer. Esto eliminará permanentemente
+                las {table.getFilteredSelectedRowModel().rows.length} categorías seleccionadas.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={confirmBulkDelete} className="bg-destructive hover:bg-destructive/90">
+                    Eliminar
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="relative">
         {isMobile ? (
           <div className="space-y-4">
@@ -446,6 +528,9 @@ export default function CategoriesPage() {
                     onChange={handleFilterChange}
                     className="max-w-sm"
                     />
+                )}
+                bulkActions={(table) => (
+                    <Button variant="destructive" onClick={() => setIsBulkDeleteOpen(true)}>Eliminar</Button>
                 )}
             />
         )}

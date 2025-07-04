@@ -88,11 +88,36 @@ export default function UsersPage() {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [editingUser, setEditingUser] = React.useState<User | null>(null);
   const [userToDelete, setUserToDelete] = React.useState<User | null>(null);
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = React.useState(false);
   const [visibleRows, setVisibleRows] = React.useState(10);
   
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
     defaultValues: { name: "", email: "" },
+  });
+
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [globalFilter, setGlobalFilter] = React.useState("");
+  const [rowSelection, setRowSelection] = React.useState({});
+
+  const table = useReactTable({
+    data: managedUsers,
+    columns: React.useMemo(() => getColumns(handleEditClick, handleDeleteClick, handleToggleStatusClick), []),
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onRowSelectionChange: setRowSelection,
+    onGlobalFilterChange: setGlobalFilter,
+    state: {
+      sorting,
+      columnFilters,
+      rowSelection,
+      globalFilter,
+    },
   });
 
   function onSubmit(data: UserFormValues) {
@@ -155,31 +180,30 @@ export default function UsersPage() {
     }
   };
 
-  const columns = React.useMemo(() => getColumns(handleEditClick, handleDeleteClick, handleToggleStatusClick), [handleEditClick, handleDeleteClick, handleToggleStatusClick]);
+  const confirmBulkDelete = () => {
+    table.getFilteredSelectedRowModel().rows.forEach(row => {
+        deleteManagedUser(row.original.id);
+    });
+    toast({
+        title: "Usuarios Eliminados",
+        description: `${table.getFilteredSelectedRowModel().rows.length} usuarios han sido eliminados.`
+    });
+    table.resetRowSelection();
+    setIsBulkDeleteOpen(false);
+  }
 
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-  const [globalFilter, setGlobalFilter] = React.useState("");
-  const [rowSelection, setRowSelection] = React.useState({});
-
-  const table = useReactTable({
-    data: managedUsers,
-    columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onRowSelectionChange: setRowSelection,
-    onGlobalFilterChange: setGlobalFilter,
-    state: {
-      sorting,
-      columnFilters,
-      rowSelection,
-      globalFilter,
-    },
-  });
+  const handleBulkToggleStatus = (status: 'activo' | 'inactivo') => {
+    table.getFilteredSelectedRowModel().rows.forEach(row => {
+        if (row.original.status !== status) {
+            toggleUserStatus(row.original.id);
+        }
+    });
+    table.resetRowSelection();
+    toast({
+        title: "Estado de usuarios actualizado",
+        description: `El estado de ${table.getFilteredSelectedRowModel().rows.length} usuarios ha sido actualizado.`,
+    });
+  }
 
   const toolbar = (
     <Input
@@ -289,6 +313,13 @@ export default function UsersPage() {
                 className="max-w-sm"
               />
           )}
+          bulkActions={(table) => (
+            <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => handleBulkToggleStatus('activo')}>Activar</Button>
+                <Button variant="outline" size="sm" onClick={() => handleBulkToggleStatus('inactivo')}>Desactivar</Button>
+                <Button variant="destructive" size="sm" onClick={() => setIsBulkDeleteOpen(true)}>Eliminar</Button>
+            </div>
+          )}
         />
       )}
 
@@ -382,6 +413,25 @@ export default function UsersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={isBulkDeleteOpen} onOpenChange={setIsBulkDeleteOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>¿Estás realmente seguro?</AlertDialogTitle>
+                <AlertDialogDescription>
+                Esta acción no se puede deshacer. Esto eliminará permanentemente
+                a los {table.getFilteredSelectedRowModel().rows.length} usuarios seleccionados.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={confirmBulkDelete} className="bg-destructive hover:bg-destructive/90">
+                    Eliminar
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <ScrollToTopButton />
     </div>
   );

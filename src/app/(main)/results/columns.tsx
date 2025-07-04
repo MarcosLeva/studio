@@ -14,11 +14,35 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { ScanResult } from "@/lib/types";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export const getColumns = (
   onExport: (result: ScanResult) => void,
   onDelete: (result: ScanResult) => void
 ): ColumnDef<ScanResult>[] => [
+    {
+        id: "select",
+        header: ({ table }) => (
+        <Checkbox
+            checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+            }
+            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+            aria-label="Seleccionar todo"
+        />
+        ),
+        cell: ({ row }) => (
+        <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label="Seleccionar fila"
+        />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+        size: 50,
+    },
     {
         accessorKey: "catalogName",
         header: "Nombre del Catálogo",

@@ -104,6 +104,7 @@ interface AppContextType {
   setResults: React.Dispatch<React.SetStateAction<ScanResult[]>>;
   addCategory: (category: Omit<Category, 'id' | 'dateCreated'>) => void;
   editCategory: (id: string, data: Omit<Category, 'id' | 'dateCreated'>) => void;
+  deleteCategory: (id: string) => void;
   addScanResult: (result: Omit<ScanResult, 'id' | 'dateScanned'>) => void;
   deleteScanResult: (id: string) => void;
   editScanResult: (id: string, data: Partial<Omit<ScanResult, 'id' | 'dateScanned'>>) => void;
@@ -137,6 +138,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setCategories(prev => 
       prev.map(cat => (cat.id === id ? { ...cat, ...data } : cat))
     );
+  };
+  
+  const deleteCategory = (id: string) => {
+    setCategories(prev => prev.filter(cat => cat.id !== id));
   };
 
   const addScanResult = (result: Omit<ScanResult, 'id' | 'dateScanned'>) => {
@@ -190,7 +195,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
 
   return (
-    <AppContext.Provider value={{ categories, setCategories, results, setResults, addCategory, editCategory, addScanResult, deleteScanResult, editScanResult, user, editUser, managedUsers, addManagedUser, editManagedUser, deleteManagedUser, toggleUserStatus }}>
+    <AppContext.Provider value={{ categories, setCategories, results, setResults, addCategory, editCategory, deleteCategory, addScanResult, deleteScanResult, editScanResult, user, editUser, managedUsers, addManagedUser, editManagedUser, deleteManagedUser, toggleUserStatus }}>
       {children}
     </AppContext.Provider>
   );
