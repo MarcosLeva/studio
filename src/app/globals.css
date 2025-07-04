@@ -84,16 +84,12 @@
     @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    overflow-x: hidden;
+    overflow-y: scroll;
   }
 
   /* Smooth animations for interactive elements */
   button, a, input, select, textarea, [tabindex] {
     @apply transition-all duration-300 ease-in-out;
-  }
-
-  button:hover, a:hover {
-    @apply transform scale-[1.02];
   }
 
   h1,h2,h3,h4,h5,h6 {
