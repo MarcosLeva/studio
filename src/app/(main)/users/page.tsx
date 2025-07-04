@@ -101,9 +101,27 @@ export default function UsersPage() {
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [rowSelection, setRowSelection] = React.useState({});
 
+  const handleEditClick = React.useCallback((user: User) => {
+    setEditingUser(user);
+    form.reset(user);
+    setIsDialogOpen(true);
+  }, [form]);
+
+  const handleDeleteClick = React.useCallback((user: User) => {
+    setUserToDelete(user);
+  }, []);
+
+  const handleToggleStatusClick = React.useCallback((user: User) => {
+    toggleUserStatus(user.id);
+    toast({
+      title: `Usuario ${user.status === 'activo' ? 'Desactivado' : 'Activado'}`,
+      description: `El estado de "${user.name}" ha sido actualizado.`,
+    });
+  }, [toggleUserStatus, toast]);
+
   const table = useReactTable({
     data: managedUsers,
-    columns: React.useMemo(() => getColumns(handleEditClick, handleDeleteClick, handleToggleStatusClick), []),
+    columns: React.useMemo(() => getColumns(handleEditClick, handleDeleteClick, handleToggleStatusClick), [handleEditClick, handleDeleteClick, handleToggleStatusClick]),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -150,24 +168,6 @@ export default function UsersPage() {
     form.reset({ name: "", email: "", role: undefined });
     setIsDialogOpen(true);
   }
-
-  const handleEditClick = React.useCallback((user: User) => {
-    setEditingUser(user);
-    form.reset(user);
-    setIsDialogOpen(true);
-  }, [form]);
-
-  const handleDeleteClick = React.useCallback((user: User) => {
-    setUserToDelete(user);
-  }, []);
-
-  const handleToggleStatusClick = React.useCallback((user: User) => {
-    toggleUserStatus(user.id);
-    toast({
-      title: `Usuario ${user.status === 'activo' ? 'Desactivado' : 'Activado'}`,
-      description: `El estado de "${user.name}" ha sido actualizado.`,
-    });
-  }, [toggleUserStatus, toast]);
 
   const confirmDelete = () => {
     if (userToDelete) {

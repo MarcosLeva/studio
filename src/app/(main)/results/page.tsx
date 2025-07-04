@@ -62,9 +62,32 @@ export default function ScannedResultsPage() {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = React.useState({});
   
+  const handleDelete = React.useCallback((result: ScanResult) => {
+    setResultToDelete(result);
+  }, []);
+
+  const handleExport = React.useCallback((result: ScanResult) => {
+    const data = [
+      {
+        "Nombre del Catálogo": result.catalogName,
+        "Categoría": result.category,
+        "Fecha de Escaneo": result.dateScanned,
+        "Análisis": result.analysis,
+      },
+    ];
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Resultado");
+    XLSX.writeFile(workbook, `${result.catalogName}.xlsx`);
+    toast({
+      title: "Exportación Exitosa",
+      description: `El resultado para "${result.catalogName}" ha sido exportado.`,
+    });
+  }, [toast]);
+
   const table = useReactTable({
     data: results,
-    columns: React.useMemo(() => getColumns(handleExport, handleDelete), []),
+    columns: React.useMemo(() => getColumns(handleExport, handleDelete), [handleExport, handleDelete]),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -78,10 +101,6 @@ export default function ScannedResultsPage() {
       rowSelection,
     },
   });
-
-  const handleDelete = React.useCallback((result: ScanResult) => {
-    setResultToDelete(result);
-  }, []);
 
   const confirmDelete = () => {
     if (resultToDelete) {
@@ -106,25 +125,6 @@ export default function ScannedResultsPage() {
     });
     setIsBulkDeleteOpen(false);
   }
-
-  const handleExport = React.useCallback((result: ScanResult) => {
-    const data = [
-      {
-        "Nombre del Catálogo": result.catalogName,
-        "Categoría": result.category,
-        "Fecha de Escaneo": result.dateScanned,
-        "Análisis": result.analysis,
-      },
-    ];
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Resultado");
-    XLSX.writeFile(workbook, `${result.catalogName}.xlsx`);
-    toast({
-      title: "Exportación Exitosa",
-      description: `El resultado para "${result.catalogName}" ha sido exportado.`,
-    });
-  }, [toast]);
 
   const handleBulkExport = React.useCallback(() => {
     const selectedRows = table.getFilteredSelectedRowModel().rows;
