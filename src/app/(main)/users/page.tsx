@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { PlusCircle, MoreHorizontal } from "lucide-react";
+import { PlusCircle, MoreHorizontal, X } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -130,6 +130,7 @@ export default function UsersPage() {
     getPaginationRowModel: getPaginationRowModel(),
     onRowSelectionChange: setRowSelection,
     onGlobalFilterChange: setGlobalFilter,
+    globalFilterFn: "includesString",
     state: {
       sorting,
       columnFilters,
@@ -214,6 +215,13 @@ export default function UsersPage() {
     { value: "activo", label: "Activo" },
     { value: "inactivo", label: "Inactivo" },
   ];
+  
+  const handleClearFilters = () => {
+    setGlobalFilter('');
+    table.resetColumnFilters();
+  };
+
+  const isFiltered = globalFilter !== '' || columnFilters.length > 0;
 
   const toolbarContent = (
     <div className="flex w-full flex-col items-center gap-2 sm:flex-row">
@@ -223,7 +231,7 @@ export default function UsersPage() {
         onChange={(event) => setGlobalFilter(event.target.value)}
         className="w-full sm:max-w-sm"
       />
-      <div className="flex w-full gap-2 sm:ml-auto sm:w-auto sm:flex-shrink-0">
+      <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto sm:flex-shrink-0">
         <Select
           value={(table.getColumn("role")?.getFilterValue() as string) ?? "all"}
           onValueChange={(value) =>
@@ -260,6 +268,16 @@ export default function UsersPage() {
             ))}
           </SelectContent>
         </Select>
+        {isFiltered && (
+            <Button
+                variant="ghost"
+                onClick={handleClearFilters}
+                className="h-9 px-2 lg:px-3"
+            >
+                Limpiar
+                <X className="ml-2 h-4 w-4" />
+            </Button>
+        )}
       </div>
     </div>
   );
