@@ -20,7 +20,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useApp } from "@/app/store";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
 
 const profileSchema = z.object({
   name: z.string().min(3, { message: "El nombre debe tener al menos 3 caracteres." }),
@@ -68,6 +68,7 @@ export default function ProfilePage() {
         toast({
           title: "Perfil Actualizado",
           description: "Tu información ha sido actualizada con éxito.",
+          icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
         });
         setIsLoading(false);
       }
@@ -82,6 +83,7 @@ export default function ProfilePage() {
           variant: "destructive",
           title: "Archivo no válido",
           description: "Por favor, selecciona un archivo de imagen.",
+          icon: <AlertTriangle className="h-5 w-5 text-destructive-foreground" />,
         });
         return;
       }
@@ -93,6 +95,7 @@ export default function ProfilePage() {
           toast({
             title: "Foto de perfil actualizada",
             description: "Tu nueva foto ha sido guardada.",
+            icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
           });
         }
       };

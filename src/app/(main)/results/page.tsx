@@ -39,7 +39,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, FileDown, Trash2 } from "lucide-react";
 import { ScrollToTopButton } from "@/components/scroll-to-top-button";
 import { MultiSelectCombobox } from "@/components/ui/multi-select-combobox";
 
@@ -51,6 +51,14 @@ export default function ScannedResultsPage() {
   const [isFiltering, setIsFiltering] = React.useState(false);
   const isMobile = useIsMobile();
   const [visibleRows, setVisibleRows] = React.useState(10);
+  const isMounted = React.useRef(true);
+
+  React.useEffect(() => {
+    isMounted.current = true;
+    return () => {
+        isMounted.current = false;
+    };
+  }, []);
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -76,6 +84,7 @@ export default function ScannedResultsPage() {
     toast({
       title: "Exportación Exitosa",
       description: `El resultado para "${result.catalogName}" ha sido exportado.`,
+      icon: <FileDown className="h-5 w-5 text-primary" />,
     });
   }, [toast]);
 
@@ -104,7 +113,9 @@ export default function ScannedResultsPage() {
     }
     setIsFiltering(true);
     const timer = setTimeout(() => {
+      if (isMounted.current) {
         setIsFiltering(false);
+      }
     }, 500);
 
     return () => clearTimeout(timer);
@@ -117,6 +128,7 @@ export default function ScannedResultsPage() {
       toast({
         title: "Resultado Eliminado",
         description: `El resultado para "${resultToDelete.catalogName}" ha sido eliminado.`,
+        icon: <Trash2 className="h-5 w-5 text-primary" />,
       });
       setResultToDelete(null);
     }
@@ -130,7 +142,8 @@ export default function ScannedResultsPage() {
     table.resetRowSelection();
     toast({
         title: "Resultados Eliminados",
-        description: `${selectedRows.length} resultados han sido eliminados.`
+        description: `${selectedRows.length} resultados han sido eliminados.`,
+        icon: <Trash2 className="h-5 w-5 text-primary" />,
     });
     setIsBulkDeleteOpen(false);
   }
@@ -150,6 +163,7 @@ export default function ScannedResultsPage() {
     toast({
       title: "Exportación Exitosa",
       description: `${selectedRows.length} resultados han sido exportados.`,
+      icon: <FileDown className="h-5 w-5 text-primary" />,
     });
     table.resetRowSelection();
   }, [table, toast]);

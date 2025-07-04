@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { PlusCircle, Lightbulb, Loader2, MoreHorizontal } from "lucide-react";
+import { PlusCircle, Lightbulb, Loader2, MoreHorizontal, CheckCircle2, AlertTriangle, Trash2 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -103,6 +103,14 @@ export default function CategoriesPage() {
   const [isFiltering, setIsFiltering] = React.useState(false);
   const isMobile = useIsMobile();
   const [visibleRows, setVisibleRows] = React.useState(10);
+  const isMounted = React.useRef(true);
+
+  React.useEffect(() => {
+    isMounted.current = true;
+    return () => {
+        isMounted.current = false;
+    };
+  }, []);
 
   const form = useForm<z.infer<typeof categorySchema>>({
     resolver: zodResolver(categorySchema),
@@ -122,12 +130,14 @@ export default function CategoriesPage() {
       toast({
         title: "Categoría Actualizada",
         description: `La categoría "${values.name}" ha sido actualizada con éxito.`,
+        icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
       });
     } else {
       addCategory(values);
       toast({
         title: "Categoría Creada",
         description: `La categoría "${values.name}" ha sido añadida con éxito.`,
+        icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
       });
     }
     setIsDialogOpen(false);
@@ -140,6 +150,7 @@ export default function CategoriesPage() {
         variant: "destructive",
         title: "No se puede sugerir",
         description: "Por favor, introduce primero un nombre de categoría.",
+        icon: <AlertTriangle className="h-5 w-5 text-destructive-foreground" />,
       });
       return;
     }
@@ -152,20 +163,28 @@ export default function CategoriesPage() {
           : undefined;
 
       const result = await suggestCategoryPrompt({ categoryName, fileDataUris });
-      form.setValue("prompt", result.suggestedPrompt, { shouldValidate: true });
-      toast({
-        title: "¡Prompt Sugerido!",
-        description: "La IA ha generado un prompt para ti."
-      });
+      if (isMounted.current) {
+        form.setValue("prompt", result.suggestedPrompt, { shouldValidate: true });
+        toast({
+          title: "¡Prompt Sugerido!",
+          description: "La IA ha generado un prompt para ti.",
+          icon: <Lightbulb className="h-5 w-5 text-yellow-500" />,
+        });
+      }
     } catch (error) {
       console.error(error);
-      toast({
-        variant: "destructive",
-        title: "Sugerencia Fallida",
-        description: "No se pudo generar un prompt. Por favor, inténtalo de nuevo.",
-      });
+      if (isMounted.current) {
+        toast({
+          variant: "destructive",
+          title: "Sugerencia Fallida",
+          description: "No se pudo generar un prompt. Por favor, inténtalo de nuevo.",
+          icon: <AlertTriangle className="h-5 w-5 text-destructive-foreground" />,
+        });
+      }
     } finally {
-      setIsSuggesting(false);
+      if (isMounted.current) {
+        setIsSuggesting(false);
+      }
     }
   };
 
@@ -199,6 +218,7 @@ export default function CategoriesPage() {
       toast({
         title: "Categoría Eliminada",
         description: `La categoría "${categoryToDelete.name}" ha sido eliminada.`,
+        icon: <Trash2 className="h-5 w-5 text-primary" />,
       });
       setCategoryToDelete(null);
     }
@@ -212,7 +232,8 @@ export default function CategoriesPage() {
     table.resetRowSelection();
     toast({
         title: "Categorías Eliminadas",
-        description: `${selectedRows.length} categorías han sido eliminadas.`
+        description: `${selectedRows.length} categorías han sido eliminadas.`,
+        icon: <Trash2 className="h-5 w-5 text-primary" />,
     });
     setIsBulkDeleteOpen(false);
   }

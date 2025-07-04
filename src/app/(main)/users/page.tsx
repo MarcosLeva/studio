@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { PlusCircle, MoreHorizontal, X } from "lucide-react";
+import { PlusCircle, MoreHorizontal, X, Mail, CheckCircle2, Trash2 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -124,12 +124,15 @@ export default function UsersPage() {
     toast({
       title: `Usuario ${user.status === 'activo' ? 'Desactivado' : 'Activado'}`,
       description: `El estado de "${user.name}" ha sido actualizado.`,
+      icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
     });
   }, [toggleUserStatus, toast]);
 
+  const columns = React.useMemo(() => getColumns(handleEditClick, handleDeleteClick, handleToggleStatusClick), [handleEditClick, handleDeleteClick, handleToggleStatusClick]);
+
   const table = useReactTable({
     data: managedUsers,
-    columns: React.useMemo(() => getColumns(handleEditClick, handleDeleteClick, handleToggleStatusClick), [handleEditClick, handleDeleteClick, handleToggleStatusClick]),
+    columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -153,12 +156,14 @@ export default function UsersPage() {
       toast({
         title: "Usuario Actualizado",
         description: `Los datos de "${data.name}" han sido actualizados.`,
+        icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
       });
     } else {
       addManagedUser(data);
       toast({
         title: "Invitación Enviada",
         description: `Se ha enviado una invitación por correo electrónico a ${data.email}.`,
+        icon: <Mail className="h-5 w-5 text-primary" />,
       });
     }
     setIsDialogOpen(false);
@@ -184,25 +189,29 @@ export default function UsersPage() {
       toast({
         title: "Usuario Eliminado",
         description: `El usuario "${userToDelete.name}" ha sido eliminado.`,
+        icon: <Trash2 className="h-5 w-5 text-primary" />,
       });
       setUserToDelete(null);
     }
   };
 
   const confirmBulkDelete = () => {
-    table.getFilteredSelectedRowModel().rows.forEach(row => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    selectedRows.forEach(row => {
         deleteManagedUser(row.original.id);
     });
     toast({
         title: "Usuarios Eliminados",
-        description: `${table.getFilteredSelectedRowModel().rows.length} usuarios han sido eliminados.`
+        description: `${selectedRows.length} usuarios han sido eliminados.`,
+        icon: <Trash2 className="h-5 w-5 text-primary" />,
     });
     table.resetRowSelection();
     setIsBulkDeleteOpen(false);
   }
 
   const handleBulkToggleStatus = (status: 'activo' | 'inactivo') => {
-    table.getFilteredSelectedRowModel().rows.forEach(row => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    selectedRows.forEach(row => {
         if (row.original.status !== status) {
             toggleUserStatus(row.original.id);
         }
@@ -210,7 +219,8 @@ export default function UsersPage() {
     table.resetRowSelection();
     toast({
         title: "Estado de usuarios actualizado",
-        description: `El estado de ${table.getFilteredSelectedRowModel().rows.length} usuarios ha sido actualizado.`,
+        description: `El estado de ${selectedRows.length} usuarios ha sido actualizado.`,
+        icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
     });
   }
 

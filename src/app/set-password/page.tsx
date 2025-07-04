@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { QrCode, ShieldCheck } from "lucide-react";
+import { QrCode, ShieldCheck, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -79,10 +79,13 @@ export default function SetPasswordPage() {
         toast({
           title: "¡Contraseña Establecida!",
           description: "Tu cuenta ha sido configurada con éxito.",
+          icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
         });
         // Redirect after a short delay
         setTimeout(() => {
-          router.push("/login");
+          if (isMounted.current) {
+            router.push("/login");
+          }
         }, 2000);
       }
     }, 1500);

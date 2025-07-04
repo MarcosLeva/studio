@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lightbulb, Loader2 } from "lucide-react";
+import { Lightbulb, Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -51,6 +51,14 @@ export default function AnalyzeCatalogPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const isMounted = React.useRef(true);
+
+  React.useEffect(() => {
+    isMounted.current = true;
+    return () => {
+        isMounted.current = false;
+    };
+  }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -69,6 +77,7 @@ export default function AnalyzeCatalogPage() {
         variant: "destructive",
         title: "Error",
         description: "Categoría seleccionada no encontrada.",
+        icon: <AlertTriangle className="h-5 w-5 text-destructive-foreground" />,
       });
       setIsLoading(false);
       return;
@@ -96,17 +105,21 @@ export default function AnalyzeCatalogPage() {
       toast({
         title: "Análisis Completo",
         description: "Tu catálogo ha sido analizado con éxito.",
+        icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
       });
       router.push("/results");
 
     } catch (error) {
       console.error("Analysis failed:", error);
-      toast({
-        variant: "destructive",
-        title: "Análisis Fallido",
-        description: "Ocurrió un error inesperado. Por favor, inténtalo de nuevo.",
-      });
-      setIsLoading(false);
+      if(isMounted.current){
+        toast({
+          variant: "destructive",
+          title: "Análisis Fallido",
+          description: "Ocurrió un error inesperado. Por favor, inténtalo de nuevo.",
+          icon: <AlertTriangle className="h-5 w-5 text-destructive-foreground" />,
+        });
+        setIsLoading(false);
+      }
     }
   }
 
