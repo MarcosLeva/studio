@@ -483,7 +483,7 @@ export default function CategoriesPage() {
                   )}
                 />
               </div>
-              <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-3 sm:gap-0">
+              <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
                 <Button type="submit">{editingCategory ? "Guardar Cambios" : "Guardar Categoría"}</Button>
               </DialogFooter>

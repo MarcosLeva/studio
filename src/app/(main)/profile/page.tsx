@@ -266,7 +266,7 @@ export default function ProfilePage() {
                                     </FormItem>
                                     )}
                                 />
-                                <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-3 sm:gap-0">
+                                <DialogFooter>
                                     <Button type="button" variant="outline" onClick={() => setIsPasswordDialogOpen(false)}>Cancelar</Button>
                                     <Button type="submit" disabled={isPasswordLoading}>
                                         {isPasswordLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -323,7 +323,7 @@ export default function ProfilePage() {
                                         </FormItem>
                                     )}
                                 />
-                                <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-3 sm:gap-0">
+                                <DialogFooter>
                                     <Button type="button" variant="outline" onClick={() => setIsProfileDialogOpen(false)}>Cancelar</Button>
                                     <Button type="submit" disabled={isProfileLoading}>
                                         {isProfileLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

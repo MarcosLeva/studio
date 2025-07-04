@@ -524,7 +524,7 @@ export default function UsersPage() {
                   </FormItem>
                 )}
               />
-              <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-3 sm:gap-0">
+              <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
                 <Button type="submit">{editingUser ? "Guardar Cambios" : "Agregar Usuario"}</Button>
               </DialogFooter>
