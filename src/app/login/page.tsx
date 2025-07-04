@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -6,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { QrCode } from "lucide-react";
+import { QrCode, ShieldCheck, Loader2 } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -33,6 +32,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isSuccess, setIsSuccess] = React.useState(false);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -46,13 +46,13 @@ export default function LoginPage() {
     setIsLoading(true);
     // Faux authentication
     setTimeout(() => {
+      setIsLoading(false);
       // Basic validation check for demo purposes
       if (data.email && data.password) {
-        toast({
-          title: "Inicio de Sesión Exitoso",
-          description: "¡Bienvenido de nuevo!",
-        });
-        router.push("/analyze-catalog");
+        setIsSuccess(true);
+        setTimeout(() => {
+            router.push("/analyze-catalog");
+        }, 2000);
       } else {
         toast({
           variant: "destructive",
@@ -60,7 +60,6 @@ export default function LoginPage() {
           description: "Por favor, comprueba tus credenciales e inténtalo de nuevo.",
         });
       }
-      setIsLoading(false);
     }, 1000);
   };
 
@@ -77,55 +76,70 @@ export default function LoginPage() {
             Análisis de Catálogos con IA. Optimizado. Inteligente.
         </p>
       </div>
-      <Card className="mt-8 w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-2xl">Iniciar Sesión</CardTitle>
-          <CardDescription>Introduce tu correo electrónico para iniciar sesión.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Correo Electrónico</FormLabel>
-                    <FormControl>
-                      <Input placeholder="nombre@ejemplo.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center justify-between">
-                      <FormLabel>Contraseña</FormLabel>
-                      <Link
-                          href="/forgot-password"
-                          className="text-sm font-medium text-primary hover:underline underline-offset-4"
-                      >
-                          ¿Olvidaste tu contraseña?
-                      </Link>
-                    </div>
-                    <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Iniciando Sesión..." : "Iniciar Sesión"}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+      {isSuccess ? (
+        <Card className="mt-8 w-full max-w-sm text-center">
+          <CardHeader className="items-center">
+              <ShieldCheck className="h-16 w-16 text-primary mb-4" />
+              <CardTitle className="text-2xl">¡Inicio de Sesión Exitoso!</CardTitle>
+              <CardDescription>
+                  ¡Bienvenido de nuevo! Serás redirigido en un momento.
+              </CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="mt-8 w-full max-w-sm">
+          <CardHeader>
+            <CardTitle className="text-2xl">Iniciar Sesión</CardTitle>
+            <CardDescription>Introduce tu correo electrónico para iniciar sesión.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Correo Electrónico</FormLabel>
+                      <FormControl>
+                        <Input placeholder="nombre@ejemplo.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center justify-between">
+                        <FormLabel>Contraseña</FormLabel>
+                        <Link
+                            href="/forgot-password"
+                            className="text-sm font-medium text-primary hover:underline underline-offset-4"
+                        >
+                            ¿Olvidaste tu contraseña?
+                        </Link>
+                      </div>
+                      <FormControl>
+                        <Input type="password" placeholder="••••••••" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Iniciando Sesión..." : "Iniciar Sesión"}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      )}
     </main>
   );
 }
