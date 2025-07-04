@@ -227,14 +227,14 @@ export default function UsersPage() {
         <Select
           value={(table.getColumn("role")?.getFilterValue() as string) ?? ""}
           onValueChange={(value) =>
-            table.getColumn("role")?.setFilterValue(value || undefined)
+            table.getColumn("role")?.setFilterValue(value === "all" ? undefined : value)
           }
         >
           <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Filtrar por rol" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos los roles</SelectItem>
+            <SelectItem value="all">Todos los roles</SelectItem>
             {roles.map((role) => (
               <SelectItem key={role.value} value={role.value}>
                 {role.label}
@@ -245,14 +245,14 @@ export default function UsersPage() {
         <Select
           value={(table.getColumn("status")?.getFilterValue() as string) ?? ""}
           onValueChange={(value) =>
-            table.getColumn("status")?.setFilterValue(value || undefined)
+            table.getColumn("status")?.setFilterValue(value === "all" ? undefined : value)
           }
         >
           <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Filtrar por estado" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos los estados</SelectItem>
+            <SelectItem value="all">Todos los estados</SelectItem>
             {statuses.map((status) => (
               <SelectItem key={status.value} value={status.value}>
                 {status.label}
