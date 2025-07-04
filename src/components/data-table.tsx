@@ -19,31 +19,13 @@ import { Button } from "./ui/button";
 
 interface DataTableProps<TData> {
   table: ReactTable<TData>;
-  toolbar?: (table: ReactTable<TData>) => React.ReactNode;
-  bulkActions?: (table: ReactTable<TData>) => React.ReactNode;
 }
 
 export function DataTable<TData>({
   table,
-  toolbar,
-  bulkActions,
 }: DataTableProps<TData>) {
-  const selectedRowCount = table.getFilteredSelectedRowModel().rows.length;
-
   return (
-    <div className="rounded-md border bg-card">
-       <div className="flex items-center p-4">
-        {selectedRowCount > 0 && bulkActions ? (
-          <div className="flex w-full items-center justify-between gap-4">
-            <div className="text-sm text-muted-foreground">
-              {selectedRowCount} de {table.getCoreRowModel().rows.length} fila(s) seleccionadas.
-            </div>
-            {bulkActions(table)}
-          </div>
-        ) : toolbar ? (
-          toolbar(table)
-        ) : null}
-      </div>
+    <div className="rounded-b-md border-x border-b bg-card">
       <div className="relative w-full overflow-auto">
         <Table>
           <TableHeader>

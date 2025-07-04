@@ -101,8 +101,10 @@ export default function UsersPage() {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = React.useState("");
+  const [filterValue, setFilterValue] = React.useState("");
   const [rowSelection, setRowSelection] = React.useState({});
   const isMounted = React.useRef(true);
+  const isInitialMount = React.useRef(true);
 
   React.useEffect(() => {
     isMounted.current = true;
@@ -111,7 +113,14 @@ export default function UsersPage() {
     };
   }, []);
 
-  const isInitialMount = React.useRef(true);
+  React.useEffect(() => {
+    const timeout = setTimeout(() => {
+      setGlobalFilter(filterValue);
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [filterValue]);
+
+
   React.useEffect(() => {
     if (isInitialMount.current) {
         isInitialMount.current = false;
@@ -218,12 +227,12 @@ export default function UsersPage() {
     selectedRows.forEach(row => {
         deleteManagedUser(row.original.id);
     });
+    table.resetRowSelection();
     toast({
         title: "Usuarios Eliminados",
         description: `${selectedRows.length} usuarios han sido eliminados.`,
         icon: <Trash2 className="h-5 w-5 text-primary" />,
     });
-    table.resetRowSelection();
     setIsBulkDeleteOpen(false);
   }
 
@@ -253,18 +262,27 @@ export default function UsersPage() {
   ];
   
   const handleClearFilters = () => {
-    setGlobalFilter('');
+    setFilterValue('');
     table.resetColumnFilters();
   };
 
-  const isFiltered = globalFilter !== '' || columnFilters.length > 0;
+  const isFiltered = filterValue !== '' || columnFilters.length > 0;
+  const selectedRowCount = table.getFilteredSelectedRowModel().rows.length;
 
+  const bulkActions = (
+    <div className="flex items-center gap-2">
+      <Button variant="outline" size="sm" onClick={() => handleBulkToggleStatus('activo')}>Activar</Button>
+      <Button variant="outline" size="sm" onClick={() => handleBulkToggleStatus('inactivo')}>Desactivar</Button>
+      <Button variant="destructive" size="sm" onClick={() => setIsBulkDeleteOpen(true)}>Eliminar</Button>
+    </div>
+  );
+  
   const toolbarContent = (
     <div className="flex w-full flex-col items-center gap-2 sm:flex-row">
       <Input
         placeholder="Filtrar por nombre o correo..."
-        value={globalFilter ?? ""}
-        onChange={(event) => setGlobalFilter(event.target.value)}
+        value={filterValue}
+        onChange={(event) => setFilterValue(event.target.value)}
         className="w-full sm:max-w-sm"
       />
       <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto sm:flex-shrink-0">
@@ -383,48 +401,56 @@ export default function UsersPage() {
         </Button>
       </div>
 
-      <div className="relative">
-        {isMobile ? (
-          <div className="space-y-4">
-            {toolbarContent}
-            {table.getRowModel().rows?.length ? (
-              <div className="space-y-4">
-                {table.getRowModel().rows.slice(0, visibleRows).map((row) => (
-                  <MobileUserCard key={row.id} user={row.original} />
-                ))}
-                {visibleRows < table.getRowModel().rows.length && (
-                  <Button
-                    onClick={() => setVisibleRows(prev => prev + 10)}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    Cargar más
-                  </Button>
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-10 text-muted-foreground">No hay usuarios.</div>
+      {isMobile ? (
+        <div className="space-y-4">
+          {toolbarContent}
+          {table.getRowModel().rows?.length ? (
+            <div className="space-y-4">
+              {table.getRowModel().rows.slice(0, visibleRows).map((row) => (
+                <MobileUserCard key={row.id} user={row.original} />
+              ))}
+              {visibleRows < table.getRowModel().rows.length && (
+                <Button
+                  onClick={() => setVisibleRows(prev => prev + 10)}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Cargar más
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-10 text-muted-foreground">No hay usuarios.</div>
+          )}
+        </div>
+      ) : (
+        <div>
+          <div className="rounded-t-md border bg-card p-4">
+            <div className="flex items-center">
+              {selectedRowCount > 0 ? (
+                <div className="flex w-full items-center justify-between gap-4">
+                  <div className="text-sm text-muted-foreground">
+                    {selectedRowCount} de {table.getCoreRowModel().rows.length} fila(s) seleccionadas.
+                  </div>
+                  {bulkActions}
+                </div>
+              ) : (
+                toolbarContent
+              )}
+            </div>
+          </div>
+          <div className="relative">
+            <DataTable
+              table={table}
+            />
+            {isFiltering && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-b-md bg-card/80 backdrop-blur-sm">
+                    <LogoSpinner />
+                </div>
             )}
           </div>
-        ) : (
-          <DataTable
-            table={table}
-            toolbar={() => toolbarContent}
-            bulkActions={(table) => (
-              <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={() => handleBulkToggleStatus('activo')}>Activar</Button>
-                  <Button variant="outline" size="sm" onClick={() => handleBulkToggleStatus('inactivo')}>Desactivar</Button>
-                  <Button variant="destructive" size="sm" onClick={() => setIsBulkDeleteOpen(true)}>Eliminar</Button>
-              </div>
-            )}
-          />
-        )}
-        {isFiltering && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-card/80 backdrop-blur-sm">
-                <LogoSpinner />
-            </div>
-        )}
-      </div>
+        </div>
+      )}
 
 
       <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>

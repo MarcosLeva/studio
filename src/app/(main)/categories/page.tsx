@@ -104,6 +104,10 @@ export default function CategoriesPage() {
   const isMobile = useIsMobile();
   const [visibleRows, setVisibleRows] = React.useState(10);
   const isMounted = React.useRef(true);
+  const isInitialMount = React.useRef(true);
+
+  // Filter state
+  const [filterValue, setFilterValue] = React.useState("");
 
   React.useEffect(() => {
     isMounted.current = true;
@@ -261,7 +265,13 @@ export default function CategoriesPage() {
     },
   });
 
-  const isInitialMount = React.useRef(true);
+  React.useEffect(() => {
+    const timeout = setTimeout(() => {
+      table.getColumn("name")?.setFilterValue(filterValue);
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [filterValue, table]);
+
   React.useEffect(() => {
     if (isInitialMount.current) {
         isInitialMount.current = false;
@@ -278,8 +288,23 @@ export default function CategoriesPage() {
   }, [columnFilters]);
   
   const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    table.getColumn("name")?.setFilterValue(event.target.value);
+    setFilterValue(event.target.value);
   };
+  
+  const selectedRowCount = table.getFilteredSelectedRowModel().rows.length;
+
+  const toolbar = (
+    <Input
+    placeholder="Filtrar categorías..."
+    value={filterValue}
+    onChange={handleFilterChange}
+    className="max-w-sm"
+    />
+  );
+  
+  const bulkActions = (
+    <Button variant="destructive" onClick={() => setIsBulkDeleteOpen(true)}>Eliminar</Button>
+  );
 
   const MobileCategoryCard = ({ category }: { category: Category }) => (
     <Card>
@@ -520,56 +545,59 @@ export default function CategoriesPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="relative">
-        {isMobile ? (
-          <div className="space-y-4">
-            <Input
-              placeholder="Filtrar categorías..."
-              value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-              onChange={handleFilterChange}
-              className="max-w-sm"
-            />
-            {table.getFilteredRowModel().rows?.length ? (
-                <div className="space-y-4">
-                    {table.getFilteredRowModel().rows.slice(0, visibleRows).map((row) => (
-                        <MobileCategoryCard key={row.id} category={row.original} />
-                    ))}
-                    {visibleRows < table.getFilteredRowModel().rows.length && (
-                        <Button
-                            onClick={() => setVisibleRows(prev => prev + 10)}
-                            variant="outline"
-                            className="w-full"
-                        >
-                            Cargar más
-                        </Button>
-                    )}
+      {isMobile ? (
+        <div className="space-y-4">
+          <Input
+            placeholder="Filtrar categorías..."
+            value={filterValue}
+            onChange={handleFilterChange}
+            className="max-w-sm"
+          />
+          {table.getRowModel().rows?.length ? (
+              <div className="space-y-4">
+                  {table.getRowModel().rows.slice(0, visibleRows).map((row) => (
+                      <MobileCategoryCard key={row.id} category={row.original} />
+                  ))}
+                  {visibleRows < table.getRowModel().rows.length && (
+                      <Button
+                          onClick={() => setVisibleRows(prev => prev + 10)}
+                          variant="outline"
+                          className="w-full"
+                      >
+                          Cargar más
+                      </Button>
+                  )}
+              </div>
+          ) : (
+            <div className="text-center py-10 text-muted-foreground">No hay categorías.</div>
+          )}
+        </div>
+      ) : (
+        <div>
+          <div className="rounded-t-md border bg-card p-4">
+            <div className="flex items-center">
+              {selectedRowCount > 0 ? (
+                <div className="flex w-full items-center justify-between gap-4">
+                  <div className="text-sm text-muted-foreground">
+                    {selectedRowCount} de {table.getCoreRowModel().rows.length} fila(s) seleccionadas.
+                  </div>
+                  {bulkActions}
                 </div>
-            ) : (
-              <div className="text-center py-10 text-muted-foreground">No hay categorías.</div>
+              ) : (
+                toolbar
+              )}
+            </div>
+          </div>
+          <div className="relative">
+            <DataTable table={table} />
+            {isFiltering && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-b-md bg-card/80 backdrop-blur-sm">
+                    <LogoSpinner />
+                </div>
             )}
           </div>
-        ) : (
-            <DataTable
-                table={table}
-                toolbar={(table) => (
-                    <Input
-                    placeholder="Filtrar categorías..."
-                    value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-                    onChange={handleFilterChange}
-                    className="max-w-sm"
-                    />
-                )}
-                bulkActions={(table) => (
-                    <Button variant="destructive" onClick={() => setIsBulkDeleteOpen(true)}>Eliminar</Button>
-                )}
-            />
-        )}
-        {isFiltering && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-card/80 backdrop-blur-sm">
-                <LogoSpinner />
-            </div>
-        )}
-      </div>
+        </div>
+      )}
       <ScrollToTopButton />
     </div>
   );

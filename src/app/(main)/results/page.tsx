@@ -52,6 +52,7 @@ export default function ScannedResultsPage() {
   const isMobile = useIsMobile();
   const [visibleRows, setVisibleRows] = React.useState(10);
   const isMounted = React.useRef(true);
+  const isInitialMount = React.useRef(true);
 
   React.useEffect(() => {
     isMounted.current = true;
@@ -87,10 +88,12 @@ export default function ScannedResultsPage() {
       icon: <FileDown className="h-5 w-5 text-primary" />,
     });
   }, [toast]);
+  
+  const columns = React.useMemo(() => getColumns(handleExport, handleDelete), [handleExport, handleDelete]);
 
   const table = useReactTable({
     data: results,
-    columns: React.useMemo(() => getColumns(handleExport, handleDelete), [handleExport, handleDelete]),
+    columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -105,7 +108,6 @@ export default function ScannedResultsPage() {
     },
   });
 
-  const isInitialMount = React.useRef(true);
   React.useEffect(() => {
     if (isInitialMount.current) {
         isInitialMount.current = false;
@@ -175,6 +177,8 @@ export default function ScannedResultsPage() {
     })),
   [results]);
 
+  const selectedRowCount = table.getFilteredSelectedRowModel().rows.length;
+
   const toolbar = (
     <MultiSelectCombobox
       options={categoryOptions}
@@ -183,6 +187,13 @@ export default function ScannedResultsPage() {
       className="w-full sm:w-[320px]"
       placeholder="Filtrar por categorías..."
     />
+  );
+  
+  const bulkActions = (
+    <div className="flex items-center gap-2">
+      <Button variant="outline" onClick={handleBulkExport}>Exportar</Button>
+      <Button variant="destructive" onClick={() => setIsBulkDeleteOpen(true)}>Eliminar</Button>
+    </div>
   );
 
   const MobileResultCard = ({ result }: { result: ScanResult }) => (
@@ -255,48 +266,54 @@ export default function ScannedResultsPage() {
         </p>
       </div>
 
-      <div className="relative">
-        {isMobile ? (
-          <div className="space-y-4">
-            {toolbar}
-            {table.getFilteredRowModel().rows?.length ? (
-                <div className="space-y-4">
-                    {table.getFilteredRowModel().rows.slice(0, visibleRows).map((row) => (
-                        <MobileResultCard key={row.id} result={row.original} />
-                    ))}
-                    {visibleRows < table.getFilteredRowModel().rows.length && (
-                        <Button
-                            onClick={() => setVisibleRows(prev => prev + 10)}
-                            variant="outline"
-                            className="w-full"
-                        >
-                            Cargar más
-                        </Button>
-                    )}
+      {isMobile ? (
+        <div className="space-y-4">
+          {toolbar}
+          {table.getFilteredRowModel().rows?.length ? (
+              <div className="space-y-4">
+                  {table.getFilteredRowModel().rows.slice(0, visibleRows).map((row) => (
+                      <MobileResultCard key={row.id} result={row.original} />
+                  ))}
+                  {visibleRows < table.getFilteredRowModel().rows.length && (
+                      <Button
+                          onClick={() => setVisibleRows(prev => prev + 10)}
+                          variant="outline"
+                          className="w-full"
+                      >
+                          Cargar más
+                      </Button>
+                  )}
+              </div>
+          ) : (
+            <div className="text-center py-10 text-muted-foreground">No hay resultados.</div>
+          )}
+        </div>
+      ) : (
+        <div>
+          <div className="rounded-t-md border bg-card p-4">
+              <div className="flex items-center">
+                {selectedRowCount > 0 ? (
+                  <div className="flex w-full items-center justify-between gap-4">
+                    <div className="text-sm text-muted-foreground">
+                      {selectedRowCount} de {table.getCoreRowModel().rows.length} fila(s) seleccionadas.
+                    </div>
+                    {bulkActions}
+                  </div>
+                ) : (
+                  toolbar
+                )}
+              </div>
+          </div>
+          <div className="relative">
+            <DataTable table={table} />
+            {isFiltering && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-b-md bg-card/80 backdrop-blur-sm">
+                    <LogoSpinner />
                 </div>
-            ) : (
-              <div className="text-center py-10 text-muted-foreground">No hay resultados.</div>
             )}
           </div>
-        ) : (
-          <DataTable 
-            table={table} 
-            toolbar={() => toolbar}
-            bulkActions={(table) => (
-              <div className="flex items-center gap-2">
-                <Button variant="outline" onClick={handleBulkExport}>Exportar</Button>
-                <Button variant="destructive" onClick={() => setIsBulkDeleteOpen(true)}>Eliminar</Button>
-              </div>
-            )}
-          />
-        )}
-
-        {isFiltering && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-card/80 backdrop-blur-sm">
-                <LogoSpinner />
-            </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <AlertDialog
         open={!!resultToDelete}
