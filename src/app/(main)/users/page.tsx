@@ -100,6 +100,14 @@ export default function UsersPage() {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [rowSelection, setRowSelection] = React.useState({});
+  const isMounted = React.useRef(true);
+
+  React.useEffect(() => {
+    isMounted.current = true;
+    return () => {
+        isMounted.current = false;
+    };
+  }, []);
 
   const handleEditClick = React.useCallback((user: User) => {
     setEditingUser(user);
@@ -268,16 +276,15 @@ export default function UsersPage() {
             ))}
           </SelectContent>
         </Select>
-        {isFiltered && (
-            <Button
-                variant="ghost"
-                onClick={handleClearFilters}
-                className="h-9 px-2 lg:px-3"
-            >
-                Limpiar
-                <X className="ml-2 h-4 w-4" />
-            </Button>
-        )}
+        <Button
+            variant="ghost"
+            onClick={handleClearFilters}
+            className="h-9 px-2 lg:px-3"
+            disabled={!isFiltered}
+        >
+            Limpiar
+            <X className="ml-2 h-4 w-4" />
+        </Button>
       </div>
     </div>
   );
