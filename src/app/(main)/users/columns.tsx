@@ -84,7 +84,8 @@ export const getColumns = (
     header: "Rol",
     cell: ({ row }) => {
         const role = row.getValue("role") as string;
-        return <Badge variant={role === 'Administrador' ? 'default' : 'secondary'}>{role}</Badge>
+        const translatedRole = role === 'Administrador' ? 'Administrador' : 'Miembro';
+        return <Badge variant={role === 'Administrador' ? 'default' : 'secondary'}>{translatedRole}</Badge>
     },
     filterFn: 'equalsString',
     size: 120,
@@ -95,6 +96,7 @@ export const getColumns = (
     cell: ({ row }) => {
       const status = row.getValue("status") as string;
       const isActive = status === 'activo';
+      const translatedStatus = isActive ? 'Activo' : 'Inactivo';
       return (
         <div className="flex items-center gap-2">
           <div className="relative flex h-2 w-2">
@@ -106,7 +108,7 @@ export const getColumns = (
                 isActive ? 'bg-green-500' : 'bg-gray-400'
             )} />
           </div>
-          <span className="capitalize">{status}</span>
+          <span className="capitalize">{translatedStatus}</span>
         </div>
       )
     },

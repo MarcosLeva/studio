@@ -1,14 +1,6 @@
-import createMiddleware from 'next-intl/middleware';
- 
-export default createMiddleware({
-  locales: ['en', 'es'],
-  defaultLocale: 'es'
-});
- 
+// This file is intentionally left empty to disable the internationalization middleware.
+export default function middleware() {}
+
 export const config = {
-  // Match all pathnames except for
-  // - The Next.js internals and static files
-  // - The API routes
-  // - Public files (e.g. favicon.ico)
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)']
+  matcher: [],
 };

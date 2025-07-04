@@ -17,7 +17,6 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { UserNav } from '@/components/user-nav';
-import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function DashboardLayout({
@@ -26,6 +25,20 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+
+  const isAuthPage = [
+    '/login', 
+    '/forgot-password', 
+    '/reset-password', 
+    '/set-password'
+  ].some(p => pathname.endsWith(p));
+
+  // The root page also shouldn't have the dashboard layout
+  const isRootPage = pathname === '/';
+
+  if (isAuthPage || isRootPage) {
+    return <>{children}</>;
+  }
 
   return (
     <SidebarProvider>
@@ -86,7 +99,7 @@ export default function DashboardLayout({
                   </Link>
               </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
                 <ThemeToggle />
                 <UserNav />
             </div>

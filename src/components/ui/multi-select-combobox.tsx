@@ -3,7 +3,6 @@
 
 import * as React from "react";
 import { Check, X, ChevronsUpDown } from "lucide-react";
-import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -42,7 +41,6 @@ function MultiSelectCombobox({
   className,
   placeholder,
 }: MultiSelectComboboxProps) {
-  const t = useTranslations("MultiSelectCombobox");
   const [open, setOpen] = React.useState(false);
 
   const handleUnselect = (item: string) => {
@@ -77,7 +75,7 @@ function MultiSelectCombobox({
                   </Badge>
                 ))
             ) : (
-              <span className="text-muted-foreground">{placeholder || t('placeholder')}</span>
+              <span className="text-muted-foreground">{placeholder || "Seleccionar opciones..."}</span>
             )}
           </div>
           <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
@@ -85,8 +83,8 @@ function MultiSelectCombobox({
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
         <Command>
-          <CommandInput placeholder={t('searchPlaceholder')} />
-          <CommandEmpty>{t('noResults')}</CommandEmpty>
+          <CommandInput placeholder="Buscar..." />
+          <CommandEmpty>No se encontraron resultados.</CommandEmpty>
           <CommandList>
             <CommandGroup>
               {options.map((option) => (
