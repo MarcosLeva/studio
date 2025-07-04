@@ -50,7 +50,6 @@ import { useToast } from "@/hooks/use-toast";
 import { suggestCategoryPrompt } from "@/ai/flows/suggest-category-prompt";
 import type { Category } from "@/lib/types";
 import { FileUploader } from "@/components/file-uploader";
-import { LogoSpinner } from "@/components/ui/logo-spinner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -100,7 +99,6 @@ export default function CategoriesPage() {
   const [categoryToDelete, setCategoryToDelete] = React.useState<Category | null>(null);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = React.useState(false);
   const [isSuggesting, setIsSuggesting] = React.useState(false);
-  const [isFiltering, setIsFiltering] = React.useState(false);
   const isMobile = useIsMobile();
   const [visibleRows, setVisibleRows] = React.useState(10);
   const isMounted = React.useRef(true);
@@ -265,28 +263,20 @@ export default function CategoriesPage() {
   });
 
   React.useEffect(() => {
-    setIsFiltering(true);
     const timeout = setTimeout(() => {
       table.getColumn("name")?.setFilterValue(filterValue);
-      if (isMounted.current) {
-        setIsFiltering(false);
-      }
-    }, 500);
+    }, 300);
 
     return () => clearTimeout(timeout);
   }, [filterValue, table]);
 
-  const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFilterValue(event.target.value);
-  };
-  
   const selectedRowCount = table.getFilteredSelectedRowModel().rows.length;
 
   const toolbar = (
     <Input
     placeholder="Filtrar categorías..."
     value={filterValue}
-    onChange={handleFilterChange}
+    onChange={(e) => setFilterValue(e.target.value)}
     className="max-w-sm"
     />
   );
@@ -483,7 +473,7 @@ export default function CategoriesPage() {
                   )}
                 />
               </div>
-              <DialogFooter>
+              <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2 sm:gap-0">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
                 <Button type="submit">{editingCategory ? "Guardar Cambios" : "Guardar Categoría"}</Button>
               </DialogFooter>
@@ -504,7 +494,7 @@ export default function CategoriesPage() {
               <span className="font-semibold">{categoryToDelete?.name}</span>.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2 sm:gap-0">
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
@@ -524,7 +514,7 @@ export default function CategoriesPage() {
                 Esta acción no se puede deshacer. Esto eliminará permanentemente las {table.getFilteredSelectedRowModel().rows.length} categorías seleccionadas.
                 </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter>
+            <AlertDialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2 sm:gap-0">
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
                 <AlertDialogAction onClick={confirmBulkDelete} className="bg-destructive hover:bg-destructive/90">
                     Eliminar
@@ -538,7 +528,7 @@ export default function CategoriesPage() {
           <Input
             placeholder="Filtrar categorías..."
             value={filterValue}
-            onChange={handleFilterChange}
+            onChange={(e) => setFilterValue(e.target.value)}
             className="max-w-sm"
           />
           {table.getRowModel().rows?.length ? (
@@ -578,11 +568,6 @@ export default function CategoriesPage() {
           </div>
           <div className="relative">
             <DataTable table={table} />
-            {isFiltering && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-b-md bg-card/80 backdrop-blur-sm">
-                    <LogoSpinner />
-                </div>
-            )}
           </div>
         </div>
       )}
@@ -590,5 +575,3 @@ export default function CategoriesPage() {
     </div>
   );
 }
-
-    

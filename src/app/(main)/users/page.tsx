@@ -70,7 +70,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollToTopButton } from "@/components/scroll-to-top-button";
 import { cn } from "@/lib/utils";
-import { LogoSpinner } from "@/components/ui/logo-spinner";
 
 const userSchema = z.object({
   name: z.string().min(3, { message: "El nombre debe tener al menos 3 caracteres." }),
@@ -91,7 +90,6 @@ export default function UsersPage() {
   const [userToDelete, setUserToDelete] = React.useState<User | null>(null);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = React.useState(false);
   const [visibleRows, setVisibleRows] = React.useState(10);
-  const [isFiltering, setIsFiltering] = React.useState(false);
   const [newlyAddedUserId, setNewlyAddedUserId] = React.useState<string | null>(null);
   
   const form = useForm<UserFormValues>({
@@ -126,27 +124,12 @@ export default function UsersPage() {
   }, [newlyAddedUserId]);
 
   React.useEffect(() => {
-    setIsFiltering(true);
     const timeout = setTimeout(() => {
       setGlobalFilter(filterValue);
-      if (isMounted.current) {
-        setIsFiltering(false);
-      }
-    }, 500);
+    }, 300);
     return () => clearTimeout(timeout);
   }, [filterValue]);
 
-
-  React.useEffect(() => {
-    setIsFiltering(true);
-    const timer = setTimeout(() => {
-        if (isMounted.current) {
-            setIsFiltering(false);
-        }
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [columnFilters]);
 
   const handleEditClick = React.useCallback((user: User) => {
     setEditingUser(user);
@@ -468,11 +451,6 @@ export default function UsersPage() {
                 table={table}
                 getRowClassName={(row) => row.original.id === newlyAddedUserId ? 'animate-fireworks' : ''}
             />
-            {isFiltering && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-b-md bg-card/80 backdrop-blur-sm">
-                    <LogoSpinner />
-                </div>
-            )}
           </div>
         </div>
       )}
@@ -589,5 +567,3 @@ export default function UsersPage() {
     </div>
   );
 }
-
-    

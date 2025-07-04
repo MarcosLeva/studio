@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogoSpinner } from "@/components/ui/logo-spinner";
 import {
   useReactTable,
   getCoreRowModel,
@@ -48,7 +47,6 @@ export default function ScannedResultsPage() {
   const { toast } = useToast();
   const [resultToDelete, setResultToDelete] = React.useState<ScanResult | null>(null);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = React.useState(false);
-  const [isFiltering, setIsFiltering] = React.useState(false);
   const isMobile = useIsMobile();
   const [visibleRows, setVisibleRows] = React.useState(10);
   const isMounted = React.useRef(true);
@@ -106,18 +104,6 @@ export default function ScannedResultsPage() {
       rowSelection,
     },
   });
-
-  React.useEffect(() => {
-    setIsFiltering(true);
-    const timer = setTimeout(() => {
-      if (isMounted.current) {
-        setIsFiltering(false);
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [columnFilters]);
-
 
   const confirmDelete = () => {
     if (resultToDelete) {
@@ -301,11 +287,6 @@ export default function ScannedResultsPage() {
           </div>
           <div className="relative">
             <DataTable table={table} />
-            {isFiltering && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-b-md bg-card/80 backdrop-blur-sm">
-                    <LogoSpinner />
-                </div>
-            )}
           </div>
         </div>
       )}
