@@ -47,6 +47,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
+import { ScrollToTopButton } from "@/components/scroll-to-top-button";
 
 export default function ScannedResultsPage() {
   const { results, deleteScanResult } = useApp();
@@ -281,6 +282,7 @@ export default function ScannedResultsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <ScrollToTopButton />
     </div>
   );
 }

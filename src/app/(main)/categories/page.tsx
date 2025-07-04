@@ -62,6 +62,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ScrollToTopButton } from "@/components/scroll-to-top-button";
 
 const categorySchema = z.object({
   name: z.string().min(3, { message: "El nombre de la categoría debe tener al menos 3 caracteres." }),
@@ -454,6 +455,7 @@ export default function CategoriesPage() {
             </div>
         )}
       </div>
+      <ScrollToTopButton />
     </div>
   );
 }
