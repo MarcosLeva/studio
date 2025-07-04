@@ -21,7 +21,7 @@ import { UserNav } from '@/components/user-nav';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { LanguageSwitcher } from '@/components/language-switcher';
 
-export default function DashboardLayout({
+function DashboardLayoutComponent({
   children,
 }: {
   children: React.ReactNode;
@@ -101,4 +101,28 @@ export default function DashboardLayout({
       </div>
     </SidebarProvider>
   );
+}
+
+
+export default function LocaleLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const pathname = usePathname();
+  const isAuthPage = [
+    '/login', 
+    '/forgot-password', 
+    '/reset-password', 
+    '/set-password'
+  ].some(p => pathname.endsWith(p));
+
+  // The root page also shouldn't have the dashboard layout
+  const isRootPage = pathname.match(/^\/(en|es)\/?$/);
+
+  if (isAuthPage || isRootPage) {
+    return <>{children}</>;
+  }
+
+  return <DashboardLayoutComponent>{children}</DashboardLayoutComponent>;
 }
