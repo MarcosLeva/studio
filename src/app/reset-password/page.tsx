@@ -80,7 +80,7 @@ export default function ResetPasswordPage() {
   
   if (isSuccess) {
     return (
-        <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+        <main className="flex min-h-svh flex-col items-center justify-center bg-background p-4">
             <Card className="w-full max-w-sm text-center">
                 <CardHeader className="items-center">
                     <ShieldCheck className="h-16 w-16 text-primary mb-4" />
@@ -100,7 +100,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+    <main className="flex min-h-svh flex-col items-center justify-center bg-background p-4">
       <div className="flex flex-col items-center justify-center space-y-4 text-center mb-8">
         <Link href="/login" className="flex items-center gap-2">
           <QrCode className="h-10 w-10 text-primary" />

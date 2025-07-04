@@ -14,7 +14,7 @@ export default function RootPage() {
   }, [router]);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+    <main className="flex min-h-svh flex-col items-center justify-center bg-background p-4">
       <p>Redirigiendo a la página de inicio de sesión...</p>
     </main>
   );

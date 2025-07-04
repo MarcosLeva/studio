@@ -65,7 +65,7 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+    <main className="flex min-h-svh flex-col items-center justify-center bg-background p-4">
       <div className="flex flex-col items-center justify-center space-y-4 text-center">
         <div className="flex items-center gap-2">
             <QrCode className="h-10 w-10 text-primary" />
