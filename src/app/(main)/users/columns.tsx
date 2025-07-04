@@ -99,7 +99,7 @@ export const getColumns = (
         <div className="flex items-center gap-2">
           <div className="relative flex h-2 w-2">
             {isActive && (
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+              <span className="absolute inline-flex h-full w-full animate-ping-large rounded-full bg-green-400 opacity-75" />
             )}
             <span className={cn(
                 "relative inline-flex h-2 w-2 rounded-full",

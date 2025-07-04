@@ -107,6 +107,12 @@ export default {
             transform: 'scale(0.95)',
           },
         },
+        'ping-large': {
+          '75%, 100%': {
+            transform: 'scale(2.5)',
+            opacity: '0',
+          },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -117,6 +123,7 @@ export default {
         'logo-pulse-2': 'logo-pulse 2s 0.3s infinite cubic-bezier(0.4, 0, 0.6, 1)',
         'logo-pulse-3': 'logo-pulse 2s 0.6s infinite cubic-bezier(0.4, 0, 0.6, 1)',
         'logo-pulse-4': 'logo-pulse 2s 0.9s infinite cubic-bezier(0.4, 0, 0.6, 1)',
+        'ping-large': 'ping-large 1s cubic-bezier(0, 0, 0.2, 1) infinite',
       },
     },
   },
