@@ -48,6 +48,7 @@ export default function ResetPasswordPage() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [isAlertOpen, setIsAlertOpen] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
+  const isMounted = React.useRef(true);
 
   const form = useForm<ResetPasswordFormValues>({
     resolver: zodResolver(resetPasswordSchema),
@@ -57,6 +58,13 @@ export default function ResetPasswordPage() {
     },
   });
 
+  React.useEffect(() => {
+    isMounted.current = true;
+    return () => {
+        isMounted.current = false;
+    };
+  }, []);
+
   const onSubmit = () => {
     setIsAlertOpen(true);
   };
@@ -65,16 +73,18 @@ export default function ResetPasswordPage() {
     setIsLoading(true);
     // Simulate API call
     setTimeout(() => {
-      setIsLoading(false);
-      setIsSuccess(true);
-      toast({
-        title: "Contraseña Restablecida",
-        description: "Tu contraseña ha sido actualizada con éxito.",
-      });
-       // Redirect after a short delay
-       setTimeout(() => {
-        router.push("/login");
-      }, 2000);
+      if (isMounted.current) {
+        setIsLoading(false);
+        setIsSuccess(true);
+        toast({
+          title: "Contraseña Restablecida",
+          description: "Tu contraseña ha sido actualizada con éxito.",
+        });
+         // Redirect after a short delay
+         setTimeout(() => {
+          router.push("/login");
+        }, 2000);
+      }
     }, 1500);
   };
   

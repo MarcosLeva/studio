@@ -48,6 +48,7 @@ export default function SetPasswordPage() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [isAlertOpen, setIsAlertOpen] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
+  const isMounted = React.useRef(true);
 
   const form = useForm<SetPasswordFormValues>({
     resolver: zodResolver(setPasswordSchema),
@@ -57,6 +58,13 @@ export default function SetPasswordPage() {
     },
   });
 
+  React.useEffect(() => {
+    isMounted.current = true;
+    return () => {
+        isMounted.current = false;
+    };
+  }, []);
+
   const onSubmit = () => {
     setIsAlertOpen(true);
   };
@@ -65,16 +73,18 @@ export default function SetPasswordPage() {
     setIsLoading(true);
     // Simulate API call
     setTimeout(() => {
-      setIsLoading(false);
-      setIsSuccess(true);
-      toast({
-        title: "¡Contraseña Establecida!",
-        description: "Tu cuenta ha sido configurada con éxito.",
-      });
-      // Redirect after a short delay
-      setTimeout(() => {
-        router.push("/login");
-      }, 2000);
+      if (isMounted.current) {
+        setIsLoading(false);
+        setIsSuccess(true);
+        toast({
+          title: "¡Contraseña Establecida!",
+          description: "Tu cuenta ha sido configurada con éxito.",
+        });
+        // Redirect after a short delay
+        setTimeout(() => {
+          router.push("/login");
+        }, 2000);
+      }
     }, 1500);
   };
   

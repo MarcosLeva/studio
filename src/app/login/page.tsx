@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -33,6 +34,7 @@ export default function LoginPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
+  const isMounted = React.useRef(true);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -42,23 +44,32 @@ export default function LoginPage() {
     },
   });
 
+  React.useEffect(() => {
+    isMounted.current = true;
+    return () => {
+        isMounted.current = false;
+    };
+  }, []);
+
   const onSubmit = (data: LoginFormValues) => {
     setIsLoading(true);
     // Faux authentication
     setTimeout(() => {
-      setIsLoading(false);
-      // Basic validation check for demo purposes
-      if (data.email && data.password) {
-        setIsSuccess(true);
-        setTimeout(() => {
-            router.push("/analyze-catalog");
-        }, 2000);
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Error al Iniciar Sesión",
-          description: "Por favor, comprueba tus credenciales e inténtalo de nuevo.",
-        });
+      if (isMounted.current) {
+        setIsLoading(false);
+        // Basic validation check for demo purposes
+        if (data.email && data.password) {
+          setIsSuccess(true);
+          setTimeout(() => {
+              router.push("/analyze-catalog");
+          }, 2000);
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Error al Iniciar Sesión",
+            description: "Por favor, comprueba tus credenciales e inténtalo de nuevo.",
+          });
+        }
       }
     }, 1000);
   };

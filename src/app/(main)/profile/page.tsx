@@ -34,6 +34,7 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const isMounted = React.useRef(true);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -42,6 +43,13 @@ export default function ProfilePage() {
       email: user.email,
     },
   });
+
+  React.useEffect(() => {
+    isMounted.current = true;
+    return () => {
+        isMounted.current = false;
+    };
+  }, []);
 
   React.useEffect(() => {
     form.reset({
@@ -55,12 +63,14 @@ export default function ProfilePage() {
     setIsLoading(true);
     // Simulate API call
     setTimeout(() => {
-      editUser({ name: data.name, email: data.email });
-      toast({
-        title: "Perfil Actualizado",
-        description: "Tu información ha sido actualizada con éxito.",
-      });
-      setIsLoading(false);
+      if (isMounted.current) {
+        editUser({ name: data.name, email: data.email });
+        toast({
+          title: "Perfil Actualizado",
+          description: "Tu información ha sido actualizada con éxito.",
+        });
+        setIsLoading(false);
+      }
     }, 1000);
   };
 
@@ -77,12 +87,14 @@ export default function ProfilePage() {
       }
       const reader = new FileReader();
       reader.onloadend = () => {
-        const dataUrl = reader.result as string;
-        editUser({ avatar: dataUrl });
-        toast({
-          title: "Foto de perfil actualizada",
-          description: "Tu nueva foto ha sido guardada.",
-        });
+        if (isMounted.current) {
+          const dataUrl = reader.result as string;
+          editUser({ avatar: dataUrl });
+          toast({
+            title: "Foto de perfil actualizada",
+            description: "Tu nueva foto ha sido guardada.",
+          });
+        }
       };
       reader.readAsDataURL(file);
     }

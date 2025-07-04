@@ -106,7 +106,6 @@ export default function AnalyzeCatalogPage() {
         title: "Análisis Fallido",
         description: "Ocurrió un error inesperado. Por favor, inténtalo de nuevo.",
       });
-    } finally {
       setIsLoading(false);
     }
   }
