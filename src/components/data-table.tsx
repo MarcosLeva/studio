@@ -5,6 +5,7 @@ import * as React from "react";
 import {
   flexRender,
   Table as ReactTable,
+  Row,
 } from "@tanstack/react-table";
 
 import {
@@ -19,10 +20,12 @@ import { Button } from "./ui/button";
 
 interface DataTableProps<TData> {
   table: ReactTable<TData>;
+  getRowClassName?: (row: Row<TData>) => string;
 }
 
 export function DataTable<TData>({
   table,
+  getRowClassName,
 }: DataTableProps<TData>) {
   
   return (
@@ -53,6 +56,7 @@ export function DataTable<TData>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className={getRowClassName?.(row)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} style={{ width: cell.column.getSize() }}>

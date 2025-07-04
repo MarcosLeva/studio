@@ -111,7 +111,7 @@ interface AppContextType {
   user: User;
   editUser: (data: Partial<Omit<User, 'id'>>) => void;
   managedUsers: User[];
-  addManagedUser: (user: Omit<User, 'id' | 'avatar' | 'status'>) => void;
+  addManagedUser: (user: Omit<User, 'id' | 'avatar' | 'status'>) => string;
   editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'status'>>) => void;
   deleteManagedUser: (id: string) => void;
   toggleUserStatus: (id: string) => void;
@@ -167,14 +167,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setUser(prev => ({ ...prev, ...data }));
   };
 
-  const addManagedUser = (userData: Omit<User, 'id' | 'avatar' | 'status'>) => {
+  const addManagedUser = (userData: Omit<User, 'id' | 'avatar' | 'status'>): string => {
     const newUser: User = {
       ...userData,
       id: `user-${new Date().getTime()}`,
       avatar: `https://placehold.co/100x100.png`,
       status: 'activo',
     };
-    setManagedUsers(prev => [...prev, newUser]);
+    setManagedUsers(prev => [newUser, ...prev]);
+    return newUser.id;
   };
 
   const editManagedUser = (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'status'>>) => {

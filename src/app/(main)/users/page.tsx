@@ -92,6 +92,7 @@ export default function UsersPage() {
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = React.useState(false);
   const [visibleRows, setVisibleRows] = React.useState(10);
   const [isFiltering, setIsFiltering] = React.useState(false);
+  const [newlyAddedUserId, setNewlyAddedUserId] = React.useState<string | null>(null);
   
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
@@ -111,6 +112,18 @@ export default function UsersPage() {
         isMounted.current = false;
     };
   }, []);
+
+  React.useEffect(() => {
+    if (newlyAddedUserId) {
+        const timer = setTimeout(() => {
+            if (isMounted.current) {
+                setNewlyAddedUserId(null);
+            }
+        }, 2500); // Animation duration
+
+        return () => clearTimeout(timer);
+    }
+  }, [newlyAddedUserId]);
 
   React.useEffect(() => {
     const timeout = setTimeout(() => {
@@ -184,7 +197,8 @@ export default function UsersPage() {
         icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
       });
     } else {
-      addManagedUser(data);
+      const newId = addManagedUser(data);
+      setNewlyAddedUserId(newId);
       toast({
         title: "Invitación Enviada",
         description: `Se ha enviado una invitación por correo electrónico a ${data.email}.`,
@@ -337,7 +351,7 @@ export default function UsersPage() {
   );
   
   const MobileUserCard = ({ user }: { user: User }) => (
-    <Card>
+    <Card className={cn(user.id === newlyAddedUserId && 'animate-fireworks')}>
       <CardContent className="p-4 flex justify-between items-start gap-4">
         <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
@@ -450,7 +464,10 @@ export default function UsersPage() {
             </div>
           </div>
           <div className="relative">
-            <DataTable table={table} />
+            <DataTable 
+                table={table}
+                getRowClassName={(row) => row.original.id === newlyAddedUserId ? 'animate-fireworks' : ''}
+            />
             {isFiltering && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center rounded-b-md bg-card/80 backdrop-blur-sm">
                     <LogoSpinner />
@@ -518,7 +535,7 @@ export default function UsersPage() {
                   </FormItem>
                 )}
               />
-              <DialogFooter>
+              <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2 sm:gap-0">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
                 <Button type="submit">{editingUser ? "Guardar Cambios" : "Agregar Usuario"}</Button>
               </DialogFooter>
@@ -539,7 +556,7 @@ export default function UsersPage() {
               <span className="font-semibold">{userToDelete?.name}</span>.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2 sm:gap-0">
             <AlertDialogCancel onClick={() => setUserToDelete(null)}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
@@ -559,7 +576,7 @@ export default function UsersPage() {
                 Esta acción no se puede deshacer. Esto eliminará permanentemente a los {table.getFilteredSelectedRowModel().rows.length} usuarios seleccionados.
                 </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter>
+            <AlertDialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2 sm:gap-0">
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
                 <AlertDialogAction onClick={confirmBulkDelete} className="bg-destructive hover:bg-destructive/90">
                     Eliminar

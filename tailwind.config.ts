@@ -113,6 +113,10 @@ export default {
             opacity: '0',
           },
         },
+        'fireworks-bg': {
+          '0%': { backgroundColor: 'hsl(var(--primary) / 0.4)' },
+          '100%': { backgroundColor: 'transparent' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -124,6 +128,7 @@ export default {
         'logo-pulse-3': 'logo-pulse 2s 0.6s infinite cubic-bezier(0.4, 0, 0.6, 1)',
         'logo-pulse-4': 'logo-pulse 2s 0.9s infinite cubic-bezier(0.4, 0, 0.6, 1)',
         'ping-large': 'ping-large 1s cubic-bezier(0, 0, 0.2, 1) infinite',
+        'fireworks': 'fireworks-bg 2.5s ease-out forwards',
       },
     },
   },
