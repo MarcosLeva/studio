@@ -225,7 +225,7 @@ export default function UsersPage() {
       />
       <div className="flex w-full gap-2 sm:ml-auto sm:w-auto sm:flex-shrink-0">
         <Select
-          value={(table.getColumn("role")?.getFilterValue() as string) ?? ""}
+          value={(table.getColumn("role")?.getFilterValue() as string) ?? "all"}
           onValueChange={(value) =>
             table.getColumn("role")?.setFilterValue(value === "all" ? undefined : value)
           }
@@ -243,7 +243,7 @@ export default function UsersPage() {
           </SelectContent>
         </Select>
         <Select
-          value={(table.getColumn("status")?.getFilterValue() as string) ?? ""}
+          value={(table.getColumn("status")?.getFilterValue() as string) ?? "all"}
           onValueChange={(value) =>
             table.getColumn("status")?.setFilterValue(value === "all" ? undefined : value)
           }
