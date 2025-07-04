@@ -11,6 +11,7 @@ import {
   getCoreRowModel,
   getFilteredRowModel,
   getSortedRowModel,
+  getPaginationRowModel,
   type SortingState,
   type ColumnFiltersState,
 } from "@tanstack/react-table";
@@ -88,6 +89,7 @@ export default function CategoriesPage() {
   const [isSuggesting, setIsSuggesting] = React.useState(false);
   const [isFiltering, setIsFiltering] = React.useState(false);
   const isMobile = useIsMobile();
+  const [visibleRows, setVisibleRows] = React.useState(10);
 
   const form = useForm<z.infer<typeof categorySchema>>({
     resolver: zodResolver(categorySchema),
@@ -178,6 +180,7 @@ export default function CategoriesPage() {
   
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [rowSelection, setRowSelection] = React.useState({});
 
   const table = useReactTable({
     data: categories,
@@ -187,9 +190,12 @@ export default function CategoriesPage() {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onRowSelectionChange: setRowSelection,
     state: {
       sorting,
       columnFilters,
+      rowSelection,
     },
   });
   
@@ -412,9 +418,18 @@ export default function CategoriesPage() {
             />
             {table.getRowModel().rows?.length ? (
                 <div className="space-y-4">
-                    {table.getRowModel().rows.map((row) => (
+                    {table.getRowModel().rows.slice(0, visibleRows).map((row) => (
                         <MobileCategoryCard key={row.id} category={row.original} />
                     ))}
+                    {visibleRows < table.getRowModel().rows.length && (
+                        <Button
+                            onClick={() => setVisibleRows(prev => prev + 10)}
+                            variant="outline"
+                            className="w-full"
+                        >
+                            Cargar más
+                        </Button>
+                    )}
                 </div>
             ) : (
               <div className="text-center py-10 text-muted-foreground">No hay categorías.</div>

@@ -33,6 +33,7 @@ import {
   getCoreRowModel,
   getFilteredRowModel,
   getSortedRowModel,
+  getPaginationRowModel,
   type SortingState,
   type ColumnFiltersState,
 } from "@tanstack/react-table";
@@ -53,6 +54,7 @@ export default function ScannedResultsPage() {
   const [resultToDelete, setResultToDelete] = React.useState<ScanResult | null>(null);
   const [isFiltering, setIsFiltering] = React.useState(false);
   const isMobile = useIsMobile();
+  const [visibleRows, setVisibleRows] = React.useState(10);
 
   const handleDelete = React.useCallback((result: ScanResult) => {
     setResultToDelete(result);
@@ -92,6 +94,7 @@ export default function ScannedResultsPage() {
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [rowSelection, setRowSelection] = React.useState({});
   
   const table = useReactTable({
     data: results,
@@ -101,9 +104,12 @@ export default function ScannedResultsPage() {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onRowSelectionChange: setRowSelection,
     state: {
       sorting,
       columnFilters,
+      rowSelection,
     },
   });
 
@@ -218,9 +224,18 @@ export default function ScannedResultsPage() {
             {toolbar}
             {table.getRowModel().rows?.length ? (
                 <div className="space-y-4">
-                    {table.getRowModel().rows.map((row) => (
+                    {table.getRowModel().rows.slice(0, visibleRows).map((row) => (
                         <MobileResultCard key={row.id} result={row.original} />
                     ))}
+                    {visibleRows < table.getRowModel().rows.length && (
+                        <Button
+                            onClick={() => setVisibleRows(prev => prev + 10)}
+                            variant="outline"
+                            className="w-full"
+                        >
+                            Cargar más
+                        </Button>
+                    )}
                 </div>
             ) : (
               <div className="text-center py-10 text-muted-foreground">No hay resultados.</div>

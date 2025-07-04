@@ -11,6 +11,7 @@ import {
   getCoreRowModel,
   getFilteredRowModel,
   getSortedRowModel,
+  getPaginationRowModel,
   type SortingState,
   type ColumnFiltersState,
 } from "@tanstack/react-table";
@@ -85,6 +86,7 @@ export default function UsersPage() {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [editingUser, setEditingUser] = React.useState<User | null>(null);
   const [userToDelete, setUserToDelete] = React.useState<User | null>(null);
+  const [visibleRows, setVisibleRows] = React.useState(10);
   
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
@@ -147,6 +149,7 @@ export default function UsersPage() {
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [rowSelection, setRowSelection] = React.useState({});
 
   const table = useReactTable({
     data: managedUsers,
@@ -156,9 +159,12 @@ export default function UsersPage() {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onRowSelectionChange: setRowSelection,
     state: {
       sorting,
       columnFilters,
+      rowSelection,
     },
   });
 
@@ -230,9 +236,18 @@ export default function UsersPage() {
           {toolbar}
           {table.getRowModel().rows?.length ? (
             <div className="space-y-4">
-              {table.getRowModel().rows.map((row) => (
+              {table.getRowModel().rows.slice(0, visibleRows).map((row) => (
                 <MobileUserCard key={row.id} user={row.original} />
               ))}
+               {visibleRows < table.getRowModel().rows.length && (
+                <Button
+                  onClick={() => setVisibleRows(prev => prev + 10)}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Cargar más
+                </Button>
+              )}
             </div>
           ) : (
              <div className="text-center py-10 text-muted-foreground">No hay usuarios.</div>
