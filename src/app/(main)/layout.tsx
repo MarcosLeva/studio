@@ -104,17 +104,23 @@ export default function DashboardLayout({
           <header className="flex h-14 shrink-0 items-center gap-4 border-b bg-card px-4 lg:px-6">
             <SidebarTrigger className="hidden md:flex" />
 
+            {/* Mobile Header: Trigger, Logo */}
             <div className="flex items-center gap-2 md:hidden">
               <SidebarTrigger />
+              <Link href="/analyze-catalog" className="flex items-center gap-2">
+                <QrCode className="h-6 w-6 text-primary" />
+                <span className="font-headline text-lg font-semibold">COCOCO Scan</span>
+              </Link>
             </div>
-            
-            <Breadcrumbs />
+
+            {/* Desktop Header: Breadcrumbs */}
+            <div className="hidden flex-1 md:block">
+              <Breadcrumbs />
+            </div>
 
             <div className="ml-auto flex items-center gap-2">
-              <div className="hidden items-center gap-2 md:flex">
-                <HeaderThemeToggle />
-                <HeaderUserNav />
-              </div>
+              <HeaderThemeToggle />
+              <HeaderUserNav />
             </div>
           </header>
           <main key={pathname} className="flex-1 overflow-y-auto p-4 sm:p-6 animate-fade-in">
