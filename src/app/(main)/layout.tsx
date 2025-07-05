@@ -106,10 +106,6 @@ export default function DashboardLayout({
 
             <div className="flex items-center gap-2 md:hidden">
               <SidebarTrigger />
-              <Link href="/analyze-catalog" className="flex items-center gap-2">
-                <QrCode className="h-6 w-6 text-primary" />
-                <span className="font-headline font-semibold">COCOCO Scan</span>
-              </Link>
             </div>
             
             <Breadcrumbs />

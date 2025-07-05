@@ -24,8 +24,8 @@ export function Breadcrumbs() {
   }
 
   return (
-    <nav aria-label="Breadcrumb" className="hidden md:flex">
-      <ol className="flex items-center space-x-2 text-sm whitespace-nowrap">
+    <nav aria-label="Breadcrumb" className="flex min-w-0">
+      <ol className="flex items-center space-x-2 text-sm whitespace-nowrap overflow-x-auto no-scrollbar">
         {segments.map((segment, index) => {
           const href = "/" + segments.slice(0, index + 1).join("/");
           const isLast = index === segments.length - 1;
@@ -49,7 +49,7 @@ export function Breadcrumbs() {
               </li>
               {!isLast && (
                 <li>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                 </li>
               )}
             </React.Fragment>

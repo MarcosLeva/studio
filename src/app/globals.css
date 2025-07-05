@@ -107,6 +107,13 @@
 }
 
 @layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
   @keyframes fireworks {
     0% { background-color: transparent; }
     25% { background-color: hsl(var(--primary) / 0.3); }
