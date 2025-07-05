@@ -20,6 +20,9 @@ import {
 } from '@/components/ui/sidebar';
 import { UserNav } from '@/components/user-nav';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { Breadcrumbs } from '@/components/breadcrumbs';
+import { HeaderUserNav } from '@/components/header-user-nav';
+import { HeaderThemeToggle } from '@/components/header-theme-toggle';
 
 export default function DashboardLayout({
   children,
@@ -98,14 +101,24 @@ export default function DashboardLayout({
         </Sidebar>
 
         <div className="relative flex flex-1 flex-col bg-background min-w-0">
-          <header className="flex h-14 shrink-0 items-center border-b bg-card px-4 lg:px-6">
-            <SidebarTrigger className="md:hidden" />
-            <div className="flex-1" />
-            <div className="flex items-center md:hidden">
+          <header className="flex h-14 shrink-0 items-center gap-4 border-b bg-card px-4 lg:px-6">
+            <SidebarTrigger className="hidden md:flex" />
+
+            <div className="flex items-center gap-2 md:hidden">
+              <SidebarTrigger />
               <Link href="/analyze-catalog" className="flex items-center gap-2">
-                  <QrCode className="h-6 w-6 text-primary" />
-                  <span className="font-headline font-semibold">COCOCO Scan</span>
+                <QrCode className="h-6 w-6 text-primary" />
+                <span className="font-headline font-semibold">COCOCO Scan</span>
               </Link>
+            </div>
+            
+            <Breadcrumbs />
+
+            <div className="ml-auto flex items-center gap-2">
+              <div className="hidden items-center gap-2 md:flex">
+                <HeaderThemeToggle />
+                <HeaderUserNav />
+              </div>
             </div>
           </header>
           <main key={pathname} className="flex-1 overflow-y-auto p-4 sm:p-6 animate-fade-in">
