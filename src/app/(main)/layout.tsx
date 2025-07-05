@@ -16,6 +16,7 @@ import {
   SidebarMenuButton,
   SidebarTrigger,
   SidebarClose,
+  SidebarFooter,
 } from '@/components/ui/sidebar';
 import { UserNav } from '@/components/user-nav';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -43,21 +44,21 @@ export default function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-svh w-full">
+      <div className="flex min-h-svh w-full bg-background">
         <Sidebar>
-          <SidebarContent>
-            <SidebarHeader>
-              <div className="flex items-center justify-between p-2">
-                <div className='flex items-center gap-2'>
-                    <QrCode className="h-8 w-8 text-primary" />
-                    <span className="text-xl font-headline font-semibold">COCOCO Scan</span>
-                </div>
-                <SidebarClose />
+          <SidebarHeader>
+            <div className="flex items-center justify-between p-2">
+              <div className='flex items-center gap-2 group-data-[collapsible=icon]:-ml-1'>
+                  <QrCode className="h-8 w-8 text-primary" />
+                  <span className="text-xl font-headline font-semibold group-data-[collapsible=icon]:hidden">COCOCO Scan</span>
               </div>
-            </SidebarHeader>
-            <SidebarMenu>
+              <SidebarClose />
+            </div>
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarMenu className='px-2'>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === '/analyze-catalog'}>
+                <SidebarMenuButton asChild isActive={pathname === '/analyze-catalog'} tooltip="Analizar Catálogo">
                   <Link href="/analyze-catalog">
                     <FileScan />
                     <span>Analizar Catálogo</span>
@@ -65,7 +66,7 @@ export default function DashboardLayout({
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === '/categories'}>
+                <SidebarMenuButton asChild isActive={pathname === '/categories'} tooltip="Categorías">
                    <Link href="/categories">
                     <LayoutGrid />
                     <span>Categorías</span>
@@ -73,7 +74,7 @@ export default function DashboardLayout({
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === '/results'}>
+                <SidebarMenuButton asChild isActive={pathname === '/results'} tooltip="Resultados Escaneados">
                   <Link href="/results">
                     <BarChart2 />
                     <span>Resultados Escaneados</span>
@@ -81,7 +82,7 @@ export default function DashboardLayout({
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname.startsWith('/users')}>
+                <SidebarMenuButton asChild isActive={pathname.startsWith('/users')} tooltip="Usuarios">
                   <Link href="/users">
                     <Users />
                     <span>Usuarios</span>
@@ -90,22 +91,21 @@ export default function DashboardLayout({
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarContent>
+          <SidebarFooter>
+            <ThemeToggle />
+            <UserNav />
+          </SidebarFooter>
         </Sidebar>
 
         <div className="relative flex flex-1 flex-col bg-background min-w-0">
-          <header className="flex h-14 shrink-0 items-center justify-between border-b bg-card px-4 lg:px-6">
+          <header className="flex h-14 shrink-0 items-center border-b bg-card px-4 lg:px-6">
             <SidebarTrigger className="md:hidden" />
-            <div className="flex-1">
-              <div className="flex justify-center md:hidden">
-                  <Link href="/analyze-catalog" className="flex items-center gap-2">
-                      <QrCode className="h-6 w-6 text-primary" />
-                      <span className="font-headline font-semibold">COCOCO Scan</span>
-                  </Link>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-                <ThemeToggle />
-                <UserNav />
+            <div className="flex-1" />
+            <div className="flex items-center md:hidden">
+              <Link href="/analyze-catalog" className="flex items-center gap-2">
+                  <QrCode className="h-6 w-6 text-primary" />
+                  <span className="font-headline font-semibold">COCOCO Scan</span>
+              </Link>
             </div>
           </header>
           <main key={pathname} className="flex-1 overflow-y-auto p-4 sm:p-6 animate-fade-in">

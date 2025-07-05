@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -32,49 +33,51 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+    
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-foreground: 240 5% 34%;
+    --sidebar-primary: 328 100% 54%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 210 12% 90%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 210 12% 88%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 240 4% 94%;
+    --sidebar-accent-foreground: 240 6% 10%;
+    --sidebar-border: 240 4% 90%;
+    --sidebar-ring: 328 100% 54%;
   }
 
   .dark {
-    --background: 220 14% 10%;
+    --background: 240 4% 10%;
     --foreground: 210 20% 98%;
-    --card: 220 14% 10%;
+    --card: 240 4% 10%;
     --card-foreground: 210 20% 98%;
-    --popover: 220 14% 10%;
+    --popover: 240 4% 10%;
     --popover-foreground: 210 20% 98%;
     --primary: 328 100% 54%;
     --primary-foreground: 328 100% 98%;
-    --secondary: 220 13% 18%;
+    --secondary: 240 4% 16%;
     --secondary-foreground: 210 20% 98%;
-    --muted: 220 13% 18%;
+    --muted: 240 4% 16%;
     --muted-foreground: 215 20% 65%;
     --accent: 195 100% 50%;
     --accent-foreground: 195 100% 10%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 220 13% 18%;
-    --input: 220 13% 18%;
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
     --ring: 328 100% 54%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    --sidebar-background: 220 14% 8%;
-    --sidebar-foreground: 210 20% 98%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 13% 18%;
-    --sidebar-accent-foreground: 210 20% 98%;
-    --sidebar-border: 220 13% 18%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    
+    --sidebar-background: 240 4% 8%;
+    --sidebar-foreground: 240 5% 65%;
+    --sidebar-primary: 328 100% 54%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4% 14%;
+    --sidebar-accent-foreground: 240 5% 96%;
+    --sidebar-border: 240 4% 16%;
+    --sidebar-ring: 328 100% 54%;
   }
 
   * {
@@ -89,10 +92,26 @@
 
   /* Smooth animations for interactive elements */
   button, a, input, select, textarea, [tabindex] {
-    @apply transition-all duration-500 ease-in-out;
+    @apply transition-all duration-200 ease-in-out;
   }
 
   h1,h2,h3,h4,h5,h6 {
     @apply font-headline;
+  }
+}
+
+@layer components {
+  .animate-fireworks {
+    animation: fireworks 1.5s ease-in-out forwards;
+  }
+}
+
+@layer utilities {
+  @keyframes fireworks {
+    0% { background-color: transparent; }
+    25% { background-color: hsl(var(--primary) / 0.3); }
+    50% { background-color: transparent; }
+    75% { background-color: hsl(var(--primary) / 0.3); }
+    100% { background-color: transparent; }
   }
 }

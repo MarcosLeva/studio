@@ -18,10 +18,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useApp } from "@/app/store";
+import { useSidebar } from "./ui/sidebar";
+import { cn } from "@/lib/utils";
 
 export function UserNav() {
   const router = useRouter();
   const { user } = useApp();
+  const { state } = useSidebar();
 
   const handleLogout = () => {
     router.push("/login");
@@ -30,12 +33,22 @@ export function UserNav() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative flex h-10 w-auto items-center justify-start rounded-full p-1 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-            <span className="mr-2 hidden text-sm font-medium sm:block">{user.name}</span>
+        <Button
+            variant="ghost"
+            className={cn(
+                "h-auto w-full justify-start p-2",
+                state === 'collapsed' && "h-10 w-10 justify-center p-0"
+            )}
+        >
+          <div className="flex items-center gap-2">
             <Avatar className="h-8 w-8">
                 <AvatarImage src={user.avatar} alt={user.name} data-ai-hint="user avatar" />
                 <AvatarFallback>{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
+            <div className={cn("flex flex-col items-start", state === 'collapsed' && "hidden")}>
+                <p className="text-sm font-medium leading-none">{user.name}</p>
+            </div>
+          </div>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
