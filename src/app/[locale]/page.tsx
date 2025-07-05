@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 

@@ -42,7 +42,7 @@ import {
 import { MoreHorizontal, FileDown, Trash2 } from "lucide-react";
 import { ScrollToTopButton } from "@/components/scroll-to-top-button";
 import { MultiSelectCombobox } from "@/components/ui/multi-select-combobox";
-import { useTranslations } from "next-intl";
+
 
 export default function ScannedResultsPage() {
   const t = useTranslations("ResultsPage");

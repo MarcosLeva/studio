@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { QrCode, MailCheck } from "lucide-react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+
 
 import { Button } from "@/components/ui/button";
 import {

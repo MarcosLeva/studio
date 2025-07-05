@@ -15,7 +15,7 @@ import {
   type SortingState,
   type ColumnFiltersState,
 } from "@tanstack/react-table";
-import { useTranslations } from "next-intl";
+
 
 import { Button } from "@/components/ui/button";
 import {

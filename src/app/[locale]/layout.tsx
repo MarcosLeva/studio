@@ -5,7 +5,7 @@ import * as React from 'react';
 import { QrCode, FileScan, LayoutGrid, BarChart2, Users } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+import { useTranslations } from 'import { useTranslations } from "next-intl";ntl';
 
 import {
   SidebarProvider,

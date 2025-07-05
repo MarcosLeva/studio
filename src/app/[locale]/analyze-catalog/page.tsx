@@ -7,7 +7,7 @@ import * as z from "zod";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lightbulb, Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
-import { useTranslations } from "next-intl";
+
 
 import { Button } from "@/components/ui/button";
 import {
