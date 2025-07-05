@@ -59,7 +59,7 @@ export default function DashboardLayout({
             </div>
           </SidebarHeader>
           <SidebarContent>
-            <SidebarMenu className='px-2'>
+            <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={pathname === '/analyze-catalog'} tooltip="Analizar Catálogo">
                   <Link href="/analyze-catalog">
