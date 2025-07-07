@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -119,7 +118,7 @@ export default function LoginPage() {
                 <div className="mt-2 text-right">
                   <Link
                       href="/forgot-password"
-                      className="text-sm font-medium text-primary hover:underline underline-offset-4"
+                      className="text-sm font-medium text-primary underline-offset-4 transition-colors hover:text-primary/80 hover:underline"
                   >
                       ¿Olvidaste tu contraseña?
                   </Link>
