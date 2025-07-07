@@ -160,37 +160,30 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const validateSession = async () => {
-      // On initial application load, check for the refresh token.
-      const refreshToken = localStorage.getItem('refresh_token');
+      const storedRefreshToken = localStorage.getItem('refresh_token');
       
-      // If no token exists, we can be sure the user is not logged in.
-      if (!refreshToken) {
+      if (!storedRefreshToken) {
         setIsAuthLoading(false);
         return;
       }
 
-      // If a token exists, try to validate it with the server to get a new session.
       try {
-        const freshUserData = await api.refreshSession();
-        const appUser = mapApiUserToAppUser(freshUserData);
+        const { user: freshUserData, access_token } = await api.refreshSession();
         
-        // If validation is successful, update the app state
+        setToken(access_token);
+        const appUser = mapApiUserToAppUser(freshUserData);
         setUser(appUser);
         localStorage.setItem('user', JSON.stringify(freshUserData));
         setIsAuthenticated(true);
       } catch (error) {
-        console.error('Session validation failed, logging out:', error);
-        // If the token is invalid or any other error occurs, perform a full logout.
+        console.error('Session validation failed:', error);
         logout();
       } finally {
-        // We are no longer in a loading state.
         setIsAuthLoading(false);
       }
     };
 
     validateSession();
-    // This effect should only run once on application mount.
-    // The `logout` function is stable due to `useCallback`.
   }, [logout]);
 
   const login = async (credentials: { email: string; password:string }) => {

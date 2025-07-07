@@ -41,7 +41,6 @@ const handleResponse = async (response: Response) => {
 }
 
 const refreshToken = async () => {
-    // If a refresh is already in progress, wait for it to complete
     if (refreshTokenPromise) {
         return refreshTokenPromise;
     }
@@ -56,12 +55,10 @@ const refreshToken = async () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh_token: token }),
     }).then(async response => {
-        // The handleResponse function will throw for non-OK responses
         const data = await handleResponse(response);
         setToken(data.access_token);
         return data;
     }).finally(() => {
-        // Reset the promise so a new one can be created for the next refresh
         refreshTokenPromise = null;
     });
 
@@ -78,7 +75,6 @@ const request = async (endpoint: string, options: RequestInit) => {
 
   try {
     const response = await fetch(url, { ...options, headers });
-    // A 401 Unauthorized response should be treated as an error to be caught
     if (response.status === 401) {
         const error = new Error('Token might have expired');
         (error as any).status = 401;
@@ -86,7 +82,6 @@ const request = async (endpoint: string, options: RequestInit) => {
     }
     return await handleResponse(response);
   } catch (error: any) {
-    // Only attempt to refresh the token on a 401 error
     if (error.status === 401) {
       try {
         const refreshData = await refreshToken();
@@ -97,12 +92,9 @@ const request = async (endpoint: string, options: RequestInit) => {
 
         return handleResponse(retryResponse);
       } catch (refreshError) {
-        // If the refresh token attempt fails, we throw the error to be handled by the caller,
-        // which should trigger a logout.
         throw refreshError;
       }
     }
-    // For any other error, just re-throw it.
     throw error;
   }
 };
@@ -124,9 +116,6 @@ export const api = {
   },
 
   async refreshSession() {
-    const data = await refreshToken();
-    // After a successful refresh, the user data is in data.user
-    // And the new access token is already set by refreshToken()
-    return data.user;
+    return refreshToken();
   }
 };
