@@ -67,7 +67,7 @@ const refreshToken = async () => {
         const url = `${getApiUrl()}/auth/refresh`;
         const response = await fetch(url, {
             method: 'POST',
-            credentials: 'include', // This sends the HttpOnly cookie to the backend
+            credentials: 'include', // This sends cookies (like the HttpOnly refresh_token) to the backend
         });
 
         if (!response.ok) {

@@ -166,7 +166,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       }
 
       try {
-        // This call will use the HttpOnly refresh token cookie
+        // This call will use the refresh_token cookie (set as HttpOnly by the backend)
         const freshUserData = await api.refreshSession();
         setUser(mapApiUserToAppUser(freshUserData));
         localStorage.setItem('user', JSON.stringify(freshUserData));
