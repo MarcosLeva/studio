@@ -152,13 +152,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   // Derived state for isAuthenticated
   const isAuthenticated = !!user;
 
-  // Centralized logout logic
+  // Centralized logout logic. This is the single source of truth for clearing session state.
   const logout = useCallback(() => {
     console.log("Executing logout: clearing tokens and user state.");
-    localStorage.removeItem('user');
-    localStorage.removeItem('refresh_token');
-    setToken(null);
     setUser(null);
+    setToken(null);
+    localStorage.removeItem('refresh_token');
   }, []);
 
   // On mount, connect the api module's failure handler to our logout function
@@ -167,9 +166,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [logout]);
 
 
-  // Effect to validate session on initial app load
+  // Effect to validate session on initial app load. Runs only once.
   useEffect(() => {
-    const validateSession = async () => {
+    const validateSessionOnLoad = async () => {
       const storedRefreshToken = localStorage.getItem('refresh_token');
       
       if (!storedRefreshToken) {
@@ -178,25 +177,25 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       
-      console.log("Refresh token found. Attempting to validate session...");
+      console.log("Found refresh token. Attempting to validate session...");
       try {
-        const { user: freshUserData, access_token } = await api.refreshSession();
-        console.log("Session validated successfully.");
-        setToken(access_token);
+        // api.refreshSession is the same refreshToken function from api.ts
+        const { user: freshUserData } = await api.refreshSession();
+        console.log("Session validated successfully on app load.");
+        // The refreshSession call already sets the new access token in api.ts
         const appUser = mapApiUserToAppUser(freshUserData);
         setUser(appUser);
-        localStorage.setItem('user', JSON.stringify(freshUserData));
       } catch (error) {
         // The `onAuthFailure` in api.ts will have already called logout().
         // We just log it here for debugging purposes.
-        console.error('Initial session validation failed:', error);
+        console.error('Initial session validation failed on app load:', error);
       } finally {
         console.log("Finished validation attempt. Setting auth loading to false.");
         setIsAuthLoading(false);
       }
     };
 
-    validateSession();
+    validateSessionOnLoad();
     // This effect should only run ONCE on component mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -208,7 +207,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem('refresh_token', loginData.refresh_token);
         const appUser = mapApiUserToAppUser(loginData.user);
         setUser(appUser);
-        localStorage.setItem('user', JSON.stringify(loginData.user));
       } else {
         throw new Error("Respuesta de login inválida desde la API.");
       }
@@ -255,22 +253,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const editUser = (data: Partial<Omit<User, 'id'>>) => {
     setUser(prevUser => {
       if (!prevUser) return null;
-      const updatedUser = { ...prevUser, ...data };
-
-      // Also update localStorage
-      const storedUserRaw = localStorage.getItem('user');
-      if (storedUserRaw) {
-        const storedUser = JSON.parse(storedUserRaw);
-        // This only updates the fields that are part of the app's User model
-        const updatedStoredUser = {
-          ...storedUser,
-          name: updatedUser.name,
-          email: updatedUser.email,
-          avatar: updatedUser.avatar,
-        }
-        localStorage.setItem('user', JSON.stringify(updatedStoredUser));
-      }
-      return updatedUser;
+      return { ...prevUser, ...data };
     });
   };
 
