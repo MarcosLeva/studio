@@ -1,5 +1,6 @@
 
 import {toast} from '@/hooks/use-toast';
+import { deleteCookie, getCookie } from './utils';
 
 let accessToken: string | null = null;
 let isRefreshing = false;
@@ -36,25 +37,19 @@ export const setToken = (token: string | null) => {
 };
 
 const handleResponse = async (response: Response) => {
-    // If we get a 401, reject immediately so the caller can handle the refresh logic.
-    if (response.status === 401) {
-        return Promise.reject(response);
-    }
-
     const text = await response.text();
-    // Handle empty response body
     const json = text ? JSON.parse(text) : {};
 
     if (!response.ok) {
-        throw new Error(json.message || `Error: ${response.statusText}`);
+        const error = new Error(json.message || `Error: ${response.statusText}`);
+        (error as any).status = response.status;
+        throw error;
     }
     
-    // Check for the success property from our specific API structure
     if (json.success === false) {
       throw new Error(json.message || 'La API indicó un fallo en la operación.');
     }
 
-    // Return the "data" property as per the API structure
     return json.data;
 }
 
@@ -67,39 +62,32 @@ const refreshToken = async () => {
 
     isRefreshing = true;
     
-    // With `credentials: 'include'`, the browser sends the HttpOnly refresh_token cookie automatically.
-    // No need to manually handle the refresh token in the frontend.
+    const token = getCookie('refresh_token');
+    if (!token) {
+        const error = new Error('Sesión no encontrada. Por favor, inicia sesión de nuevo.');
+        processQueue(error, null);
+        isRefreshing = false;
+        return Promise.reject(error);
+    }
 
     try {
         const url = `${getApiUrl()}/auth/refresh`;
         const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
+            body: JSON.stringify({ refresh_token: token }),
         });
 
-        if (!response.ok) {
-            const error = new Error('Tu sesión ha expirado. Por favor, inicia sesión de nuevo.');
-            processQueue(error, null);
-            setToken(null);
-            if (typeof window !== 'undefined') localStorage.removeItem('user');
-            throw error;
-        }
-
-        const json = await response.json();
-
-        if (json.success === false) {
-            throw new Error(json.message || 'No se pudo refrescar la sesión.');
-        }
-
-        const newAccessToken = json.data.access_token;
+        const data = await handleResponse(response);
+        const newAccessToken = data.access_token;
         setToken(newAccessToken);
         
-        processQueue(null, json.data);
-        return json.data;
+        processQueue(null, data);
+        return data;
     } catch (error) {
         processQueue(error as Error, null);
         setToken(null);
+        deleteCookie('refresh_token');
         if (typeof window !== 'undefined') localStorage.removeItem('user');
         throw error;
     } finally {
@@ -119,7 +107,7 @@ const request = async (endpoint: string, options: RequestInit) => {
     const response = await fetch(url, { ...options, headers });
     return await handleResponse(response);
   } catch (error: any) {
-    if (error instanceof Response && error.status === 401) {
+    if (error.status === 401) {
       try {
         const refreshData = await refreshToken();
         

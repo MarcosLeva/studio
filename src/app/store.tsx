@@ -4,6 +4,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import type { Category, ScanResult, User } from '@/lib/types';
 import { api, setToken } from '@/lib/api';
+import { deleteCookie, setCookie } from '@/lib/utils';
 
 // Mock Data
 const initialCategories: Category[] = [
@@ -152,7 +153,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = useCallback(() => {
     localStorage.removeItem('user');
-    // No need to remove cookie from JS if it's HttpOnly
+    deleteCookie('refresh_token');
     setToken(null);
     setUser(null);
     setIsAuthenticated(false);
@@ -178,9 +179,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (credentials: { email: string; password:string }) => {
       const loginData = await api.post('/auth/login', credentials);
-      if (loginData && loginData.access_token && loginData.user) {
+      if (loginData && loginData.access_token && loginData.user && loginData.refresh_token) {
         setToken(loginData.access_token);
-        // The HttpOnly refresh_token is set by the server's Set-Cookie header
+        setCookie('refresh_token', loginData.refresh_token, 7);
         const appUser = mapApiUserToAppUser(loginData.user);
         setUser(appUser);
         localStorage.setItem('user', JSON.stringify(loginData.user));
