@@ -157,12 +157,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     console.log("Executing logout: clearing tokens and user state.");
     setUser(null);
     setToken(null);
-    localStorage.removeItem('refresh_token');
+    // localStorage.removeItem('refresh_token'); // Temporarily commented out for debugging
   }, []);
 
   // On mount, connect the api module's failure handler to our logout function
   useEffect(() => {
-    setOnAuthFailure(logout);
+    // setOnAuthFailure(logout); // Temporarily commented out for debugging
   }, [logout]);
 
 
