@@ -4,7 +4,6 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import type { Category, ScanResult, User } from '@/lib/types';
 import { api, setToken } from '@/lib/api';
-import { deleteCookie, getCookie, setCookie } from '@/lib/utils';
 
 // Mock Data
 const initialCategories: Category[] = [
@@ -153,7 +152,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = useCallback(() => {
     localStorage.removeItem('user');
-    deleteCookie('refresh_token');
+    localStorage.removeItem('refresh_token');
     setToken(null);
     setUser(null);
     setIsAuthenticated(false);
@@ -162,7 +161,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const validateSession = async () => {
       // On initial application load, check for the refresh token.
-      const refreshToken = getCookie('refresh_token');
+      const refreshToken = localStorage.getItem('refresh_token');
       
       // If no token exists, we can be sure the user is not logged in.
       if (!refreshToken) {
@@ -198,7 +197,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       const loginData = await api.post('/auth/login', credentials);
       if (loginData && loginData.access_token && loginData.user && loginData.refresh_token) {
         setToken(loginData.access_token);
-        setCookie('refresh_token', loginData.refresh_token, 7);
+        localStorage.setItem('refresh_token', loginData.refresh_token);
         const appUser = mapApiUserToAppUser(loginData.user);
         setUser(appUser);
         localStorage.setItem('user', JSON.stringify(loginData.user));

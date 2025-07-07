@@ -1,6 +1,5 @@
 
 import {toast} from '@/hooks/use-toast';
-import { deleteCookie, getCookie } from './utils';
 
 let accessToken: string | null = null;
 let refreshTokenPromise: Promise<any> | null = null;
@@ -47,7 +46,7 @@ const refreshToken = async () => {
         return refreshTokenPromise;
     }
 
-    const token = getCookie('refresh_token');
+    const token = localStorage.getItem('refresh_token');
     if (!token) {
         return Promise.reject(new Error('No refresh token available.'));
     }
@@ -57,10 +56,7 @@ const refreshToken = async () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh_token: token }),
     }).then(async response => {
-        if (!response.ok) {
-            // If refresh fails, reject the promise
-            throw new Error('Session expired or invalid.');
-        }
+        // The handleResponse function will throw for non-OK responses
         const data = await handleResponse(response);
         setToken(data.access_token);
         return data;
@@ -84,7 +80,9 @@ const request = async (endpoint: string, options: RequestInit) => {
     const response = await fetch(url, { ...options, headers });
     // A 401 Unauthorized response should be treated as an error to be caught
     if (response.status === 401) {
-        throw { status: 401 };
+        const error = new Error('Token might have expired');
+        (error as any).status = 401;
+        throw error;
     }
     return await handleResponse(response);
   } catch (error: any) {
