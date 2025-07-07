@@ -102,27 +102,29 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center justify-between">
+              <div>
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
                       <FormLabel>Contraseña</FormLabel>
-                      <Link
-                          href="/forgot-password"
-                          className="text-sm font-medium text-primary hover:underline underline-offset-4"
-                      >
-                          ¿Olvidaste tu contraseña?
-                      </Link>
-                    </div>
-                    <FormControl>
-                      <PasswordInput placeholder="••••••••" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <FormControl>
+                        <PasswordInput placeholder="••••••••" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="mt-2 text-right">
+                  <Link
+                      href="/forgot-password"
+                      className="text-sm font-medium text-primary hover:underline underline-offset-4"
+                  >
+                      ¿Olvidaste tu contraseña?
+                  </Link>
+                </div>
+              </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isLoading ? 'Iniciando Sesión...' : 'Iniciar Sesión'}
