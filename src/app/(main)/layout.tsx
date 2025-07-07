@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from 'react';
-import { QrCode, FileScan, LayoutGrid, BarChart2, Users } from 'lucide-react';
+import { QrCode, FileScan, LayoutGrid, BarChart2, Users, RefreshCw, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -25,6 +25,9 @@ import { HeaderUserNav } from '@/components/header-user-nav';
 import { HeaderThemeToggle } from '@/components/header-theme-toggle';
 import { useApp } from '../store';
 import { LogoSpinner } from '@/components/ui/logo-spinner';
+import { Button } from '@/components/ui/button';
+import { api } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
 export default function DashboardLayout({
   children,
@@ -34,6 +37,30 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated, isAuthLoading } = useApp();
+  const { toast } = useToast();
+
+  const handleRefreshToken = async () => {
+    toast({
+        title: "Refrescando Token...",
+        description: "Por favor, espera un momento.",
+    });
+    try {
+        await api.refreshSession();
+        toast({
+            title: "¡Token Refrescado!",
+            description: "Tu sesión ha sido extendida con éxito.",
+            icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
+        });
+    } catch (error) {
+        console.error("Manual refresh failed:", error);
+        toast({
+            variant: "destructive",
+            title: "Error al Refrescar",
+            description: "No se pudo refrescar la sesión. Es posible que necesites iniciar sesión de nuevo.",
+            icon: <AlertTriangle className="h-5 w-5 text-destructive-foreground" />,
+        });
+    }
+  };
 
   React.useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
@@ -128,6 +155,10 @@ export default function DashboardLayout({
             </div>
 
             <div className="ml-auto flex items-center gap-2">
+              <Button variant="ghost" size="icon" onClick={handleRefreshToken}>
+                <RefreshCw className="h-[1.2rem] w-[1.2rem]" />
+                <span className="sr-only">Refrescar token</span>
+              </Button>
               <HeaderThemeToggle />
               <HeaderUserNav />
             </div>
