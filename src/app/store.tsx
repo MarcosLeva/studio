@@ -154,16 +154,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   // Centralized logout logic. This is the single source of truth for clearing session state.
   const logout = useCallback(() => {
-    // console.log("Executing logout: clearing tokens and user state.");
-    // setUser(null);
-    // setToken(null);
-    // localStorage.removeItem('refresh_token');
+    console.log("Executing logout: clearing tokens and user state.");
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem('refresh_token');
   }, []);
 
   // On mount, connect the api module's failure handler to our logout function
-  // useEffect(() => {
-  //   setOnAuthFailure(logout);
-  // }, [logout]);
+  useEffect(() => {
+    setOnAuthFailure(logout);
+  }, [logout]);
 
 
   // Effect to validate session on initial app load. Runs only once.
@@ -179,10 +179,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       
       console.log("Found refresh token. Attempting to validate session...");
       try {
-        // api.refreshSession is the same refreshToken function from api.ts
+        // api.refreshSession will call refreshToken in api.ts
+        // which sets the new access token and returns user data.
         const { user: freshUserData } = await api.refreshSession();
         console.log("Session validated successfully on app load.");
-        // The refreshSession call already sets the new access token in api.ts
         const appUser = mapApiUserToAppUser(freshUserData);
         setUser(appUser);
       } catch (error) {
