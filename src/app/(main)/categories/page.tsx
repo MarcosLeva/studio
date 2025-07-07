@@ -102,6 +102,7 @@ export default function CategoriesPage() {
   const [isSuggesting, setIsSuggesting] = React.useState(false);
   const isMobile = useIsMobile();
   const [visibleRows, setVisibleRows] = React.useState(10);
+  const [isLoadingMore, setIsLoadingMore] = React.useState(false);
   const isMounted = React.useRef(true);
   
   // Filter state
@@ -278,6 +279,16 @@ export default function CategoriesPage() {
 
   const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFilterValue(event.target.value);
+  };
+
+  const handleLoadMore = () => {
+    setIsLoadingMore(true);
+    setTimeout(() => {
+      setVisibleRows(prev => prev + 10);
+      if (isMounted.current) {
+        setIsLoadingMore(false);
+      }
+    }, 500);
   };
 
   const selectedRowCount = table.getFilteredSelectedRowModel().rows.length;
@@ -548,11 +559,13 @@ export default function CategoriesPage() {
                   ))}
                   {visibleRows < table.getFilteredRowModel().rows.length && (
                       <Button
-                          onClick={() => setVisibleRows(prev => prev + 10)}
+                          onClick={handleLoadMore}
                           variant="outline"
                           className="w-full"
+                          disabled={isLoadingMore}
                       >
-                          Cargar más
+                          {isLoadingMore && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          {isLoadingMore ? "Cargando..." : "Cargar más"}
                       </Button>
                   )}
               </div>
@@ -590,3 +603,5 @@ export default function CategoriesPage() {
     </div>
   );
 }
+
+    

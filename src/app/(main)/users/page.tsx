@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { PlusCircle, MoreHorizontal, X, Mail, CheckCircle2, Trash2 } from "lucide-react";
+import { PlusCircle, MoreHorizontal, X, Mail, CheckCircle2, Trash2, Loader2 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -91,6 +91,7 @@ export default function UsersPage() {
   const [userToDelete, setUserToDelete] = React.useState<User | null>(null);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = React.useState(false);
   const [visibleRows, setVisibleRows] = React.useState(10);
+  const [isLoadingMore, setIsLoadingMore] = React.useState(false);
   const [newlyAddedUserId, setNewlyAddedUserId] = React.useState<string | null>(null);
   
   const form = useForm<UserFormValues>({
@@ -252,6 +253,16 @@ export default function UsersPage() {
         icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
     });
   }
+
+  const handleLoadMore = () => {
+    setIsLoadingMore(true);
+    setTimeout(() => {
+      setVisibleRows(prev => prev + 10);
+      if (isMounted.current) {
+        setIsLoadingMore(false);
+      }
+    }, 500);
+  };
 
   const roles = [
     { value: "Administrador", label: "Administrador" },
@@ -424,11 +435,13 @@ export default function UsersPage() {
               ))}
               {visibleRows < table.getFilteredRowModel().rows.length && (
                 <Button
-                  onClick={() => setVisibleRows(prev => prev + 10)}
+                  onClick={handleLoadMore}
                   variant="outline"
                   className="w-full"
+                  disabled={isLoadingMore}
                 >
-                  Cargar más
+                  {isLoadingMore && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isLoadingMore ? "Cargando..." : "Cargar más"}
                 </Button>
               )}
             </div>
@@ -578,3 +591,5 @@ export default function UsersPage() {
     </div>
   );
 }
+
+    

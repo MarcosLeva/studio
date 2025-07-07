@@ -38,7 +38,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, FileDown, Trash2 } from "lucide-react";
+import { MoreHorizontal, FileDown, Trash2, Loader2 } from "lucide-react";
 import { ScrollToTopButton } from "@/components/scroll-to-top-button";
 import { MultiSelectCombobox } from "@/components/ui/multi-select-combobox";
 import { LogoSpinner } from "@/components/ui/logo-spinner";
@@ -50,6 +50,7 @@ export default function ScannedResultsPage() {
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = React.useState(false);
   const isMobile = useIsMobile();
   const [visibleRows, setVisibleRows] = React.useState(10);
+  const [isLoadingMore, setIsLoadingMore] = React.useState(false);
   const isMounted = React.useRef(true);
   const [isFiltering, setIsFiltering] = React.useState(false);
 
@@ -164,6 +165,16 @@ export default function ScannedResultsPage() {
     });
     table.resetRowSelection();
   }, [table, toast]);
+
+  const handleLoadMore = () => {
+    setIsLoadingMore(true);
+    setTimeout(() => {
+      setVisibleRows(prev => prev + 10);
+      if (isMounted.current) {
+        setIsLoadingMore(false);
+      }
+    }, 500);
+  };
     
   const categoryOptions = React.useMemo(() => 
     Array.from(new Set(results.map((r) => r.category))).map(cat => ({
@@ -271,11 +282,13 @@ export default function ScannedResultsPage() {
                   ))}
                   {visibleRows < table.getFilteredRowModel().rows.length && (
                       <Button
-                          onClick={() => setVisibleRows(prev => prev + 10)}
+                          onClick={handleLoadMore}
                           variant="outline"
                           className="w-full"
+                          disabled={isLoadingMore}
                       >
-                          Cargar más
+                          {isLoadingMore && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          {isLoadingMore ? "Cargando..." : "Cargar más"}
                       </Button>
                   )}
               </div>
@@ -358,3 +371,5 @@ export default function ScannedResultsPage() {
     </div>
   );
 }
+
+    
