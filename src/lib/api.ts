@@ -42,7 +42,7 @@ const refreshToken = async () => {
     const storedRefreshToken = localStorage.getItem('refresh_token');
     if (!storedRefreshToken) {
         // If there's no refresh token, we can't do anything.
-        onAuthFailure();
+        // onAuthFailure();
         return Promise.reject(new Error('No refresh token available.'));
     }
 
@@ -69,7 +69,7 @@ const refreshToken = async () => {
     })
     .catch(error => {
         console.error('Session refresh failed:', error);
-        onAuthFailure(); // Trigger logout on any refresh failure.
+        // onAuthFailure(); // Trigger logout on any refresh failure.
         throw error; // Propagate the error.
     })
     .finally(() => {

@@ -154,16 +154,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   // Centralized logout logic. This is the single source of truth for clearing session state.
   const logout = useCallback(() => {
-    console.log("Executing logout: clearing tokens and user state.");
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('refresh_token');
+    // console.log("Executing logout: clearing tokens and user state.");
+    // setUser(null);
+    // setToken(null);
+    // localStorage.removeItem('refresh_token');
   }, []);
 
   // On mount, connect the api module's failure handler to our logout function
-  useEffect(() => {
-    setOnAuthFailure(logout);
-  }, [logout]);
+  // useEffect(() => {
+  //   setOnAuthFailure(logout);
+  // }, [logout]);
 
 
   // Effect to validate session on initial app load. Runs only once.
