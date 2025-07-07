@@ -89,6 +89,24 @@ const initialManagedUsers: User[] = [
 ];
 
 
+/**
+ * Maps a user object from the API to the application's User type.
+ * @param apiUser - The user object from the API response.
+ * @returns The mapped User object for the application state.
+ */
+const mapApiUserToAppUser = (apiUser: any): User => {
+  return {
+    id: apiUser.id,
+    name: apiUser.name,
+    email: apiUser.email,
+    // The API returns 'admin' or 'member', the app uses 'Administrador' or 'Miembro'
+    role: apiUser.role === 'admin' ? 'Administrador' : 'Miembro',
+    status: apiUser.status,
+    // The API doesn't send an avatar yet, so we use a placeholder.
+    avatar: apiUser.avatar || `https://placehold.co/100x100.png`,
+  };
+};
+
 interface AppContextType {
   // Auth
   user: User | null;
@@ -133,6 +151,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
 
+  const logout = () => {
+    localStorage.removeItem('authToken');
+    setToken(null);
+    setUser(null);
+    setIsAuthenticated(false);
+  };
+
   useEffect(() => {
     const validateToken = async () => {
       const storedToken = localStorage.getItem('authToken');
@@ -140,45 +165,32 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         try {
           // The API service will automatically use the token from localStorage
           const profileData = await api.get('/auth/profile');
-          setUser(profileData);
+          setUser(mapApiUserToAppUser(profileData));
           setToken(storedToken);
           setIsAuthenticated(true);
         } catch (error) {
           console.error('Session validation failed:', error);
-          localStorage.removeItem('authToken');
+          logout();
         }
       }
       setIsAuthLoading(false);
     };
 
     validateToken();
+    // The `logout` function is stable and doesn't need to be in the dependency array.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const login = async (credentials: { email: string; password: string }) => {
     const loginData = await api.post('/auth/login', credentials);
-    if (loginData && loginData.access_token) {
+    if (loginData && loginData.access_token && loginData.user) {
       localStorage.setItem('authToken', loginData.access_token);
       setToken(loginData.access_token);
-      
-      try {
-        const profileData = await api.get('/auth/profile');
-        setUser(profileData);
-        setIsAuthenticated(true);
-      } catch (error) {
-        // If profile fetch fails, logout to be safe
-        logout();
-        throw new Error("No se pudo obtener la información del perfil después de iniciar sesión.");
-      }
+      setUser(mapApiUserToAppUser(loginData.user));
+      setIsAuthenticated(true);
     } else {
-      throw new Error("Respuesta de login inválida desde la API. No se recibió el token de acceso.");
+      throw new Error("Respuesta de login inválida desde la API. No se recibió el token de acceso o los datos del usuario.");
     }
-  };
-
-  const logout = () => {
-    localStorage.removeItem('authToken');
-    setToken(null);
-    setUser(null);
-    setIsAuthenticated(false);
   };
   
   const addCategory = (category: Omit<Category, 'id' | 'dateCreated'>) => {
