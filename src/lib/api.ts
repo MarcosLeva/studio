@@ -32,23 +32,19 @@ export const setToken = (token: string | null) => {
   accessToken = token;
 };
 
-// This function is the core of the refresh logic.
+// This function is the core of the refresh logic. It has no side effects.
 const refreshToken = async () => {
-    // If a refresh is already in progress, return the existing promise to avoid race conditions.
     if (refreshTokenPromise) {
         return refreshTokenPromise;
     }
 
     const storedRefreshToken = localStorage.getItem('refresh_token');
     if (!storedRefreshToken) {
-        // If there's no refresh token, we can't do anything.
-        onAuthFailure();
         return Promise.reject(new Error('No refresh token available.'));
     }
 
     console.log("Attempting to refresh token...");
 
-    // Start the refresh request and store the promise.
     refreshTokenPromise = fetch(`${getApiUrl()}/auth/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -56,7 +52,8 @@ const refreshToken = async () => {
     })
     .then(async response => {
         if (!response.ok) {
-            // The refresh token is likely invalid or expired.
+            // A non-OK response (like 401, 403) means the refresh token is invalid.
+            // Let the promise reject so the caller can handle it.
             throw new Error('Failed to refresh token.');
         }
         const data = await handleResponse(response);
@@ -65,15 +62,9 @@ const refreshToken = async () => {
         }
         setToken(data.access_token);
         console.log("Token refreshed successfully.");
-        return data; // returns { access_token, user }
-    })
-    .catch(error => {
-        console.error('Session refresh failed:', error);
-        onAuthFailure();
-        throw error; // Propagate the error.
+        return data;
     })
     .finally(() => {
-        // Clear the promise so the next refresh attempt can proceed.
         refreshTokenPromise = null;
     });
 
@@ -93,7 +84,7 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
 
     let response = await fetch(`${getApiUrl()}${endpoint}`, { ...options, headers });
 
-    // If the token has expired, try to refresh it and retry the request once.
+    // If the access token has expired, try to refresh it and retry the request once.
     if (response.status === 401) {
         console.log(`Request to ${endpoint} failed with 401. Attempting token refresh.`);
         try {
@@ -105,8 +96,10 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
             response = await fetch(`${getApiUrl()}${endpoint}`, { ...options, headers });
 
         } catch (error) {
-            // The refreshToken function already calls onAuthFailure.
-            // Re-throw the error to stop the current operation.
+            // This catch block runs if refreshToken() fails.
+            // This is the correct moment to declare the session invalid and log out.
+            console.error('Session is invalid and could not be refreshed. Logging out.', error);
+            onAuthFailure();
             throw new Error("Su sesión ha expirado. Por favor, inicie sesión de nuevo.");
         }
     }
@@ -133,6 +126,6 @@ const handleResponse = async (response: Response) => {
 export const api = {
     get: (endpoint: string) => request(endpoint, { method: 'GET' }),
     post: (endpoint: string, body: unknown) => request(endpoint, { method: 'POST', body: JSON.stringify(body) }),
-    // Expose refreshToken to be called directly on app load.
+    // Expose refreshToken to be called directly for the initial session validation.
     refreshSession: refreshToken,
 };

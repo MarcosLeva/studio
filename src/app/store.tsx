@@ -172,7 +172,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   // Centralized logout logic. This is the single source of truth for clearing session state.
   const logout = useCallback(() => {
-    console.log("Executing logout: clearing tokens and user state.");
+    console.log("Executing logout: clearing user state and tokens.");
     setUser(null);
     setToken(null);
     localStorage.removeItem('refresh_token');
@@ -191,31 +191,27 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       const storedRefreshToken = localStorage.getItem('refresh_token');
       
       if (!storedRefreshToken) {
-        console.log("No refresh token found. User is not logged in.");
         setIsAuthLoading(false);
         return;
       }
       
       console.log("Found refresh token. Attempting to validate session...");
       try {
-        // api.refreshSession will call refreshToken in api.ts
-        // which sets the new access token and returns user data.
         const { user: freshUserData } = await api.refreshSession();
         console.log("Session validated successfully on app load.");
         const appUser = mapApiUserToAppUser(freshUserData);
         setUser(appUser);
-        localStorage.setItem('user', JSON.stringify(appUser)); // Persist user data on refresh
+        localStorage.setItem('user', JSON.stringify(appUser));
       } catch (error) {
-        console.error('Initial session validation failed on app load. Logging out.', error);
+        // This only runs if api.refreshSession() fails, which is the correct condition to logout.
+        console.error('Initial session validation failed. The refresh token is likely invalid. Logging out.', error);
         logout();
       } finally {
-        console.log("Finished validation attempt. Setting auth loading to false.");
         setIsAuthLoading(false);
       }
     };
 
     validateSessionOnLoad();
-    // This effect should only run ONCE on component mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [logout]);
 
