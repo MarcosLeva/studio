@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import type { Category, ScanResult, User } from '@/lib/types';
-import { api, setToken } from '@/lib/api';
+import { api, setToken, setOnAuthFailure } from '@/lib/api';
 
 // Mock Data
 const initialCategories: Category[] = [
@@ -147,43 +147,59 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   // Auth state
   const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
+  const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true); // Start as true
 
+  // Derived state for isAuthenticated
+  const isAuthenticated = !!user;
+
+  // Centralized logout logic
   const logout = useCallback(() => {
+    console.log("Executing logout: clearing tokens and user state.");
     localStorage.removeItem('user');
     localStorage.removeItem('refresh_token');
     setToken(null);
     setUser(null);
-    setIsAuthenticated(false);
   }, []);
 
+  // On mount, connect the api module's failure handler to our logout function
+  useEffect(() => {
+    setOnAuthFailure(logout);
+  }, [logout]);
+
+
+  // Effect to validate session on initial app load
   useEffect(() => {
     const validateSession = async () => {
       const storedRefreshToken = localStorage.getItem('refresh_token');
+      
       if (!storedRefreshToken) {
+        console.log("No refresh token found. User is not logged in.");
         setIsAuthLoading(false);
         return;
       }
-
+      
+      console.log("Refresh token found. Attempting to validate session...");
       try {
         const { user: freshUserData, access_token } = await api.refreshSession();
-        
+        console.log("Session validated successfully.");
         setToken(access_token);
         const appUser = mapApiUserToAppUser(freshUserData);
         setUser(appUser);
         localStorage.setItem('user', JSON.stringify(freshUserData));
-        setIsAuthenticated(true);
       } catch (error) {
-        console.error('Session validation failed. The user will not be logged out for debugging purposes.', error);
-        // logout(); // Temporarily disabled for debugging.
+        // The `onAuthFailure` in api.ts will have already called logout().
+        // We just log it here for debugging purposes.
+        console.error('Initial session validation failed:', error);
       } finally {
+        console.log("Finished validation attempt. Setting auth loading to false.");
         setIsAuthLoading(false);
       }
     };
 
     validateSession();
-  }, [logout]);
+    // This effect should only run ONCE on component mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const login = async (credentials: { email: string; password:string }) => {
       const loginData = await api.post('/auth/login', credentials);
@@ -193,7 +209,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         const appUser = mapApiUserToAppUser(loginData.user);
         setUser(appUser);
         localStorage.setItem('user', JSON.stringify(loginData.user));
-        setIsAuthenticated(true);
       } else {
         throw new Error("Respuesta de login inválida desde la API.");
       }
