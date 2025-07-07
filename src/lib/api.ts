@@ -1,5 +1,6 @@
 
 import {toast} from '@/hooks/use-toast';
+import { getCookie, setCookie, eraseCookie } from '@/lib/utils';
 
 let accessToken: string | null = null;
 let isRefreshing = false;
@@ -20,12 +21,12 @@ const getApiUrl = () => {
   return apiUrl;
 };
 
-const processQueue = (error: Error | null, token: string | null = null) => {
+const processQueue = (error: Error | null, data: any | null = null) => {
   failedQueue.forEach(prom => {
     if (error) {
       prom.reject(error);
     } else {
-      prom.resolve(token);
+      prom.resolve(data);
     }
   });
   failedQueue = [];
@@ -67,18 +68,33 @@ const refreshToken = async () => {
 
     isRefreshing = true;
 
+    const userRefreshToken = getCookie('refresh_token');
+
+    if (!userRefreshToken) {
+        const error = new Error('Sesión no encontrada. Por favor, inicia sesión de nuevo.');
+        processQueue(error, null);
+        setToken(null);
+        if (typeof window !== 'undefined') localStorage.removeItem('user');
+        isRefreshing = false;
+        throw error;
+    }
+
     try {
         const url = `${getApiUrl()}/auth/refresh`;
         const response = await fetch(url, {
             method: 'POST',
-            credentials: 'include', // This sends the HttpOnly refresh_token cookie
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: userRefreshToken }),
         });
 
         if (!response.ok) {
             const error = new Error('Tu sesión ha expirado. Por favor, inicia sesión de nuevo.');
             processQueue(error, null);
             setToken(null);
-            if (typeof window !== 'undefined') localStorage.removeItem('user');
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem('user');
+                eraseCookie('refresh_token');
+            }
             throw error;
         }
 
@@ -90,12 +106,21 @@ const refreshToken = async () => {
 
         const newAccessToken = json.data.access_token;
         setToken(newAccessToken);
-        processQueue(null, newAccessToken);
+        
+        // Handle rotating refresh tokens, if the API sends a new one
+        if (json.data.refresh_token) {
+            setCookie('refresh_token', json.data.refresh_token, 7);
+        }
+
+        processQueue(null, json.data);
         return json.data;
     } catch (error) {
         processQueue(error as Error, null);
         setToken(null);
-        if (typeof window !== 'undefined') localStorage.removeItem('user');
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('user');
+            eraseCookie('refresh_token');
+        }
         throw error;
     } finally {
         isRefreshing = false;

@@ -4,6 +4,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import type { Category, ScanResult, User } from '@/lib/types';
 import { api, setToken } from '@/lib/api';
+import { setCookie, eraseCookie } from '@/lib/utils';
 
 // Mock Data
 const initialCategories: Category[] = [
@@ -152,6 +153,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = useCallback(() => {
     localStorage.removeItem('user');
+    eraseCookie('refresh_token');
     setToken(null);
     setUser(null);
     setIsAuthenticated(false);
@@ -160,10 +162,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const validateSession = async () => {
       try {
-        // We no longer optimistically set the user. We wait for the session to be validated.
         const freshUserData = await api.refreshSession();
         setUser(mapApiUserToAppUser(freshUserData));
-        // The raw user data from the API response
         localStorage.setItem('user', JSON.stringify(freshUserData));
         setIsAuthenticated(true);
       } catch (error) {
@@ -179,8 +179,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (credentials: { email: string; password:string }) => {
       const loginData = await api.post('/auth/login', credentials);
-      if (loginData && loginData.access_token && loginData.user) {
+      if (loginData && loginData.access_token && loginData.user && loginData.refresh_token) {
         setToken(loginData.access_token);
+        setCookie('refresh_token', loginData.refresh_token, 7); // Set cookie
         const appUser = mapApiUserToAppUser(loginData.user);
         setUser(appUser);
         localStorage.setItem('user', JSON.stringify(loginData.user));
