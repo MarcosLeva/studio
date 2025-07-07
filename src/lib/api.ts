@@ -24,11 +24,20 @@ const getToken = () => {
 };
 
 const handleResponse = async (response: Response) => {
+    const json = await response.json();
+
     if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: response.statusText }));
-        throw new Error(errorData.message || 'Ocurrió un error inesperado.');
+        // Handles HTTP errors (e.g., 401, 404, 500)
+        throw new Error(json.message || `Error: ${response.statusText}`);
     }
-    return response.json();
+    
+    if (json.success === false) {
+      // Handles logical errors from the API (e.g., bad input where status is 200 OK)
+      throw new Error(json.message || 'La API indicó un fallo en la operación.');
+    }
+
+    // Returns the actual data from the response payload
+    return json.data;
 }
 
 export const api = {
@@ -55,7 +64,6 @@ export const api = {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
     };
-    // For login, we don't send the token, but for other post requests we might need it.
     if (token && endpoint !== '/auth/login') {
       headers['Authorization'] = `Bearer ${token}`;
     }

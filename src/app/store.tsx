@@ -139,8 +139,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       if (storedToken) {
         try {
           // The API service will automatically use the token from localStorage
-          const data = await api.get('/auth/profile');
-          setUser(data.user);
+          const profileData = await api.get('/auth/profile');
+          setUser(profileData);
           setToken(storedToken);
           setIsAuthenticated(true);
         } catch (error) {
@@ -155,14 +155,22 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (credentials: { email: string; password: string }) => {
-    const data = await api.post('/auth/login', credentials);
-    if (data.token && data.user) {
-      localStorage.setItem('authToken', data.token);
-      setToken(data.token);
-      setUser(data.user);
-      setIsAuthenticated(true);
+    const loginData = await api.post('/auth/login', credentials);
+    if (loginData && loginData.access_token) {
+      localStorage.setItem('authToken', loginData.access_token);
+      setToken(loginData.access_token);
+      
+      try {
+        const profileData = await api.get('/auth/profile');
+        setUser(profileData);
+        setIsAuthenticated(true);
+      } catch (error) {
+        // If profile fetch fails, logout to be safe
+        logout();
+        throw new Error("No se pudo obtener la información del perfil después de iniciar sesión.");
+      }
     } else {
-      throw new Error("Respuesta de login inválida desde la API.");
+      throw new Error("Respuesta de login inválida desde la API. No se recibió el token de acceso.");
     }
   };
 
