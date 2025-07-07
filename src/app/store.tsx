@@ -173,15 +173,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   // Centralized logout logic. This is the single source of truth for clearing session state.
   const logout = useCallback(() => {
     console.log("Executing logout: clearing tokens and user state.");
-    // setUser(null);
-    // setToken(null);
-    // localStorage.removeItem('refresh_token');
-    // localStorage.removeItem('user');
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user');
   }, []);
 
   // On mount, connect the api module's failure handler to our logout function
   useEffect(() => {
-    // setOnAuthFailure(logout);
+    setOnAuthFailure(logout);
   }, [logout]);
 
 
@@ -206,8 +206,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         setUser(appUser);
         localStorage.setItem('user', JSON.stringify(appUser)); // Persist user data on refresh
       } catch (error) {
-        // We are not logging out on failure for debugging purposes, as requested.
-        console.error('Initial session validation failed on app load:', error);
+        console.error('Initial session validation failed on app load. Logging out.', error);
+        logout();
       } finally {
         console.log("Finished validation attempt. Setting auth loading to false.");
         setIsAuthLoading(false);
@@ -217,7 +217,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     validateSessionOnLoad();
     // This effect should only run ONCE on component mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [logout]);
 
   const login = async (credentials: { email: string; password:string }) => {
       const loginData = await api.post('/auth/login', credentials);
