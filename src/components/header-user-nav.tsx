@@ -2,7 +2,6 @@
 "use client";
 
 import { CreditCard, LogOut, Settings, User } from "lucide-react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -18,14 +17,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useApp } from "@/app/store";
+import { Skeleton } from "./ui/skeleton";
 
 export function HeaderUserNav() {
-  const router = useRouter();
-  const { user } = useApp();
+  const { user, logout } = useApp();
 
   const handleLogout = () => {
-    router.push("/login");
+    logout();
   };
+
+  if (!user) {
+    return <Skeleton className="h-8 w-8 rounded-full" />;
+  }
 
   return (
     <DropdownMenu>

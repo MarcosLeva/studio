@@ -2,7 +2,6 @@
 "use client";
 
 import { CreditCard, LogOut, Settings, User } from "lucide-react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -20,15 +19,29 @@ import {
 import { useApp } from "@/app/store";
 import { useSidebar } from "./ui/sidebar";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "./ui/skeleton";
 
 export function UserNav() {
-  const router = useRouter();
-  const { user } = useApp();
+  const { user, logout } = useApp();
   const { state } = useSidebar();
 
   const handleLogout = () => {
-    router.push("/login");
+    logout();
   };
+
+  if (!user) {
+    return (
+        <div className={cn(
+            "flex items-center gap-2 p-2",
+            state === 'collapsed' && "p-0"
+        )}>
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <div className={cn("flex flex-col gap-2", state === 'collapsed' && "hidden")}>
+                <Skeleton className="h-4 w-24" />
+            </div>
+        </div>
+    )
+  }
 
   return (
     <DropdownMenu>

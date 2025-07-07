@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { QrCode, FileScan, LayoutGrid, BarChart2, Users } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 import {
@@ -23,6 +23,8 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { HeaderUserNav } from '@/components/header-user-nav';
 import { HeaderThemeToggle } from '@/components/header-theme-toggle';
+import { useApp } from '../store';
+import { LogoSpinner } from '@/components/ui/logo-spinner';
 
 export default function DashboardLayout({
   children,
@@ -30,19 +32,26 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { isAuthenticated, isAuthLoading } = useApp();
 
-  const isAuthPage = [
-    '/login', 
-    '/forgot-password', 
-    '/reset-password', 
-    '/set-password'
-  ].some(p => pathname.endsWith(p));
+  React.useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isAuthenticated, isAuthLoading, router]);
 
-  // The root page also shouldn't have the dashboard layout
-  const isRootPage = pathname === '/';
-
-  if (isAuthPage || isRootPage) {
-    return <>{children}</>;
+  if (isAuthLoading) {
+    return (
+      <div className="flex h-svh w-full items-center justify-center bg-background">
+        <LogoSpinner className="scale-125" />
+      </div>
+    );
+  }
+  
+  // This check prevents a flash of the dashboard layout before redirecting
+  if (!isAuthenticated) {
+    return null;
   }
 
   return (

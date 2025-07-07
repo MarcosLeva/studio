@@ -18,7 +18,7 @@ export const LogoSpinner = ({ className, ...props }: React.HTMLAttributes<HTMLDi
           <rect className="animate-logo-pulse-4 fill-primary" width="7" height="7" x="14" y="14" rx="1" />
         </svg>
       </div>
-      <p className="text-sm font-medium text-muted-foreground">Filtrando...</p>
+      <p className="text-sm font-medium text-muted-foreground">Cargando...</p>
     </div>
   );
 };

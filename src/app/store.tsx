@@ -1,8 +1,9 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import type { Category, ScanResult, User } from '@/lib/types';
+import { api } from '@/lib/api';
 
 // Mock Data
 const initialCategories: Category[] = [
@@ -50,15 +51,6 @@ const initialScanResults: ScanResult[] = [
   },
 ];
 
-const initialUser: User = {
-    id: 'user-1',
-    name: 'Usuario de Demostración',
-    email: 'user@cococo.com',
-    avatar: 'https://placehold.co/100x100.png',
-    role: 'Administrador',
-    status: 'activo',
-};
-
 const initialManagedUsers: User[] = [
     {
         id: 'user-2',
@@ -98,18 +90,29 @@ const initialManagedUsers: User[] = [
 
 
 interface AppContextType {
+  // Auth
+  user: User | null;
+  isAuthenticated: boolean;
+  isAuthLoading: boolean;
+  login: (credentials: { email: string; password: string }) => Promise<void>;
+  logout: () => void;
+  editUser: (data: Partial<Omit<User, 'id'>>) => void;
+
+  // Categories
   categories: Category[];
   setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
-  results: ScanResult[];
-  setResults: React.Dispatch<React.SetStateAction<ScanResult[]>>;
   addCategory: (category: Omit<Category, 'id' | 'dateCreated'>) => void;
   editCategory: (id: string, data: Omit<Category, 'id' | 'dateCreated'>) => void;
   deleteCategory: (id: string) => void;
+
+  // Results
+  results: ScanResult[];
+  setResults: React.Dispatch<React.SetStateAction<ScanResult[]>>;
   addScanResult: (result: Omit<ScanResult, 'id' | 'dateScanned'>) => void;
   deleteScanResult: (id: string) => void;
   editScanResult: (id: string, data: Partial<Omit<ScanResult, 'id' | 'dateScanned'>>) => void;
-  user: User;
-  editUser: (data: Partial<Omit<User, 'id'>>) => void;
+  
+  // Managed Users
   managedUsers: User[];
   addManagedUser: (user: Omit<User, 'id' | 'avatar' | 'status'>) => string;
   editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'status'>>) => void;
@@ -122,8 +125,53 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [results, setResults] = useState<ScanResult[]>(initialScanResults);
-  const [user, setUser] = useState<User>(initialUser);
   const [managedUsers, setManagedUsers] = useState<User[]>(initialManagedUsers);
+
+  // Auth state
+  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const validateToken = async () => {
+      const storedToken = localStorage.getItem('authToken');
+      if (storedToken) {
+        try {
+          // The API service will automatically use the token from localStorage
+          const data = await api.get('/auth/profile');
+          setUser(data.user);
+          setToken(storedToken);
+          setIsAuthenticated(true);
+        } catch (error) {
+          console.error('Session validation failed:', error);
+          localStorage.removeItem('authToken');
+        }
+      }
+      setIsAuthLoading(false);
+    };
+
+    validateToken();
+  }, []);
+
+  const login = async (credentials: { email: string; password: string }) => {
+    const data = await api.post('/auth/login', credentials);
+    if (data.token && data.user) {
+      localStorage.setItem('authToken', data.token);
+      setToken(data.token);
+      setUser(data.user);
+      setIsAuthenticated(true);
+    } else {
+      throw new Error("Respuesta de login inválida desde la API.");
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('authToken');
+    setToken(null);
+    setUser(null);
+    setIsAuthenticated(false);
+  };
   
   const addCategory = (category: Omit<Category, 'id' | 'dateCreated'>) => {
     const newCategory: Category = {
@@ -164,7 +212,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const editUser = (data: Partial<Omit<User, 'id'>>) => {
-    setUser(prev => ({ ...prev, ...data }));
+    if (user) {
+      setUser(prev => prev ? { ...prev, ...data } : null);
+    }
   };
 
   const addManagedUser = (userData: Omit<User, 'id' | 'avatar' | 'status'>): string => {
@@ -194,9 +244,32 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
+  const contextValue = {
+    user,
+    isAuthenticated,
+    isAuthLoading,
+    login,
+    logout,
+    editUser,
+    categories,
+    setCategories,
+    addCategory,
+    editCategory,
+    deleteCategory,
+    results,
+    setResults,
+    addScanResult,
+    deleteScanResult,
+    editScanResult,
+    managedUsers,
+    addManagedUser,
+    editManagedUser,
+    deleteManagedUser,
+    toggleUserStatus,
+  };
 
   return (
-    <AppContext.Provider value={{ categories, setCategories, results, setResults, addCategory, editCategory, deleteCategory, addScanResult, deleteScanResult, editScanResult, user, editUser, managedUsers, addManagedUser, editManagedUser, deleteManagedUser, toggleUserStatus }}>
+    <AppContext.Provider value={contextValue}>
       {children}
     </AppContext.Provider>
   );

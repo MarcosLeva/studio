@@ -32,6 +32,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { PasswordInput } from "@/components/ui/password-input";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const profileSchema = z.object({
   name: z.string().min(3, { message: "El nombre debe tener al menos 3 caracteres." }),
@@ -51,6 +52,47 @@ const passwordSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 type PasswordFormValues = z.infer<typeof passwordSchema>;
 
+function ProfilePageSkeleton() {
+    return (
+        <div>
+            <div className="mb-6">
+                <Skeleton className="h-9 w-1/3" />
+                <Skeleton className="h-4 w-2/3 mt-2" />
+            </div>
+            <Card>
+                <CardHeader>
+                    <Skeleton className="h-7 w-1/4" />
+                    <Skeleton className="h-4 w-1/2 mt-2" />
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="flex items-center space-x-6">
+                        <Skeleton className="h-24 w-24 rounded-full" />
+                        <Skeleton className="h-10 w-32" />
+                    </div>
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-6 w-1/2" />
+                        </div>
+                         <div className="space-y-2">
+                            <Skeleton className="h-4 w-32" />
+                            <Skeleton className="h-6 w-2/3" />
+                        </div>
+                         <div className="space-y-2">
+                            <Skeleton className="h-4 w-16" />
+                            <Skeleton className="h-6 w-1/4" />
+                        </div>
+                    </div>
+                </CardContent>
+                <CardFooter className="flex-col sm:flex-row sm:justify-end gap-3 sm:gap-4">
+                     <Skeleton className="h-10 w-full sm:w-44" />
+                     <Skeleton className="h-10 w-full sm:w-36" />
+                </CardFooter>
+            </Card>
+        </div>
+    )
+}
+
 export default function ProfilePage() {
   const { user, editUser } = useApp();
   const { toast } = useToast();
@@ -65,8 +107,8 @@ export default function ProfilePage() {
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: user.name,
-      email: user.email,
+      name: user?.name || "",
+      email: user?.email || "",
     },
   });
 
@@ -87,11 +129,17 @@ export default function ProfilePage() {
   }, []);
 
   React.useEffect(() => {
-    form.reset({
-        name: user.name,
-        email: user.email,
-    })
+    if (user) {
+        form.reset({
+            name: user.name,
+            email: user.email,
+        })
+    }
   }, [user, form]);
+
+  if (!user) {
+    return <ProfilePageSkeleton />;
+  }
 
 
   const onProfileSubmit = (data: ProfileFormValues) => {
