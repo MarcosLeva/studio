@@ -36,21 +36,25 @@ export const setToken = (token: string | null) => {
 };
 
 const handleResponse = async (response: Response) => {
-    // On a 401, we don't parse the body right away, we let the caller handle the refresh logic.
+    // If we get a 401, reject immediately so the caller can handle the refresh logic.
     if (response.status === 401) {
         return Promise.reject(response);
     }
 
-    const json = await response.json();
+    const text = await response.text();
+    // Handle empty response body
+    const json = text ? JSON.parse(text) : {};
 
     if (!response.ok) {
         throw new Error(json.message || `Error: ${response.statusText}`);
     }
     
+    // Check for the success property from our specific API structure
     if (json.success === false) {
       throw new Error(json.message || 'La API indicó un fallo en la operación.');
     }
 
+    // Return the "data" property as per the API structure
     return json.data;
 }
 
@@ -67,24 +71,31 @@ const refreshToken = async () => {
         const url = `${getApiUrl()}/auth/refresh`;
         const response = await fetch(url, {
             method: 'POST',
-            credentials: 'include', // This sends cookies (like the refresh_token) to the backend
+            credentials: 'include', // This sends the HttpOnly refresh_token cookie
         });
 
         if (!response.ok) {
-            const error = new Error('Session expired. Please log in again.');
+            const error = new Error('Tu sesión ha expirado. Por favor, inicia sesión de nuevo.');
             processQueue(error, null);
             setToken(null);
             if (typeof window !== 'undefined') localStorage.removeItem('user');
             throw error;
         }
 
-        const data = await handleResponse(response);
-        const newAccessToken = data.access_token;
+        const json = await response.json();
+
+        if (json.success === false) {
+            throw new Error(json.message || 'No se pudo refrescar la sesión.');
+        }
+
+        const newAccessToken = json.data.access_token;
         setToken(newAccessToken);
         processQueue(null, newAccessToken);
-        return newAccessToken;
+        return json.data;
     } catch (error) {
         processQueue(error as Error, null);
+        setToken(null);
+        if (typeof window !== 'undefined') localStorage.removeItem('user');
         throw error;
     } finally {
         isRefreshing = false;
@@ -101,14 +112,21 @@ const request = async (endpoint: string, options: RequestInit) => {
 
   try {
     const response = await fetch(url, { ...options, headers });
-    if (response.status === 401) {
-        await refreshToken();
-        headers.set('Authorization', `Bearer ${accessToken}`);
-        const retryResponse = await fetch(url, { ...options, headers });
+    return await handleResponse(response);
+  } catch (error: any) {
+    if (error instanceof Response && error.status === 401) {
+      try {
+        const refreshData = await refreshToken();
+        
+        const retryHeaders = new Headers(options.headers);
+        retryHeaders.set('Authorization', `Bearer ${refreshData.access_token}`);
+        const retryResponse = await fetch(url, { ...options, headers: retryHeaders });
+
         return handleResponse(retryResponse);
+      } catch (refreshError) {
+        throw refreshError;
+      }
     }
-    return handleResponse(response);
-  } catch (error) {
     throw error;
   }
 };
@@ -130,7 +148,9 @@ export const api = {
   },
 
   async refreshSession() {
-    await refreshToken();
-    return this.get('/auth/profile');
+    const data = await refreshToken();
+    // After a successful refresh, the user data is in data.user
+    // And the new access token is already set by refreshToken()
+    return data.user;
   }
 };

@@ -159,16 +159,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const validateSession = async () => {
-      const storedUserRaw = localStorage.getItem('user');
-      if (storedUserRaw) {
-        // Optimistically set the user to avoid UI flicker
-        setUser(mapApiUserToAppUser(JSON.parse(storedUserRaw)));
-      }
-
       try {
-        // This call will use the refresh_token cookie (set as HttpOnly by the backend)
+        // We no longer optimistically set the user. We wait for the session to be validated.
         const freshUserData = await api.refreshSession();
         setUser(mapApiUserToAppUser(freshUserData));
+        // The raw user data from the API response
         localStorage.setItem('user', JSON.stringify(freshUserData));
         setIsAuthenticated(true);
       } catch (error) {
