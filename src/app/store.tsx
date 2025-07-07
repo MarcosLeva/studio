@@ -190,23 +190,36 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const validateSessionOnLoad = async () => {
       const storedRefreshToken = localStorage.getItem('refresh_token');
       
+      // If there's no refresh token, we're done. The user is not logged in.
       if (!storedRefreshToken) {
         setIsAuthLoading(false);
         return;
       }
       
-      console.log("Found refresh token. Attempting to validate session...");
+      // If there IS a token, we try to validate it.
+      console.log("Found refresh token. Attempting to validate session on app load...");
       try {
         const { user: freshUserData } = await api.refreshSession();
-        console.log("Session validated successfully on app load.");
+        // If refresh is successful, update user data in case it changed.
         const appUser = mapApiUserToAppUser(freshUserData);
         setUser(appUser);
         localStorage.setItem('user', JSON.stringify(appUser));
-      } catch (error) {
-        // This only runs if api.refreshSession() fails, which is the correct condition to logout.
-        console.error('Initial session validation failed. The refresh token is likely invalid. Logging out.', error);
-        logout();
+        console.log("Session validated and refreshed successfully on app load.");
+      } catch (error: any) {
+        // This block catches errors from api.refreshSession().
+        // We ONLY log out if the error is an authentication error (e.g., status 401),
+        // which means the refresh token is invalid. For other errors (like a temporary
+        // network issue), we do nothing, preserving the locally stored session.
+        // The user can continue to use the app, and subsequent API calls will retry the refresh.
+        console.error('An error occurred during session validation:', error);
+        if (error.status === 401) {
+            console.error('Refresh token is invalid. Logging out.');
+            logout();
+        } else {
+            console.log('Non-authentication error during refresh. Session will not be terminated.');
+        }
       } finally {
+        // Always stop the loading indicator.
         setIsAuthLoading(false);
       }
     };

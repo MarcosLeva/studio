@@ -54,7 +54,9 @@ const refreshToken = async () => {
         if (!response.ok) {
             // A non-OK response (like 401, 403) means the refresh token is invalid.
             // Let the promise reject so the caller can handle it.
-            throw new Error('Failed to refresh token.');
+            const error = new Error('Failed to refresh token.');
+            (error as any).status = response.status;
+            throw error;
         }
         const data = await handleResponse(response);
         if (!data.access_token || !data.user) {
