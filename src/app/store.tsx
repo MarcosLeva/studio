@@ -1,9 +1,9 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import type { Category, ScanResult, User } from '@/lib/types';
-import { api } from '@/lib/api';
+import { api, setToken } from '@/lib/api';
 
 // Mock Data
 const initialCategories: Category[] = [
@@ -147,50 +147,52 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   // Auth state
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
 
-  const logout = () => {
-    localStorage.removeItem('authToken');
+  const logout = useCallback(() => {
+    localStorage.removeItem('user');
     setToken(null);
     setUser(null);
     setIsAuthenticated(false);
-  };
-
-  useEffect(() => {
-    const validateToken = async () => {
-      const storedToken = localStorage.getItem('authToken');
-      if (storedToken) {
-        try {
-          // The API service will automatically use the token from localStorage
-          const profileData = await api.get('/auth/profile');
-          setUser(mapApiUserToAppUser(profileData));
-          setToken(storedToken);
-          setIsAuthenticated(true);
-        } catch (error) {
-          console.error('Session validation failed:', error);
-          logout();
-        }
-      }
-      setIsAuthLoading(false);
-    };
-
-    validateToken();
-    // The `logout` function is stable and doesn't need to be in the dependency array.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const login = async (credentials: { email: string; password: string }) => {
-    const loginData = await api.post('/auth/login', credentials);
-    if (loginData && loginData.access_token && loginData.user) {
-      localStorage.setItem('authToken', loginData.access_token);
-      setToken(loginData.access_token);
-      setUser(mapApiUserToAppUser(loginData.user));
-      setIsAuthenticated(true);
-    } else {
-      throw new Error("Respuesta de login inválida desde la API. No se recibió el token de acceso o los datos del usuario.");
-    }
+  useEffect(() => {
+    const validateSession = async () => {
+      const storedUserRaw = localStorage.getItem('user');
+      if (storedUserRaw) {
+        // Optimistically set the user to avoid UI flicker
+        setUser(mapApiUserToAppUser(JSON.parse(storedUserRaw)));
+      }
+
+      try {
+        // This call will use the HttpOnly refresh token cookie
+        const freshUserData = await api.refreshSession();
+        setUser(mapApiUserToAppUser(freshUserData));
+        localStorage.setItem('user', JSON.stringify(freshUserData));
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error('Session validation failed:', error);
+        logout();
+      } finally {
+        setIsAuthLoading(false);
+      }
+    };
+
+    validateSession();
+  }, [logout]);
+
+  const login = async (credentials: { email: string; password:string }) => {
+      const loginData = await api.post('/auth/login', credentials);
+      if (loginData && loginData.access_token && loginData.user) {
+        setToken(loginData.access_token);
+        const appUser = mapApiUserToAppUser(loginData.user);
+        setUser(appUser);
+        localStorage.setItem('user', JSON.stringify(loginData.user));
+        setIsAuthenticated(true);
+      } else {
+        throw new Error("Respuesta de login inválida desde la API.");
+      }
   };
   
   const addCategory = (category: Omit<Category, 'id' | 'dateCreated'>) => {
@@ -232,9 +234,25 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const editUser = (data: Partial<Omit<User, 'id'>>) => {
-    if (user) {
-      setUser(prev => prev ? { ...prev, ...data } : null);
-    }
+    setUser(prevUser => {
+      if (!prevUser) return null;
+      const updatedUser = { ...prevUser, ...data };
+
+      // Also update localStorage
+      const storedUserRaw = localStorage.getItem('user');
+      if (storedUserRaw) {
+        const storedUser = JSON.parse(storedUserRaw);
+        // This only updates the fields that are part of the app's User model
+        const updatedStoredUser = {
+          ...storedUser,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          avatar: updatedUser.avatar,
+        }
+        localStorage.setItem('user', JSON.stringify(updatedStoredUser));
+      }
+      return updatedUser;
+    });
   };
 
   const addManagedUser = (userData: Omit<User, 'id' | 'avatar' | 'status'>): string => {

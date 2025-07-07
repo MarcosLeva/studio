@@ -1,6 +1,10 @@
 
 import {toast} from '@/hooks/use-toast';
 
+let accessToken: string | null = null;
+let isRefreshing = false;
+let failedQueue: { resolve: (value?: unknown) => void; reject: (reason?: any) => void; }[] = [];
+
 const getApiUrl = () => {
   const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
   if (!apiUrl) {
@@ -16,64 +20,117 @@ const getApiUrl = () => {
   return apiUrl;
 };
 
-const getToken = () => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('authToken');
-  }
-  return null;
+const processQueue = (error: Error | null, token: string | null = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+export const setToken = (token: string | null) => {
+  accessToken = token;
 };
 
 const handleResponse = async (response: Response) => {
+    // On a 401, we don't parse the body right away, we let the caller handle the refresh logic.
+    if (response.status === 401) {
+        return Promise.reject(response);
+    }
+
     const json = await response.json();
 
     if (!response.ok) {
-        // Handles HTTP errors (e.g., 401, 404, 500)
         throw new Error(json.message || `Error: ${response.statusText}`);
     }
     
     if (json.success === false) {
-      // Handles logical errors from the API (e.g., bad input where status is 200 OK)
       throw new Error(json.message || 'La API indicó un fallo en la operación.');
     }
 
-    // Returns the actual data from the response payload
     return json.data;
 }
 
-export const api = {
-  async get(endpoint: string) {
-    const url = `${getApiUrl()}${endpoint}`;
-    const token = getToken();
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+const refreshToken = async () => {
+    if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+        });
     }
 
-    const response = await fetch(url, {
-      method: 'GET',
-      headers,
-    });
+    isRefreshing = true;
+
+    try {
+        const url = `${getApiUrl()}/auth/refresh`;
+        const response = await fetch(url, {
+            method: 'POST',
+            credentials: 'include', // This sends the HttpOnly cookie to the backend
+        });
+
+        if (!response.ok) {
+            const error = new Error('Session expired. Please log in again.');
+            processQueue(error, null);
+            setToken(null);
+            if (typeof window !== 'undefined') localStorage.removeItem('user');
+            throw error;
+        }
+
+        const data = await handleResponse(response);
+        const newAccessToken = data.access_token;
+        setToken(newAccessToken);
+        processQueue(null, newAccessToken);
+        return newAccessToken;
+    } catch (error) {
+        processQueue(error as Error, null);
+        throw error;
+    } finally {
+        isRefreshing = false;
+    }
+}
+
+const request = async (endpoint: string, options: RequestInit) => {
+  const url = `${getApiUrl()}${endpoint}`;
+  const headers = new Headers(options.headers);
+
+  if (accessToken) {
+    headers.set('Authorization', `Bearer ${accessToken}`);
+  }
+
+  try {
+    const response = await fetch(url, { ...options, headers });
+    if (response.status === 401) {
+        await refreshToken();
+        headers.set('Authorization', `Bearer ${accessToken}`);
+        const retryResponse = await fetch(url, { ...options, headers });
+        return handleResponse(retryResponse);
+    }
     return handleResponse(response);
+  } catch (error) {
+    throw error;
+  }
+};
+
+
+export const api = {
+  async get(endpoint: string) {
+    return request(endpoint, {
+      method: 'GET',
+    });
   },
 
   async post(endpoint: string, body: unknown) {
-    const url = `${getApiUrl()}${endpoint}`;
-    const token = getToken();
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
-    if (token && endpoint !== '/auth/login') {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    const response = await fetch(url, {
+    return request(endpoint, {
       method: 'POST',
-      headers,
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    
-    return handleResponse(response);
   },
+
+  async refreshSession() {
+    await refreshToken();
+    return this.get('/auth/profile');
+  }
 };
