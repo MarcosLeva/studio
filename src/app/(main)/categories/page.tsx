@@ -484,7 +484,7 @@ export default function CategoriesPage() {
                 />
               </div>
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
+                <Button type="button" variant="outline" onClick={() => handleDialogClose(false)}>Cancelar</Button>
                 <Button type="submit">{editingCategory ? "Guardar Cambios" : "Guardar Categoría"}</Button>
               </DialogFooter>
             </form>
@@ -504,7 +504,7 @@ export default function CategoriesPage() {
               <span className="font-semibold">{categoryToDelete?.name}</span>.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-3 sm:gap-0">
+          <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
@@ -524,7 +524,7 @@ export default function CategoriesPage() {
                 Esta acción no se puede deshacer. Esto eliminará permanentemente las {table.getFilteredSelectedRowModel().rows.length} categorías seleccionadas.
                 </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-3 sm:gap-0">
+            <AlertDialogFooter>
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
                 <AlertDialogAction onClick={confirmBulkDelete} className="bg-destructive hover:bg-destructive/90">
                     Eliminar
@@ -541,12 +541,12 @@ export default function CategoriesPage() {
             onChange={handleFilterChange}
             className="max-w-sm"
           />
-          {table.getRowModel().rows?.length ? (
+          {table.getFilteredRowModel().rows?.length ? (
               <div className="space-y-4">
-                  {table.getRowModel().rows.slice(0, visibleRows).map((row) => (
+                  {table.getFilteredRowModel().rows.slice(0, visibleRows).map((row) => (
                       <MobileCategoryCard key={row.id} category={row.original} />
                   ))}
-                  {visibleRows < table.getRowModel().rows.length && (
+                  {visibleRows < table.getFilteredRowModel().rows.length && (
                       <Button
                           onClick={() => setVisibleRows(prev => prev + 10)}
                           variant="outline"

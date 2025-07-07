@@ -417,12 +417,12 @@ export default function UsersPage() {
       {isMobile ? (
         <div className="space-y-4">
           {toolbarContent}
-          {table.getRowModel().rows?.length ? (
+          {table.getFilteredRowModel().rows?.length ? (
             <div className="space-y-4">
-              {table.getRowModel().rows.slice(0, visibleRows).map((row) => (
+              {table.getFilteredRowModel().rows.slice(0, visibleRows).map((row) => (
                 <MobileUserCard key={row.id} user={row.original} />
               ))}
-              {visibleRows < table.getRowModel().rows.length && (
+              {visibleRows < table.getFilteredRowModel().rows.length && (
                 <Button
                   onClick={() => setVisibleRows(prev => prev + 10)}
                   variant="outline"
@@ -525,7 +525,7 @@ export default function UsersPage() {
                 )}
               />
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
+                <Button type="button" variant="outline" onClick={() => handleDialogClose(false)}>Cancelar</Button>
                 <Button type="submit">{editingUser ? "Guardar Cambios" : "Agregar Usuario"}</Button>
               </DialogFooter>
             </form>
@@ -545,7 +545,7 @@ export default function UsersPage() {
               <span className="font-semibold">{userToDelete?.name}</span>.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-3 sm:gap-0">
+          <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setUserToDelete(null)}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
@@ -565,7 +565,7 @@ export default function UsersPage() {
                 Esta acción no se puede deshacer. Esto eliminará permanentemente a los {table.getFilteredSelectedRowModel().rows.length} usuarios seleccionados.
                 </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-3 sm:gap-0">
+            <AlertDialogFooter>
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
                 <AlertDialogAction onClick={confirmBulkDelete} className="bg-destructive hover:bg-destructive/90">
                     Eliminar
