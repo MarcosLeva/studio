@@ -47,7 +47,7 @@ const refreshToken = async () => {
 
     const token = localStorage.getItem('refresh_token');
     if (!token) {
-        return Promise.reject(new Error('No refresh token available.'));
+        return Promise.reject(new Error('No refresh token available in localStorage.'));
     }
 
     refreshTokenPromise = fetch(`${getApiUrl()}/auth/refresh`, {

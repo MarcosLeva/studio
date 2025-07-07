@@ -160,13 +160,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const validateSession = async () => {
-      const storedRefreshToken = localStorage.getItem('refresh_token');
-      
-      if (!storedRefreshToken) {
-        setIsAuthLoading(false);
-        return;
-      }
-
       try {
         const { user: freshUserData, access_token } = await api.refreshSession();
         
@@ -176,7 +169,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem('user', JSON.stringify(freshUserData));
         setIsAuthenticated(true);
       } catch (error) {
-        console.error('Session validation failed:', error);
+        console.error('Session validation failed, logging out:', error);
         logout();
       } finally {
         setIsAuthLoading(false);
