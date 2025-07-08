@@ -94,7 +94,7 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
         headers,
     });
 
-    // If the access token has expired, try to refresh it and retry the request once.
+    // If the access token has expired (401), try to refresh it and retry the request once.
     if (response.status === 401) {
         console.log(`Request to ${endpoint} failed with 401. Attempting token refresh.`);
         try {
@@ -111,11 +111,9 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
         } catch (error: any) {
             // This catch block runs if refreshToken() itself fails (e.g., with a 401).
             // This is the correct moment to declare the session invalid and log out.
-            if (error.status === 401) {
-                console.error('Session is invalid and could not be refreshed. Logging out.', error);
-                onAuthFailure();
-            }
-            // Re-throw the error to stop the original request flow.
+            console.error('Session is invalid and could not be refreshed. Logging out.', error);
+            onAuthFailure();
+            // Re-throw the error to stop the original request flow and notify the caller.
             throw error;
         }
     }
