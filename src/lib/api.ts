@@ -34,6 +34,7 @@ export const setToken = (token: string | null) => {
 
 // This function is the core of the refresh logic.
 const refreshToken = async () => {
+    // If a refresh is already in progress, wait for it to complete.
     if (refreshTokenPromise) {
         return refreshTokenPromise;
     }
@@ -45,21 +46,19 @@ const refreshToken = async () => {
 
     console.log("Attempting to refresh token...");
 
+    // Start the refresh request and store the promise.
     refreshTokenPromise = fetch(`${getApiUrl()}/auth/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh_token: storedRefreshToken }),
     })
     .then(async response => {
-        const data = await handleResponse(response); // handleResponse throws on non-ok status
+        // handleResponse throws on non-ok status, which will be caught below.
+        const data = await handleResponse(response);
         if (!data.access_token) {
           throw new Error('Invalid refresh response from API.');
         }
         setToken(data.access_token);
-        // The refresh token might be rotated, so we save the new one.
-        if (data.refresh_token) {
-            localStorage.setItem('refresh_token', data.refresh_token);
-        }
         console.log("Token refreshed successfully.");
         return data;
     })
@@ -69,13 +68,14 @@ const refreshToken = async () => {
         throw error;
     })
     .finally(() => {
+        // Clear the promise once it's settled.
         refreshTokenPromise = null;
     });
 
     return refreshTokenPromise;
 }
 
-// Expose the refresh function for initial app load validation
+// Expose the refresh function for initial app load validation.
 export const refreshSession = refreshToken;
 
 // Generic request handler with automatic token refresh.
