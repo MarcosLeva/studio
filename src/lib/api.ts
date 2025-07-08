@@ -22,7 +22,6 @@ const getApiUrl = () => {
 };
 
 // Function to be called from the UI to trigger a logout.
-// This decouples the API client from the UI state management.
 let onAuthFailure: () => void = () => {};
 export const setOnAuthFailure = (callback: () => void) => {
     onAuthFailure = callback;
@@ -60,7 +59,6 @@ const handleResponse = async (response: Response) => {
 
 // This function is the core of the refresh logic.
 const refreshToken = async () => {
-    // If a refresh is already in progress, wait for it to complete.
     if (refreshTokenPromise) {
         return refreshTokenPromise;
     }
@@ -74,14 +72,12 @@ const refreshToken = async () => {
 
     console.log("Attempting to refresh token...");
 
-    // Start the refresh request and store the promise.
     refreshTokenPromise = fetch(`${getApiUrl()}/auth/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh_token: storedRefreshToken }),
     })
     .then(async response => {
-        // handleResponse throws on non-ok status (e.g., 401 on refresh), which will be caught below.
         const responseData = await handleResponse(response);
         const nestedData = responseData.data;
 
@@ -91,14 +87,12 @@ const refreshToken = async () => {
           throw error;
         }
         
-        // This is the crucial part: set the new token in the module's state.
         setToken(nestedData.access_token);
         console.log("Token refreshed successfully.");
         return responseData;
     })
     .catch(error => {
-        // The catch block runs if fetch fails or handleResponse throws.
-        // Re-throw the error to be handled by the original caller in `request`.
+        // Re-throw the error to be handled by the original caller.
         throw error;
     })
     .finally(() => {
@@ -114,51 +108,46 @@ export const refreshSession = refreshToken;
 
 // Generic request handler with automatic token refresh.
 const request = async (endpoint: string, options: RequestInit = {}) => {
-    let headers = new Headers(options.headers);
+  // Helper function to create and execute a fetch request with the correct headers.
+  const makeRequest = async (token: string | null) => {
+    const headers = new Headers(options.headers);
     if (!headers.has('Content-Type') && options.body) {
-        headers.set('Content-Type', 'application/json');
+      headers.set('Content-Type', 'application/json');
     }
-
-    if (accessToken) {
-        headers.set('Authorization', `Bearer ${accessToken}`);
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
     }
+    return fetch(`${getApiUrl()}${endpoint}`, { ...options, headers });
+  };
 
-    let response = await fetch(`${getApiUrl()}${endpoint}`, { 
-        ...options, 
-        headers,
-    });
+  // Make the initial request with the current token.
+  let response = await makeRequest(accessToken);
 
-    // If the access token has expired (401), try to refresh it and retry the request once.
-    if (response.status === 401) {
-        console.log(`Request to ${endpoint} failed with 401. Attempting token refresh.`);
-        try {
-            await refreshToken();
-            
-            // Update headers with the new token and retry the original request.
-            headers.set('Authorization', `Bearer ${accessToken}`);
-            console.log(`Retrying request to ${endpoint} with new token.`);
-            response = await fetch(`${getApiUrl()}${endpoint}`, { 
-                ...options, 
-                headers,
-            });
-
-        } catch (error: any) {
-            // This catch block runs if refreshToken() itself fails.
-            // THIS IS THE CRITICAL CHANGE: Only log out if the refresh fails with a 401.
-            if (error?.status === 401) {
-                console.error('Refresh token is invalid. Logging out.', error);
-                onAuthFailure();
-            } else {
-                // For any other error during refresh (e.g., network error, 500),
-                // we log it but do not log the user out. The original request will still fail.
-                console.error('An error occurred during token refresh, but it was not a 401. Session will be kept.', error);
-            }
-            // Re-throw the error to stop the original request flow and notify the caller.
-            throw error;
-        }
+  // If unauthorized (401), and it's not a refresh call itself, try to refresh the token.
+  if (response.status === 401 && endpoint !== '/auth/refresh') {
+    try {
+      console.log(`Request to ${endpoint} failed with 401. Refreshing token...`);
+      await refreshToken();
+      
+      // Retry the request with the new access token.
+      console.log(`Retrying request to ${endpoint} with new token.`);
+      response = await makeRequest(accessToken);
+    } catch (refreshError: any) {
+      // If the refresh itself fails with 401, it's a definitive auth failure.
+      if (refreshError?.status === 401) {
+        console.error('Refresh token is invalid. Logging out.', refreshError);
+        onAuthFailure();
+      } else {
+        // For any other error during refresh (e.g., network), don't log out.
+        console.error('An error occurred during token refresh. Session will be kept.', refreshError);
+      }
+      // Re-throw the error to stop the original request flow.
+      throw refreshError;
     }
+  }
 
-    return handleResponse(response);
+  // Parse and return the final response.
+  return handleResponse(response);
 };
 
 export const api = {
