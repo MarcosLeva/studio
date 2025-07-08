@@ -32,6 +32,32 @@ export const setToken = (token: string | null) => {
   accessToken = token;
 };
 
+// Helper to parse response and handle non-OK statuses.
+const handleResponse = async (response: Response) => {
+    const text = await response.text();
+    // Use a try-catch block for robust JSON parsing.
+    let json;
+    try {
+        json = text ? JSON.parse(text) : {};
+    } catch(e) {
+        console.error("Failed to parse JSON response:", text);
+        // Create a generic error if JSON parsing fails
+        const error = new Error("Invalid JSON response from server.");
+        (error as any).status = response.status;
+        throw error;
+    }
+    
+    if (!response.ok) {
+        // Attempt to get a meaningful error message from the parsed JSON.
+        const errorMessage = json?.data?.message || json?.message || `Error: ${response.status} ${response.statusText}`;
+        const error = new Error(errorMessage);
+        (error as any).status = response.status;
+        throw error;
+    }
+    
+    return json;
+}
+
 // This function is the core of the refresh logic.
 const refreshToken = async () => {
     // If a refresh is already in progress, wait for it to complete.
@@ -53,7 +79,7 @@ const refreshToken = async () => {
         body: JSON.stringify({ refresh_token: storedRefreshToken }),
     })
     .then(async response => {
-        // handleResponse throws on non-ok status, which will be caught below.
+        // handleResponse throws on non-ok status (e.g., 401 on refresh), which will be caught below.
         const responseData = await handleResponse(response);
         const nestedData = responseData.data;
 
@@ -61,17 +87,18 @@ const refreshToken = async () => {
           throw new Error('Invalid refresh response from API.');
         }
         
+        // This is the crucial part: set the new token in the module's state.
         setToken(nestedData.access_token);
         console.log("Token refreshed successfully.");
         return responseData;
     })
     .catch(error => {
         // The catch block runs if fetch fails or handleResponse throws.
-        // We re-throw the error to be handled by the original caller.
+        // Re-throw the error to be handled by the original caller in `request`.
         throw error;
     })
     .finally(() => {
-        // Clear the promise once it's settled.
+        // Clear the promise once it's settled to allow future refreshes.
         refreshTokenPromise = null;
     });
 
@@ -123,32 +150,6 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
 
     return handleResponse(response);
 };
-
-// Helper to parse response and handle non-OK statuses.
-const handleResponse = async (response: Response) => {
-    const text = await response.text();
-    // Use a try-catch block for robust JSON parsing.
-    let json;
-    try {
-        json = text ? JSON.parse(text) : {};
-    } catch(e) {
-        console.error("Failed to parse JSON response:", text);
-        // Create a generic error if JSON parsing fails
-        const error = new Error("Invalid JSON response from server.");
-        (error as any).status = response.status;
-        throw error;
-    }
-    
-    if (!response.ok) {
-        // Attempt to get a meaningful error message from the parsed JSON.
-        const errorMessage = json?.data?.message || json?.message || `Error: ${response.status} ${response.statusText}`;
-        const error = new Error(errorMessage);
-        (error as any).status = response.status;
-        throw error;
-    }
-    
-    return json;
-}
 
 export const api = {
     get: (endpoint: string) => request(endpoint, { method: 'GET' }),
