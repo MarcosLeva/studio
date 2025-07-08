@@ -60,14 +60,26 @@ const initialScanResults: ScanResult[] = [
  * @returns The mapped User object for the application state.
  */
 export const mapApiUserToAppUser = (apiUser: any): User => {
+  // Provide default values for potentially missing fields to prevent crashes.
+  const name = apiUser.name || "Usuario no definido";
+  const email = apiUser.email || "email.no.definido@example.com";
+  
+  let role: string;
+  if (apiUser.role === 'admin') {
+    role = 'Administrador';
+  } else if (apiUser.role === 'user') { // The API returns 'user' for members
+    role = 'Miembro';
+  } else {
+    // This handles undefined, null, or other unexpected values for role.
+    role = 'Rol no definido';
+  }
+
   return {
     id: apiUser.id,
-    name: apiUser.name,
-    email: apiUser.email,
-    // The API returns 'admin' or 'member', the app uses 'Administrador' or 'Miembro'
-    role: apiUser.role === 'admin' ? 'Administrador' : 'Miembro',
-    status: apiUser.status,
-    // The API doesn't send an avatar yet, so we use a placeholder.
+    name: name,
+    email: email,
+    role: role,
+    status: apiUser.status || 'inactivo',
     avatar: apiUser.avatar || `https://placehold.co/100x100.png`,
   };
 };

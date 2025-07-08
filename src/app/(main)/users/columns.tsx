@@ -84,8 +84,7 @@ export const getColumns = (
     header: "Rol",
     cell: ({ row }) => {
         const role = row.getValue("role") as string;
-        const translatedRole = role === 'Administrador' ? 'Administrador' : 'Miembro';
-        return <Badge variant={role === 'Administrador' ? 'default' : 'secondary'}>{translatedRole}</Badge>
+        return <Badge variant={role === 'Administrador' ? 'default' : 'secondary'}>{role}</Badge>
     },
     filterFn: 'equalsString',
     size: 120,
