@@ -189,19 +189,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       console.log("Attempting to validate session on app load...");
       try {
         const response = await refreshSession();
-        // The API response may wrap the payload in a `data` object.
+        // The call to refreshSession already validates the token and user presence.
+        // If it succeeds, we just need to set the user state.
         const data = response.data ?? response;
-
-        if (data && data.user && data.access_token) {
-            setToken(data.access_token);
-            const appUser = mapApiUserToAppUser(data.user);
-            setUser(appUser);
-            localStorage.setItem('user', JSON.stringify(appUser));
-            console.log("Session validated and refreshed successfully on app load.");
-        } else {
-            console.error('Invalid data structure from refresh session, logging out.');
-            handleSessionExpiration();
-        }
+        const appUser = mapApiUserToAppUser(data.user);
+        setUser(appUser);
+        localStorage.setItem('user', JSON.stringify(appUser));
+        console.log("Session validated and refreshed successfully on app load.");
       } catch (error: any) {
         // Only log out if the error is an authentication error (401),
         // not a network error.
@@ -209,6 +203,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             console.error('Refresh token is invalid. Logging out.');
             handleSessionExpiration();
         } else {
+            // For any other error (network, server error, invalid data structure),
+            // we log it but don't log the user out.
             console.error('An error occurred during session validation:', error);
         }
       } finally {

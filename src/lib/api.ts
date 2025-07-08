@@ -57,7 +57,7 @@ const refreshToken = async () => {
         const responseData = await handleResponse(response);
         const nestedData = responseData.data;
 
-        if (!nestedData || !nestedData.access_token) {
+        if (!nestedData || !nestedData.access_token || !nestedData.user) {
           throw new Error('Invalid refresh response from API.');
         }
         
