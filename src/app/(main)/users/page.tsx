@@ -181,7 +181,7 @@ function MobileUsersPageSkeleton() {
 }
 
 export default function UsersPage() {
-  const { managedUsers, addManagedUser, editManagedUser, deleteManagedUser, toggleUserStatus, areUsersLoading } = useApp();
+  const { managedUsers, addManagedUser, editManagedUser, deleteManagedUser, toggleUserStatus, areUsersLoading, fetchManagedUsers } = useApp();
   const { toast } = useToast();
   const isMobile = useIsMobile();
   
@@ -213,6 +213,12 @@ export default function UsersPage() {
         isMounted.current = false;
     };
   }, []);
+
+  React.useEffect(() => {
+    if (managedUsers.length === 0) {
+      fetchManagedUsers();
+    }
+  }, [fetchManagedUsers, managedUsers.length]);
 
   React.useEffect(() => {
     if (newlyAddedUserId) {
@@ -489,7 +495,7 @@ export default function UsersPage() {
               <p className="text-sm text-muted-foreground">{user.email}</p>
               <div className="flex items-center gap-4 pt-1">
                 <Badge variant={user.role === 'Administrador' ? 'default' : 'secondary'}>
-                    {user.role === 'Administrador' ? "Administrador" : "Miembro"}
+                    {user.role}
                 </Badge>
                 <div className="flex items-center gap-1.5">
                     <div className="relative flex h-2 w-2">
@@ -536,7 +542,7 @@ export default function UsersPage() {
     </Card>
   );
 
-  if (areUsersLoading) {
+  if (areUsersLoading && managedUsers.length === 0) {
       return isMobile ? <MobileUsersPageSkeleton /> : <DesktopUsersPageSkeleton />;
   }
 
@@ -724,5 +730,3 @@ export default function UsersPage() {
     </div>
   );
 }
-
-    

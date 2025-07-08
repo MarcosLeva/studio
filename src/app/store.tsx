@@ -128,6 +128,7 @@ interface AppContextType {
   // Managed Users
   managedUsers: User[];
   areUsersLoading: boolean;
+  fetchManagedUsers: () => Promise<void>;
   addManagedUser: (user: User) => string;
   editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'status'>>) => void;
   deleteManagedUser: (id: string) => void;
@@ -145,7 +146,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   // Auth state
   const [user, setUser] = useState<User | null>(getInitialUser);
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
-  const [areUsersLoading, setAreUsersLoading] = useState(true);
+  const [areUsersLoading, setAreUsersLoading] = useState(false);
 
   // Derived state for isAuthenticated
   const isAuthenticated = !!user;
@@ -216,36 +217,25 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Fetch managed users on initial load
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setAreUsersLoading(true);
-        // Fetch a large number of users to simulate getting all of them for client-side handling
-        const response = await api.get('/users?page=1&limit=100');
-        // The user list is nested under `data.data` in the API response.
-        const apiUsers = response?.data?.data || [];
-        const appUsers = apiUsers.map(mapApiUserToAppUser);
-        setManagedUsers(appUsers);
-      } catch (error: any) {
-        toast({
-          variant: "destructive",
-          title: "Error al cargar usuarios",
-          description: error.message || "No se pudieron obtener los datos de los usuarios desde el servidor.",
-        });
-      } finally {
-        setAreUsersLoading(false);
-      }
-    };
-    
-    // Only fetch users if authenticated
-    if (isAuthenticated) {
-        fetchUsers();
-    } else {
-        setAreUsersLoading(false);
+  const fetchManagedUsers = useCallback(async () => {
+    if (areUsersLoading) return;
+
+    try {
+      setAreUsersLoading(true);
+      const response = await api.get('/users?page=1&limit=100');
+      const apiUsers = response?.data?.data || [];
+      const appUsers = apiUsers.map(mapApiUserToAppUser);
+      setManagedUsers(appUsers);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error al cargar usuarios",
+        description: error.message || "No se pudieron obtener los datos de los usuarios desde el servidor.",
+      });
+    } finally {
+      setAreUsersLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated]);
+  }, [areUsersLoading, toast]);
 
 
   const login = async (credentials: { email: string; password:string }) => {
@@ -352,6 +342,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     editScanResult,
     managedUsers,
     areUsersLoading,
+    fetchManagedUsers,
     addManagedUser,
     editManagedUser,
     deleteManagedUser,
