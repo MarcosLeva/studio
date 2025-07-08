@@ -28,26 +28,24 @@ export const setOnAuthFailure = (callback: () => void) => {
 };
 
 export const setToken = (token: string | null) => {
+  console.log("Setting new access token:", token ? "Token received" : "Token cleared");
   accessToken = token;
 };
 
 // Helper to parse response and handle non-OK statuses.
 const handleResponse = async (response: Response) => {
     const text = await response.text();
-    // Use a try-catch block for robust JSON parsing.
     let json;
     try {
         json = text ? JSON.parse(text) : {};
     } catch(e) {
         console.error("Failed to parse JSON response:", text);
-        // Create a generic error if JSON parsing fails
         const error = new Error("Invalid JSON response from server.");
         (error as any).status = response.status;
         throw error;
     }
     
     if (!response.ok) {
-        // Attempt to get a meaningful error message from the parsed JSON.
         const errorMessage = json?.data?.message || json?.message || `Error: ${response.status} ${response.statusText}`;
         const error = new Error(errorMessage);
         (error as any).status = response.status;
@@ -59,7 +57,7 @@ const handleResponse = async (response: Response) => {
 
 // This function is the core of the refresh logic.
 const refreshToken = async () => {
-    // This promise-based gatekeeper is essential to prevent multiple refresh requests firing at once.
+    // This promise-based gatekeeper prevents multiple refresh requests from firing at once.
     if (refreshTokenPromise) {
         return refreshTokenPromise;
     }
@@ -68,8 +66,8 @@ const refreshToken = async () => {
         const storedRefreshToken = localStorage.getItem('refresh_token');
         if (!storedRefreshToken) {
             const error = new Error('No refresh token available');
-            (error as any).status = 401;
-            throw error; // This will be caught below
+            (error as any).status = 401; // Treat as auth failure
+            throw error;
         }
 
         console.log("Attempting to refresh token...");
@@ -80,12 +78,11 @@ const refreshToken = async () => {
                 body: JSON.stringify({ refresh_token: storedRefreshToken }),
             });
             
-            // handleResponse will throw an error for non-2xx responses, which will be caught below.
             const responseData = await handleResponse(response);
-            const nestedData = responseData.data;
+            const nestedData = responseData.data ?? responseData;
 
-            if (!nestedData || !nestedData.access_token) {
-              const error = new Error('Invalid refresh response from API: missing access_token.');
+            if (!nestedData.access_token || !nestedData.user) {
+              const error = new Error('Invalid refresh response from API: missing access_token or user.');
               (error as any).status = 500;
               throw error;
             }
@@ -93,15 +90,15 @@ const refreshToken = async () => {
             console.log("Token refreshed successfully. Setting new access token.");
             setToken(nestedData.access_token);
             
-            return responseData; // Return the full data so the caller can use it (e.g., store.tsx on load)
+            return responseData;
         } catch (error: any) {
-            // If the error is 401, it's a definitive auth failure.
+            // If the refresh call itself fails with 401, it's a definitive auth failure.
             if (error.status === 401) {
                 console.error('Refresh token is invalid. Logging out.', error);
-                onAuthFailure(); // Trigger the logout flow in the store
+                onAuthFailure();
             } else {
                 // For other errors (network, 500), just log it. The session is not necessarily dead.
-                console.error('An error occurred during token refresh, but not logging out.', error);
+                console.error('An error occurred during token refresh:', error);
             }
             throw error; // Propagate the error to the original caller of `request`
         }
@@ -119,34 +116,42 @@ export const refreshSession = refreshToken;
 
 // Generic request handler with automatic token refresh.
 const request = async (endpoint: string, options: RequestInit = {}) => {
-  const makeRequest = async (token: string | null) => {
+  // This inner function prepares and sends the request, always using the current accessToken.
+  const makeTheRequest = async () => {
     const headers = new Headers(options.headers);
     if (!headers.has('Content-Type') && options.body) {
       headers.set('Content-Type', 'application/json');
     }
-    if (token) {
-      headers.set('Authorization', `Bearer ${token}`);
+    // Always use the current accessToken from the module scope.
+    if (accessToken) {
+      headers.set('Authorization', `Bearer ${accessToken}`);
     }
     return fetch(`${getApiUrl()}${endpoint}`, { ...options, headers });
   };
 
-  let response = await makeRequest(accessToken);
+  // First attempt to make the request.
+  let response = await makeTheRequest();
 
+  // If the first attempt fails with 401, try to refresh the token and then retry.
   if (response.status === 401 && endpoint !== '/auth/refresh') {
+    console.log(`Request to ${endpoint} received 401. Attempting token refresh.`);
     try {
-      console.log(`Request to ${endpoint} failed with 401. Refreshing token...`);
+      // This will update the module-level 'accessToken' variable upon success.
       await refreshToken();
       
-      console.log(`Retrying request to ${endpoint} with new token.`);
-      response = await makeRequest(accessToken);
+      console.log(`Token refreshed. Retrying request to ${endpoint}.`);
+      // Second attempt with the (hopefully) new token.
+      response = await makeTheRequest();
     } catch (refreshError: any) {
-        console.error("Failed to refresh token, the original request will fail.", refreshError);
-        // The error from refreshToken will propagate, so the caller of request() will see it.
-        // The onAuthFailure() is handled inside refreshToken itself.
-        throw refreshError;
+      console.error("Token refresh failed. The original request will not be retried.", refreshError);
+      // If refreshToken() fails, it throws an error which we propagate to the UI.
+      // The onAuthFailure() logic is handled within refreshToken().
+      throw refreshError;
     }
   }
-
+  
+  // This will process the final response, whether it's from the first or second attempt.
+  // It will throw an error for any non-OK status, which is then caught by the calling function in the UI.
   return handleResponse(response);
 };
 
