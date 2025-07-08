@@ -129,7 +129,12 @@ interface AppContextType {
   managedUsers: User[];
   areUsersLoading: boolean;
   usersError: string | null;
-  fetchManagedUsers: () => Promise<void>;
+  userPagination: {
+    currentPage: number;
+    totalPages: number;
+    totalUsers: number;
+  };
+  fetchManagedUsers: (page: number, limit: number) => Promise<void>;
   addManagedUser: (user: User) => string;
   editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'status'>>) => void;
   deleteManagedUser: (id: string) => void;
@@ -149,6 +154,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
   const [areUsersLoading, setAreUsersLoading] = useState(false);
   const [usersError, setUsersError] = useState<string | null>(null);
+  const [userPagination, setUserPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalUsers: 0,
+  });
 
   // Derived state for isAuthenticated
   const isAuthenticated = !!user;
@@ -193,14 +203,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       
       console.log("Attempting to validate session on app load...");
       try {
-        // This call will either succeed silently or fail and trigger logout via onAuthFailure.
-        // It updates the access token in sessionStorage behind the scenes.
         await refreshSession();
         console.log("Session validated and refreshed successfully on app load.");
       } catch (error: any) {
-        // The onAuthFailure logic is already handled inside refreshSession.
-        // We just log the error here for debugging purposes.
-        // The user will be logged out if it was a 401.
         console.error('An error occurred during session validation:', error.message);
       } finally {
         setIsAuthLoading(false);
@@ -211,18 +216,26 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchManagedUsers = useCallback(async () => {
+  const fetchManagedUsers = useCallback(async (page: number, limit: number) => {
     setUsersError(null);
     setAreUsersLoading(true);
     try {
-      const response = await api.get('/users?page=1&limit=100');
+      const response = await api.get(`/users?page=${page}&limit=${limit}`);
       const apiUsers = response?.data?.data || [];
+      const paginationData = response?.data?.meta || {};
       const appUsers = apiUsers.map(mapApiUserToAppUser);
       setManagedUsers(appUsers);
+      setUserPagination({
+        currentPage: paginationData.current_page || page,
+        totalPages: paginationData.last_page || 1,
+        totalUsers: paginationData.total || 0,
+      });
     } catch (error: any) {
       const errorMessage = error.message || "No se pudieron obtener los datos de los usuarios desde el servidor.";
       console.error("Error fetching users:", errorMessage);
       setUsersError(errorMessage);
+      setManagedUsers([]);
+      setUserPagination({ currentPage: 1, totalPages: 1, totalUsers: 0 });
     } finally {
       setAreUsersLoading(false);
     }
@@ -231,7 +244,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (credentials: { email: string; password:string }) => {
       const response = await api.post('/auth/login', credentials);
-      // The API response may wrap the payload in a `data` object.
       const loginData = response.data ?? response;
 
       if (loginData && loginData.access_token && loginData.user && loginData.refresh_token) {
@@ -334,6 +346,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     managedUsers,
     areUsersLoading,
     usersError,
+    userPagination,
     fetchManagedUsers,
     addManagedUser,
     editManagedUser,

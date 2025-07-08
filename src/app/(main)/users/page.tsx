@@ -14,6 +14,7 @@ import {
   getPaginationRowModel,
   type SortingState,
   type ColumnFiltersState,
+  type PaginationState,
 } from "@tanstack/react-table";
 
 import { Button } from "@/components/ui/button";
@@ -182,7 +183,7 @@ function MobileUsersPageSkeleton() {
 }
 
 export default function UsersPage() {
-  const { managedUsers, addManagedUser, editManagedUser, deleteManagedUser, toggleUserStatus, areUsersLoading, fetchManagedUsers, usersError, isAuthLoading } = useApp();
+  const { managedUsers, addManagedUser, editManagedUser, deleteManagedUser, toggleUserStatus, areUsersLoading, fetchManagedUsers, usersError, isAuthLoading, userPagination } = useApp();
   const { toast } = useToast();
   const isMobile = useIsMobile();
   
@@ -190,9 +191,6 @@ export default function UsersPage() {
   const [editingUser, setEditingUser] = React.useState<User | null>(null);
   const [userToDelete, setUserToDelete] = React.useState<User | null>(null);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = React.useState(false);
-  const [visibleRows, setVisibleRows] = React.useState(10);
-  const [isLoadingMore, setIsLoadingMore] = React.useState(false);
-  const [newlyAddedUserId, setNewlyAddedUserId] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   
   const form = useForm<UserFormValues>({
@@ -208,6 +206,20 @@ export default function UsersPage() {
   const [isFiltering, setIsFiltering] = React.useState(false);
   const isMounted = React.useRef(true);
   
+  const [{ pageIndex, pageSize }, setPagination] = React.useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 20,
+  });
+
+  const pagination = React.useMemo(
+    () => ({
+      pageIndex,
+      pageSize,
+    }),
+    [pageIndex, pageSize]
+  );
+  const pageCount = userPagination.totalPages;
+  
   React.useEffect(() => {
     isMounted.current = true;
     return () => {
@@ -217,22 +229,11 @@ export default function UsersPage() {
 
   React.useEffect(() => {
     if (!isAuthLoading) {
-        fetchManagedUsers();
+        fetchManagedUsers(pageIndex + 1, pageSize);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthLoading]);
+  }, [isAuthLoading, pageIndex, pageSize]);
 
-  React.useEffect(() => {
-    if (newlyAddedUserId) {
-        const timer = setTimeout(() => {
-            if (isMounted.current) {
-                setNewlyAddedUserId(null);
-            }
-        }, 2500); // Animation duration
-
-        return () => clearTimeout(timer);
-    }
-  }, [newlyAddedUserId]);
 
   React.useEffect(() => {
     setIsFiltering(true);
@@ -256,46 +257,50 @@ export default function UsersPage() {
     setUserToDelete(user);
   }, []);
 
-  const handleToggleStatusClick = React.useCallback((user: User) => {
+  const handleToggleStatusClick = React.useCallback(async (user: User) => {
     toggleUserStatus(user.id);
     toast({
       title: user.status === 'activo' ? "Usuario Desactivado" : "Usuario Activado",
       description: `El estado de "${user.name}" ha sido actualizado.`,
       icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
     });
-  }, [toggleUserStatus, toast]);
+    await fetchManagedUsers(pageIndex + 1, pageSize);
+  }, [toggleUserStatus, toast, fetchManagedUsers, pageIndex, pageSize]);
 
   const columns = React.useMemo(() => getColumns(handleEditClick, handleDeleteClick, handleToggleStatusClick), [handleEditClick, handleDeleteClick, handleToggleStatusClick]);
 
   const table = useReactTable({
     data: managedUsers,
     columns,
+    pageCount,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     onRowSelectionChange: setRowSelection,
     onGlobalFilterChange: setGlobalFilter,
+    onPaginationChange: setPagination,
+    manualPagination: true,
     globalFilterFn: "includesString",
     state: {
       sorting,
       columnFilters,
       rowSelection,
       globalFilter,
+      pagination,
     },
   });
 
   async function onSubmit(data: UserFormValues) {
     if (editingUser) {
-      // TODO: Connect edit user endpoint
       editManagedUser(editingUser.id, data);
       toast({
         title: "Usuario Actualizado",
         description: `Los datos de "${data.name}" han sido actualizados.`,
         icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
       });
+      await fetchManagedUsers(pageIndex + 1, pageSize);
       setIsDialogOpen(false);
       return;
     }
@@ -310,15 +315,13 @@ export default function UsersPage() {
         role: apiRole,
       });
 
-      const appUser = mapApiUserToAppUser(response.data.user);
-      const newId = addManagedUser(appUser);
-      setNewlyAddedUserId(newId);
-      
       toast({
         title: "Usuario Creado",
-        description: response.message,
+        description: response.message || "Se ha enviado una invitación por correo electrónico.",
         icon: <Mail className="h-5 w-5 text-primary" />,
       });
+      await fetchManagedUsers(1, pageSize);
+      table.setPageIndex(0);
       setIsDialogOpen(false);
     } catch (error: any) {
       toast({
@@ -347,7 +350,7 @@ export default function UsersPage() {
     setIsDialogOpen(true);
   }
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (userToDelete) {
       deleteManagedUser(userToDelete.id);
       toast({
@@ -356,10 +359,11 @@ export default function UsersPage() {
         icon: <Trash2 className="h-5 w-5 text-primary" />,
       });
       setUserToDelete(null);
+      await fetchManagedUsers(pageIndex + 1, pageSize);
     }
   };
 
-  const confirmBulkDelete = () => {
+  const confirmBulkDelete = async () => {
     const selectedRows = table.getFilteredSelectedRowModel().rows;
     selectedRows.forEach(row => {
         deleteManagedUser(row.original.id);
@@ -371,9 +375,10 @@ export default function UsersPage() {
         icon: <Trash2 className="h-5 w-5 text-primary" />,
     });
     setIsBulkDeleteOpen(false);
+    await fetchManagedUsers(pageIndex + 1, pageSize);
   }
 
-  const handleBulkToggleStatus = (status: 'activo' | 'inactivo') => {
+  const handleBulkToggleStatus = async (status: 'activo' | 'inactivo') => {
     const selectedRows = table.getFilteredSelectedRowModel().rows;
     selectedRows.forEach(row => {
         if (row.original.status !== status) {
@@ -386,17 +391,8 @@ export default function UsersPage() {
         description: `El estado de ${selectedRows.length} usuarios ha sido actualizado.`,
         icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
     });
+    await fetchManagedUsers(pageIndex + 1, pageSize);
   }
-
-  const handleLoadMore = () => {
-    setIsLoadingMore(true);
-    setTimeout(() => {
-      setVisibleRows(prev => prev + 10);
-      if (isMounted.current) {
-        setIsLoadingMore(false);
-      }
-    }, 500);
-  };
 
   const roles = [
     { value: "Administrador", label: "Administrador" },
@@ -485,7 +481,7 @@ export default function UsersPage() {
   );
   
   const MobileUserCard = ({ user }: { user: User }) => (
-    <Card className={cn(user.id === newlyAddedUserId && 'animate-fireworks')}>
+    <Card>
       <CardContent className="p-4 flex justify-between items-start gap-4">
         <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
@@ -543,6 +539,28 @@ export default function UsersPage() {
       </CardContent>
     </Card>
   );
+  
+  const MobilePaginationControls = () => (
+    <div className="flex items-center justify-between mt-4">
+        <Button
+            variant="outline"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+        >
+            Anterior
+        </Button>
+        <span className="text-sm text-muted-foreground">
+            Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount()}
+        </span>
+        <Button
+            variant="outline"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+        >
+            Siguiente
+        </Button>
+    </div>
+  );
 
   if (areUsersLoading && managedUsers.length === 0) {
       return isMobile ? <MobileUsersPageSkeleton /> : <DesktopUsersPageSkeleton />;
@@ -580,22 +598,12 @@ export default function UsersPage() {
       {isMobile ? (
         <div className="space-y-4">
           {toolbarContent}
-          {table.getFilteredRowModel().rows?.length ? (
+          {table.getRowModel().rows?.length ? (
             <div className="space-y-4">
-              {table.getFilteredRowModel().rows.slice(0, visibleRows).map((row) => (
+              {table.getRowModel().rows.map((row) => (
                 <MobileUserCard key={row.id} user={row.original} />
               ))}
-              {visibleRows < table.getFilteredRowModel().rows.length && (
-                <Button
-                  onClick={handleLoadMore}
-                  variant="outline"
-                  className="w-full"
-                  disabled={isLoadingMore}
-                >
-                  {isLoadingMore && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {isLoadingMore ? "Cargando..." : "Cargar más"}
-                </Button>
-              )}
+              <MobilePaginationControls />
             </div>
           ) : (
             <div className="text-center py-10 text-muted-foreground">No hay usuarios.</div>
@@ -620,7 +628,6 @@ export default function UsersPage() {
           <div className="relative">
             <DataTable 
                 table={table}
-                getRowClassName={(row) => row.original.id === newlyAddedUserId ? 'animate-fireworks' : ''}
             />
             {isFiltering && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center rounded-b-md bg-card/80 backdrop-blur-sm">
@@ -746,5 +753,3 @@ export default function UsersPage() {
     </div>
   );
 }
-
-    
