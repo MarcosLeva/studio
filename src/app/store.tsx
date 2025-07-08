@@ -168,6 +168,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setToken(null);
     localStorage.removeItem('user');
     localStorage.removeItem('refresh_token');
+    // sessionStorage is already cleared by setToken(null), but we do it here too for clarity.
+    sessionStorage.removeItem('access_token');
   }, [toast]);
 
   const handleSessionExpiration = useCallback(() => {
@@ -220,11 +222,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const fetchManagedUsers = useCallback(async () => {
-    if (areUsersLoading || isAuthLoading) return;
-
     setUsersError(null);
+    setAreUsersLoading(true);
     try {
-      setAreUsersLoading(true);
       const response = await api.get('/users?page=1&limit=100');
       const apiUsers = response?.data?.data || [];
       const appUsers = apiUsers.map(mapApiUserToAppUser);
@@ -236,7 +236,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setAreUsersLoading(false);
     }
-  }, [areUsersLoading, isAuthLoading]);
+  }, []);
 
 
   const login = async (credentials: { email: string; password:string }) => {

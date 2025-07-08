@@ -1,8 +1,12 @@
 
+"use client";
+
 import {toast} from '@/hooks/use-toast';
 
-// This will hold the in-memory access token.
-let accessToken: string | null = null;
+// This will hold the in-memory access token, initialized from sessionStorage.
+let accessToken: string | null =
+  typeof window !== 'undefined' ? sessionStorage.getItem('access_token') : null;
+
 // This will prevent multiple simultaneous refresh requests.
 let refreshTokenPromise: Promise<any> | null = null;
 
@@ -30,6 +34,11 @@ export const setOnAuthFailure = (callback: () => void) => {
 export const setToken = (token: string | null) => {
   console.log("Setting new access token:", token ? "Token received" : "Token cleared");
   accessToken = token;
+  if (token) {
+    sessionStorage.setItem('access_token', token);
+  } else {
+    sessionStorage.removeItem('access_token');
+  }
 };
 
 // Helper to parse response and handle non-OK statuses.
