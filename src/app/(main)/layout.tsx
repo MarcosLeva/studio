@@ -23,7 +23,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { HeaderUserNav } from '@/components/header-user-nav';
 import { HeaderThemeToggle } from '@/components/header-theme-toggle';
-import { useApp } from '../store';
+import { useApp, mapApiUserToAppUser } from '../store';
 import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { Button } from '@/components/ui/button';
 import { refreshSession } from '@/lib/api';
@@ -36,7 +36,7 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isAuthenticated, isAuthLoading } = useApp();
+  const { isAuthenticated, isAuthLoading, editUser } = useApp();
   const { toast } = useToast();
 
   const handleRefreshToken = async () => {
@@ -45,7 +45,11 @@ export default function DashboardLayout({
         description: "Por favor, espera un momento.",
     });
     try {
-        await refreshSession();
+        const response = await refreshSession();
+        const data = response.data ?? response;
+        const appUser = mapApiUserToAppUser(data.user);
+        editUser(appUser);
+
         toast({
             title: "¡Token Refrescado!",
             description: "Tu sesión ha sido extendida con éxito.",
