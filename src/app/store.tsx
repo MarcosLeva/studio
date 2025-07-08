@@ -4,6 +4,8 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import type { Category, ScanResult, User } from '@/lib/types';
 import { api, setToken, setOnAuthFailure, refreshSession } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
+import { AlertTriangle } from 'lucide-react';
 
 // Mock Data
 const initialCategories: Category[] = [
@@ -162,6 +164,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [results, setResults] = useState<ScanResult[]>(initialScanResults);
   const [managedUsers, setManagedUsers] = useState<User[]>(initialManagedUsers);
+  const { toast } = useToast();
 
   // Auth state
   const [user, setUser] = useState<User | null>(getInitialUser);
@@ -176,20 +179,31 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     setToken(null);
     localStorage.removeItem('user');
-    localStorage.removeItem('refresh_token');
+    // The browser will handle clearing the httpOnly cookie on expiration,
+    // but on manual logout, we ask the backend to clear it if an endpoint exists.
+    // For now, just clearing local state is sufficient.
   }, []);
 
-  // On mount, connect the api module's failure handler to our logout function
+  const handleSessionExpiration = useCallback(() => {
+    toast({
+        variant: "destructive",
+        title: "Sesión Expirada",
+        description: "Tu sesión ha caducado. Por favor, vuelve a iniciar sesión.",
+        icon: <AlertTriangle className="h-5 w-5 text-destructive-foreground" />,
+    });
+    logout();
+  }, [toast, logout]);
+
+  // On mount, connect the api module's failure handler to our new function
   useEffect(() => {
-    setOnAuthFailure(logout);
-  }, [logout]);
+    setOnAuthFailure(handleSessionExpiration);
+  }, [handleSessionExpiration]);
 
 
   // Effect to validate session on initial app load. Runs only once.
   useEffect(() => {
     const validateSessionOnLoad = async () => {
-      // We check for a stored user first. If there's none, no need to refresh.
-      // This also syncs the initial `isAuthLoading` state.
+      // If there's no user in local storage, we don't need to do anything.
       if (!getInitialUser()) {
           setIsAuthLoading(false);
           return;
@@ -198,7 +212,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       console.log("Attempting to validate session on app load...");
       try {
         const response = await refreshSession();
-        // Explicitly handle the case where the data is wrapped
+        // The API response may wrap the payload in a `data` object.
         const data = response.data ?? response;
 
         if (data && data.user && data.access_token) {
@@ -206,21 +220,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             const appUser = mapApiUserToAppUser(data.user);
             setUser(appUser);
             localStorage.setItem('user', JSON.stringify(appUser));
-            // The refresh token might be rotated, so we save the new one.
-            if (data.refresh_token) {
-              localStorage.setItem('refresh_token', data.refresh_token);
-            }
             console.log("Session validated and refreshed successfully on app load.");
         } else {
             console.error('Invalid data structure from refresh session, logging out.');
-            logout();
+            handleSessionExpiration();
         }
       } catch (error: any) {
         // Only log out if the error is an authentication error (401),
         // not a network error.
         if (error.status === 401) {
             console.error('Refresh token is invalid. Logging out.');
-            logout();
+            handleSessionExpiration();
         } else {
             console.error('An error occurred during session validation:', error);
         }
@@ -231,19 +241,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     validateSessionOnLoad();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [logout]);
+  }, [handleSessionExpiration]);
 
   const login = async (credentials: { email: string; password:string }) => {
       const response = await api.post('/auth/login', credentials);
       // The API response may wrap the payload in a `data` object.
       const loginData = response.data ?? response;
 
-      if (loginData && loginData.access_token && loginData.user && loginData.refresh_token) {
+      if (loginData && loginData.access_token && loginData.user) {
         setToken(loginData.access_token);
         const appUser = mapApiUserToAppUser(loginData.user);
         setUser(appUser);
         localStorage.setItem('user', JSON.stringify(appUser));
-        localStorage.setItem('refresh_token', loginData.refresh_token);
+        // The refresh token is now handled by an httpOnly cookie, so we don't store it here.
       } else {
         console.error("Invalid login response structure:", response);
         throw new Error("Respuesta de login inválida desde la API.");

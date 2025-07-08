@@ -23,6 +23,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { PasswordInput } from "@/components/ui/password-input";
 import { useApp } from "@/app/store";
+import { LogoSpinner } from "@/components/ui/logo-spinner";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Por favor, introduce una dirección de correo electrónico válida." }),
@@ -66,6 +67,14 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+  
+  if (isLoading) {
+    return (
+      <main className="flex min-h-svh flex-col items-center justify-center bg-background p-4">
+        <LogoSpinner className="scale-125" />
+      </main>
+    );
+  }
 
   return (
     <main className="flex min-h-svh flex-col items-center justify-center bg-background p-4">
