@@ -182,7 +182,7 @@ function MobileUsersPageSkeleton() {
 }
 
 export default function UsersPage() {
-  const { managedUsers, addManagedUser, editManagedUser, deleteManagedUser, toggleUserStatus, areUsersLoading, fetchManagedUsers, usersError } = useApp();
+  const { managedUsers, addManagedUser, editManagedUser, deleteManagedUser, toggleUserStatus, areUsersLoading, fetchManagedUsers, usersError, isAuthLoading } = useApp();
   const { toast } = useToast();
   const isMobile = useIsMobile();
   
@@ -216,9 +216,11 @@ export default function UsersPage() {
   }, []);
 
   React.useEffect(() => {
-    fetchManagedUsers();
+    if (!isAuthLoading) {
+        fetchManagedUsers();
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isAuthLoading]);
 
   React.useEffect(() => {
     if (newlyAddedUserId) {

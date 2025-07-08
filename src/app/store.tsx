@@ -220,7 +220,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const fetchManagedUsers = useCallback(async () => {
-    if (areUsersLoading) return;
+    if (areUsersLoading || isAuthLoading) return;
 
     setUsersError(null);
     try {
@@ -236,7 +236,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setAreUsersLoading(false);
     }
-  }, [areUsersLoading]);
+  }, [areUsersLoading, isAuthLoading]);
 
 
   const login = async (credentials: { email: string; password:string }) => {
