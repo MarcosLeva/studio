@@ -96,7 +96,7 @@ const initialManagedUsers: User[] = [
  * @param apiUser - The user object from the API response.
  * @returns The mapped User object for the application state.
  */
-const mapApiUserToAppUser = (apiUser: any): User => {
+export const mapApiUserToAppUser = (apiUser: any): User => {
   return {
     id: apiUser.id,
     name: apiUser.name,
@@ -152,7 +152,7 @@ interface AppContextType {
   
   // Managed Users
   managedUsers: User[];
-  addManagedUser: (user: Omit<User, 'id' | 'avatar' | 'status'>) => string;
+  addManagedUser: (user: User) => string;
   editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'status'>>) => void;
   deleteManagedUser: (id: string) => void;
   toggleUserStatus: (id: string) => void;
@@ -305,15 +305,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const addManagedUser = (userData: Omit<User, 'id' | 'avatar' | 'status'>): string => {
-    const newUser: User = {
-      ...userData,
-      id: `user-${new Date().getTime()}`,
-      avatar: `https://placehold.co/100x100.png`,
-      status: 'activo',
-    };
-    setManagedUsers(prev => [newUser, ...prev]);
-    return newUser.id;
+  const addManagedUser = (user: User): string => {
+    setManagedUsers(prev => [user, ...prev]);
+    return user.id;
   };
 
   const editManagedUser = (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'status'>>) => {

@@ -43,7 +43,7 @@ import {
 } from "@/components/ui/select";
 import { DataTable } from "@/components/data-table";
 import { getColumns } from "./columns";
-import { useApp } from "@/app/store";
+import { useApp, mapApiUserToAppUser } from "@/app/store";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@/lib/types";
 import {
@@ -71,6 +71,7 @@ import {
 import { ScrollToTopButton } from "@/components/scroll-to-top-button";
 import { cn } from "@/lib/utils";
 import { LogoSpinner } from "@/components/ui/logo-spinner";
+import { api } from "@/lib/api";
 
 const userSchema = z.object({
   name: z.string().min(3, { message: "El nombre debe tener al menos 3 caracteres." }),
@@ -93,6 +94,7 @@ export default function UsersPage() {
   const [visibleRows, setVisibleRows] = React.useState(10);
   const [isLoadingMore, setIsLoadingMore] = React.useState(false);
   const [newlyAddedUserId, setNewlyAddedUserId] = React.useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
@@ -179,24 +181,50 @@ export default function UsersPage() {
     },
   });
 
-  function onSubmit(data: UserFormValues) {
+  async function onSubmit(data: UserFormValues) {
     if (editingUser) {
+      // TODO: Connect edit user endpoint
       editManagedUser(editingUser.id, data);
       toast({
         title: "Usuario Actualizado",
         description: `Los datos de "${data.name}" han sido actualizados.`,
         icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
       });
-    } else {
-      const newId = addManagedUser(data);
+      setIsDialogOpen(false);
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const apiRole = data.role === 'Administrador' ? 'admin' : 'user';
+      
+      const response = await api.post('/users', {
+        name: data.name,
+        email: data.email,
+        role: apiRole,
+      });
+
+      const appUser = mapApiUserToAppUser(response.data.user);
+      const newId = addManagedUser(appUser);
       setNewlyAddedUserId(newId);
+      
       toast({
-        title: "Invitación Enviada",
-        description: `Se ha enviado una invitación por correo electrónico a ${data.email}.`,
+        title: "Usuario Creado",
+        description: response.message,
         icon: <Mail className="h-5 w-5 text-primary" />,
       });
+      setIsDialogOpen(false);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error al crear usuario",
+        description: error.message || "Ocurrió un error inesperado. Por favor, inténtalo de nuevo.",
+      });
+    } finally {
+      if (isMounted.current) {
+        setIsSubmitting(false);
+      }
     }
-    setIsDialogOpen(false);
   }
 
   const handleDialogClose = (open: boolean) => {
@@ -539,7 +567,10 @@ export default function UsersPage() {
               />
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => handleDialogClose(false)}>Cancelar</Button>
-                <Button type="submit">{editingUser ? "Guardar Cambios" : "Agregar Usuario"}</Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {editingUser ? "Guardar Cambios" : "Agregar Usuario"}
+                </Button>
               </DialogFooter>
             </form>
           </Form>
