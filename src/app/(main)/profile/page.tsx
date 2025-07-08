@@ -21,7 +21,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { useApp } from "@/app/store";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, CheckCircle2, AlertTriangle, KeyRound, Pencil } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle, KeyRound, Pencil, Shield, User } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -33,7 +33,6 @@ import {
 } from "@/components/ui/dialog";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 
 const profileSchema = z.object({
   name: z.string().min(3, { message: "El nombre debe tener al menos 3 caracteres." }),
@@ -253,10 +252,13 @@ export default function ProfilePage() {
                   </div>
                   <div>
                     <Label className="text-sm font-medium text-muted-foreground">Rol</Label>
-                    <div className="pt-1">
-                      <Badge variant={user.role === 'Administrador' ? 'default' : 'secondary'}>
-                          {user.role}
-                      </Badge>
+                    <div className="flex items-center gap-2 pt-2 text-lg">
+                      {user.role === 'Administrador' ? (
+                        <Shield className="h-5 w-5 text-primary" />
+                      ) : (
+                        <User className="h-5 w-5 text-muted-foreground" />
+                      )}
+                      <span>{user.role}</span>
                     </div>
                   </div>
               </div>
