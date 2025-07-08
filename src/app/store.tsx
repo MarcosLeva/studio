@@ -175,7 +175,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     console.log("Executing logout: clearing user state and tokens.");
     setUser(null);
     setToken(null);
-    localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
   }, []);
 
@@ -188,14 +187,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   // Effect to validate session on initial app load. Runs only once.
   useEffect(() => {
     const validateSessionOnLoad = async () => {
-      const storedRefreshToken = localStorage.getItem('refresh_token');
-      
-      if (!storedRefreshToken) {
-        setIsAuthLoading(false);
-        return;
-      }
-      
-      console.log("Found refresh token. Attempting to validate session on app load...");
+      // No need to check for a refresh token here, as it's an httpOnly cookie.
+      // We just try to refresh the session. If the cookie exists, it will work.
+      console.log("Attempting to validate session on app load...");
       try {
         const response = await refreshSession();
         // Explicitly handle the case where the data is wrapped
@@ -212,10 +206,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             logout();
         }
       } catch (error: any) {
-        console.error('An error occurred during session validation:', error);
+        // Only log out if the error is an authentication error (401),
+        // not a network error.
         if (error.status === 401) {
             console.error('Refresh token is invalid. Logging out.');
             logout();
+        } else {
+            console.error('An error occurred during session validation:', error);
         }
       } finally {
         setIsAuthLoading(false);
@@ -228,16 +225,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (credentials: { email: string; password:string }) => {
       const response = await api.post('/auth/login', credentials);
-      // Explicitly handle the case where the data is wrapped
-      const loginData = (response as any).data ?? response;
+      // The API response wraps the payload in a `data` object.
+      const payload = (response as any).data;
 
-      if (loginData && loginData.access_token && loginData.user && loginData.refresh_token) {
-        setToken(loginData.access_token);
-        localStorage.setItem('refresh_token', loginData.refresh_token);
-        const appUser = mapApiUserToAppUser(loginData.user);
+      // The refresh_token is handled by an httpOnly cookie, so we don't check for it here.
+      if (payload && payload.access_token && payload.user) {
+        setToken(payload.access_token);
+        const appUser = mapApiUserToAppUser(payload.user);
         setUser(appUser);
         localStorage.setItem('user', JSON.stringify(appUser));
       } else {
+        console.error("Invalid login response structure:", response);
         throw new Error("Respuesta de login inválida desde la API.");
       }
   };

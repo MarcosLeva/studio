@@ -37,32 +37,29 @@ const refreshToken = async () => {
     if (refreshTokenPromise) {
         return refreshTokenPromise;
     }
-
-    const storedRefreshToken = localStorage.getItem('refresh_token');
-    if (!storedRefreshToken) {
-        return Promise.reject(new Error('No refresh token available.'));
-    }
-
+    
+    // The refresh token is an httpOnly cookie, so we don't need to get it from localStorage.
+    // The browser will send it automatically.
     console.log("Attempting to refresh token...");
 
     refreshTokenPromise = fetch(`${getApiUrl()}/auth/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh_token: storedRefreshToken }),
+        // No body is needed as the refresh token is in an httpOnly cookie
     })
     .then(async response => {
-        if (!response.ok) {
-            const error = new Error('Failed to refresh token.');
-            (error as any).status = response.status;
-            throw error;
-        }
-        const data = await handleResponse(response);
+        const data = await handleResponse(response); // handleResponse throws on non-ok status
         if (!data.access_token) {
           throw new Error('Invalid refresh response from API.');
         }
         setToken(data.access_token);
         console.log("Token refreshed successfully.");
         return data;
+    })
+    .catch(error => {
+        // The catch block runs if fetch fails or handleResponse throws.
+        // We re-throw the error to be handled by the original caller.
+        throw error;
     })
     .finally(() => {
         refreshTokenPromise = null;
@@ -105,7 +102,7 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
             });
 
         } catch (error: any) {
-            // This catch block runs if refreshToken() fails.
+            // This catch block runs if refreshToken() itself fails (e.g., with a 401).
             // This is the correct moment to declare the session invalid and log out.
             if (error.status === 401) {
                 console.error('Session is invalid and could not be refreshed. Logging out.', error);
@@ -122,10 +119,21 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
 // Helper to parse response and handle non-OK statuses.
 const handleResponse = async (response: Response) => {
     const text = await response.text();
-    const json = text ? JSON.parse(text) : {};
-
+    // Use a try-catch block for robust JSON parsing.
+    let json;
+    try {
+        json = text ? JSON.parse(text) : {};
+    } catch(e) {
+        console.error("Failed to parse JSON response:", text);
+        // Create a generic error if JSON parsing fails
+        const error = new Error("Invalid JSON response from server.");
+        (error as any).status = response.status;
+        throw error;
+    }
+    
     if (!response.ok) {
-        const errorMessage = (json as any).message || `Error: ${response.status} ${response.statusText}`;
+        // Attempt to get a meaningful error message from the parsed JSON.
+        const errorMessage = json?.data?.message || json?.message || `Error: ${response.status} ${response.statusText}`;
         const error = new Error(errorMessage);
         (error as any).status = response.status;
         throw error;
