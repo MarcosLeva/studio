@@ -229,8 +229,8 @@ export default function UsersPage() {
   React.useEffect(() => {
     setIsFiltering(true);
     const timeout = setTimeout(() => {
-      setGlobalFilter(filterValue);
-       if (isMounted.current) {
+      if (isMounted.current) {
+        setGlobalFilter(filterValue);
         setIsFiltering(false);
       }
     }, 300);
