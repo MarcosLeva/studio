@@ -106,12 +106,14 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
                 credentials: 'include' // <-- Agregado aquí también
             });
 
-        } catch (error) {
+        } catch (error: any) {
             // This catch block runs if refreshToken() fails.
             // This is the correct moment to declare the session invalid and log out.
-            console.error('Session is invalid and could not be refreshed. Logging out.', error);
-            onAuthFailure();
-            throw new Error("Su sesión ha expirado. Por favor, inicie sesión de nuevo.");
+            if (error.status === 401) {
+                console.error('Session is invalid and could not be refreshed. Logging out.', error);
+                onAuthFailure();
+            }
+            throw error;
         }
     }
 
@@ -124,14 +126,14 @@ const handleResponse = async (response: Response) => {
     const json = text ? JSON.parse(text) : {};
 
     if (!response.ok) {
-        const errorMessage = json.message || `Error: ${response.status} ${response.statusText}`;
+        const errorMessage = (json as any).message || `Error: ${response.status} ${response.statusText}`;
         const error = new Error(errorMessage);
         (error as any).status = response.status;
         throw error;
     }
     
     // API responses can wrap data in a `data` property or return it directly.
-    return json.data ?? json;
+    return (json as any).data ?? json;
 }
 
 export const api = {
