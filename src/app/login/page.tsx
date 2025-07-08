@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { QrCode, Loader2, AlertTriangle, ShieldCheck } from "lucide-react";
+import { QrCode, AlertTriangle, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -68,14 +68,6 @@ export default function LoginPage() {
     }
   };
   
-  if (isLoading) {
-    return (
-      <main className="flex min-h-svh flex-col items-center justify-center bg-background p-4">
-        <LogoSpinner className="scale-125" />
-      </main>
-    );
-  }
-
   return (
     <main className="flex min-h-svh flex-col items-center justify-center bg-background p-4">
       <div className="flex flex-col items-center justify-center space-y-4 text-center">
@@ -91,56 +83,67 @@ export default function LoginPage() {
       </div>
       
       <Card className="mt-8 w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-2xl">Iniciar Sesión</CardTitle>
-          <CardDescription>Introduce tu correo electrónico para iniciar sesión.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Correo Electrónico</FormLabel>
-                    <FormControl>
-                      <Input placeholder="nombre@ejemplo.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div>
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Contraseña</FormLabel>
-                      <FormControl>
-                        <PasswordInput placeholder="••••••••" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="mt-2 text-right">
-                  <Link
-                      href="/forgot-password"
-                      className="text-sm font-medium text-primary underline-offset-4 transition-all duration-300 hover:text-primary/80 hover:underline hover:underline-offset-8"
-                  >
-                      ¿Olvidaste tu contraseña?
-                  </Link>
+        {isLoading ? (
+            <div className="flex flex-col items-center justify-center p-8 space-y-4 min-h-[440px]">
+                <LogoSpinner />
+                <div className="text-center">
+                <p className="text-xl font-semibold">Iniciando Sesión</p>
+                <p className="text-sm text-muted-foreground">Serás redirigido en un momento...</p>
                 </div>
-              </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isLoading ? 'Iniciando Sesión...' : 'Iniciar Sesión'}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
+            </div>
+        ) : (
+          <>
+            <CardHeader>
+              <CardTitle className="text-2xl">Iniciar Sesión</CardTitle>
+              <CardDescription>Introduce tu correo electrónico para iniciar sesión.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Correo Electrónico</FormLabel>
+                        <FormControl>
+                          <Input placeholder="nombre@ejemplo.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div>
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Contraseña</FormLabel>
+                          <FormControl>
+                            <PasswordInput placeholder="••••••••" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="mt-2 text-right">
+                      <Link
+                          href="/forgot-password"
+                          className="text-sm font-medium text-primary underline-offset-4 transition-all duration-300 hover:text-primary/80 hover:underline hover:underline-offset-8"
+                      >
+                          ¿Olvidaste tu contraseña?
+                      </Link>
+                    </div>
+                  </div>
+                  <Button type="submit" className="w-full">
+                    Iniciar Sesión
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </>
+        )}
       </Card>
     </main>
   );

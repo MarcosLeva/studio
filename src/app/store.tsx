@@ -179,9 +179,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     setToken(null);
     localStorage.removeItem('user');
-    // The browser will handle clearing the httpOnly cookie on expiration,
-    // but on manual logout, we ask the backend to clear it if an endpoint exists.
-    // For now, just clearing local state is sufficient.
+    localStorage.removeItem('refresh_token');
   }, []);
 
   const handleSessionExpiration = useCallback(() => {
@@ -248,12 +246,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       // The API response may wrap the payload in a `data` object.
       const loginData = response.data ?? response;
 
-      if (loginData && loginData.access_token && loginData.user) {
+      if (loginData && loginData.access_token && loginData.user && loginData.refresh_token) {
         setToken(loginData.access_token);
         const appUser = mapApiUserToAppUser(loginData.user);
         setUser(appUser);
         localStorage.setItem('user', JSON.stringify(appUser));
-        // The refresh token is now handled by an httpOnly cookie, so we don't store it here.
+        localStorage.setItem('refresh_token', loginData.refresh_token);
       } else {
         console.error("Invalid login response structure:", response);
         throw new Error("Respuesta de login inválida desde la API.");
