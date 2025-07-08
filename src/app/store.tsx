@@ -53,43 +53,6 @@ const initialScanResults: ScanResult[] = [
   },
 ];
 
-const initialManagedUsers: User[] = [
-    {
-        id: 'user-2',
-        name: 'Ana García',
-        email: 'ana.garcia@cococo.com',
-        avatar: 'https://placehold.co/100x100.png',
-        role: 'Miembro',
-        status: 'activo',
-    },
-    {
-        id: 'user-3',
-        name: 'Carlos Rodriguez',
-        email: 'carlos.rodriguez@cococo.com',
-        avatar: 'https://placehold.co/100x100.png',
-        role: 'Miembro',
-        status: 'inactivo',
-    },
-    { id: 'user-4', name: 'Luisa Martinez', email: 'luisa.martinez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'activo' },
-    { id: 'user-5', name: 'Javier Fernandez', email: 'javier.fernandez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'activo' },
-    { id: 'user-6', name: 'Sofia Lopez', email: 'sofia.lopez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'inactivo' },
-    { id: 'user-7', name: 'David Gomez', email: 'david.gomez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'activo' },
-    { id: 'user-8', name: 'Elena Perez', email: 'elena.perez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'activo' },
-    { id: 'user-9', name: 'Daniel Sanchez', email: 'daniel.sanchez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'activo' },
-    { id: 'user-10', name: 'Paula Romero', email: 'paula.romero@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'inactivo' },
-    { id: 'user-11', name: 'Adrian Vazquez', email: 'adrian.vazquez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'activo' },
-    { id: 'user-12', name: 'Claudia Diaz', email: 'claudia.diaz@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'activo' },
-    { id: 'user-13', name: 'Hugo Moreno', email: 'hugo.moreno@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'inactivo' },
-    { id: 'user-14', name: 'Alba Alvarez', email: 'alba.alvarez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'activo' },
-    { id: 'user-15', name: 'Mario Jimenez', email: 'mario.jimenez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'activo' },
-    { id: 'user-16', name: 'Laura Ruiz', email: 'laura.ruiz@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'activo' },
-    { id: 'user-17', name: 'Sergio Hernandez', email: 'sergio.hernandez@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'inactivo' },
-    { id: 'user-18', name: 'Marta Gil', email: 'marta.gil@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'activo' },
-    { id: 'user-19', name: 'Pablo Cano', email: 'pablo.cano@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'activo' },
-    { id: 'user-20', name: 'Lucia Serrano', email: 'lucia.serrano@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'activo' },
-    { id: 'user-21', name: 'Marcos Molina', email: 'marcos.molina@cococo.com', avatar: 'https://placehold.co/100x100.png', role: 'Miembro', status: 'inactivo' },
-];
-
 
 /**
  * Maps a user object from the API to the application's User type.
@@ -152,6 +115,7 @@ interface AppContextType {
   
   // Managed Users
   managedUsers: User[];
+  areUsersLoading: boolean;
   addManagedUser: (user: User) => string;
   editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'status'>>) => void;
   deleteManagedUser: (id: string) => void;
@@ -163,12 +127,13 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [results, setResults] = useState<ScanResult[]>(initialScanResults);
-  const [managedUsers, setManagedUsers] = useState<User[]>(initialManagedUsers);
+  const [managedUsers, setManagedUsers] = useState<User[]>([]);
   const { toast } = useToast();
 
   // Auth state
   const [user, setUser] = useState<User | null>(getInitialUser);
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
+  const [areUsersLoading, setAreUsersLoading] = useState(true);
 
   // Derived state for isAuthenticated
   const isAuthenticated = !!user;
@@ -179,7 +144,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     setToken(null);
     localStorage.removeItem('user');
-    localStorage.removeItem('refresh_token');
   }, []);
 
   const handleSessionExpiration = useCallback(() => {
@@ -241,17 +205,47 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handleSessionExpiration]);
 
+  // Fetch managed users on initial load
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setAreUsersLoading(true);
+        // Fetch a large number of users to simulate getting all of them for client-side handling
+        const response = await api.get('/users?page=1&limit=100');
+        const apiUsers = response?.data?.users || [];
+        const appUsers = apiUsers.map(mapApiUserToAppUser);
+        setManagedUsers(appUsers);
+      } catch (error: any) {
+        toast({
+          variant: "destructive",
+          title: "Error al cargar usuarios",
+          description: error.message || "No se pudieron obtener los datos de los usuarios desde el servidor.",
+        });
+      } finally {
+        setAreUsersLoading(false);
+      }
+    };
+    
+    // Only fetch users if authenticated
+    if (isAuthenticated) {
+        fetchUsers();
+    } else {
+        setAreUsersLoading(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]); // Run when auth state changes
+
+
   const login = async (credentials: { email: string; password:string }) => {
       const response = await api.post('/auth/login', credentials);
       // The API response may wrap the payload in a `data` object.
       const loginData = response.data ?? response;
 
-      if (loginData && loginData.access_token && loginData.user && loginData.refresh_token) {
+      if (loginData && loginData.access_token && loginData.user) {
         setToken(loginData.access_token);
         const appUser = mapApiUserToAppUser(loginData.user);
         setUser(appUser);
         localStorage.setItem('user', JSON.stringify(appUser));
-        localStorage.setItem('refresh_token', loginData.refresh_token);
       } else {
         console.error("Invalid login response structure:", response);
         throw new Error("Respuesta de login inválida desde la API.");
@@ -344,6 +338,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     deleteScanResult,
     editScanResult,
     managedUsers,
+    areUsersLoading,
     addManagedUser,
     editManagedUser,
     deleteManagedUser,
@@ -364,3 +359,5 @@ export const useApp = () => {
   }
   return context;
 };
+
+    

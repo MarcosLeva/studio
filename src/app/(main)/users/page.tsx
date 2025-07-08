@@ -72,6 +72,7 @@ import { ScrollToTopButton } from "@/components/scroll-to-top-button";
 import { cn } from "@/lib/utils";
 import { LogoSpinner } from "@/components/ui/logo-spinner";
 import { api } from "@/lib/api";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const userSchema = z.object({
   name: z.string().min(3, { message: "El nombre debe tener al menos 3 caracteres." }),
@@ -81,9 +82,106 @@ const userSchema = z.object({
 
 type UserFormValues = z.infer<typeof userSchema>;
 
+function DesktopUsersPageSkeleton() {
+  return (
+    <div>
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+        <div>
+          <Skeleton className="h-9 w-32" />
+          <Skeleton className="h-4 w-72 mt-2" />
+        </div>
+        <Skeleton className="h-10 w-full sm:w-[150px]" />
+      </div>
+
+      {/* Toolbar */}
+      <div className="rounded-t-md border bg-card p-4">
+        <div className="flex w-full flex-col items-center gap-2 sm:flex-row">
+          <Skeleton className="h-10 w-full sm:max-w-sm" />
+          <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto sm:flex-shrink-0">
+            <Skeleton className="h-10 w-[180px]" />
+            <Skeleton className="h-10 w-[180px]" />
+            <Skeleton className="h-9 w-24" />
+          </div>
+        </div>
+      </div>
+
+      {/* Table Skeleton */}
+      <div className="rounded-b-md border-x border-b">
+        <div className="w-full text-sm">
+          {/* Table Header */}
+          <div className="border-b">
+            <div className="flex h-12 items-center px-4">
+              <Skeleton className="h-4 w-4" />
+              <Skeleton className="ml-4 h-4 w-32" />
+              <Skeleton className="ml-[180px] h-4 w-40" />
+              <Skeleton className="ml-[180px] h-4 w-24" />
+              <Skeleton className="ml-[70px] h-4 w-24" />
+            </div>
+          </div>
+          {/* Table Body */}
+          <div>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex h-[73px] items-center border-b px-4 animate-pulse">
+                <Skeleton className="h-4 w-4" />
+                <div className="ml-4 flex items-center gap-3">
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+                <Skeleton className="ml-[52px] h-4 w-48" />
+                <Skeleton className="ml-[70px] h-6 w-24 rounded-full" />
+                <Skeleton className="ml-[70px] h-4 w-20" />
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Table Pagination */}
+        <div className="flex items-center justify-end space-x-2 p-4">
+          <Skeleton className="h-9 w-24" />
+          <Skeleton className="h-9 w-24" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MobileUsersPageSkeleton() {
+    return (
+        <div>
+            {/* Header */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+                <div>
+                    <Skeleton className="h-9 w-32" />
+                    <Skeleton className="h-4 w-72 mt-2" />
+                </div>
+                <Skeleton className="h-10 w-full sm:w-[150px]" />
+            </div>
+
+            {/* Toolbar */}
+            <div className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                {Array.from({ length: 5 }).map((_, i) => (
+                    <Card key={i}>
+                        <CardContent className="p-4 flex justify-between items-start gap-4 animate-pulse">
+                            <div className="flex items-center gap-3 flex-grow">
+                                <Skeleton className="h-10 w-10 rounded-full" />
+                                <div className="space-y-2">
+                                    <Skeleton className="h-4 w-24" />
+                                    <Skeleton className="h-3 w-32" />
+                                    <Skeleton className="h-5 w-40" />
+                                </div>
+                            </div>
+                            <Skeleton className="h-8 w-8" />
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        </div>
+    )
+}
 
 export default function UsersPage() {
-  const { managedUsers, addManagedUser, editManagedUser, deleteManagedUser, toggleUserStatus } = useApp();
+  const { managedUsers, addManagedUser, editManagedUser, deleteManagedUser, toggleUserStatus, areUsersLoading } = useApp();
   const { toast } = useToast();
   const isMobile = useIsMobile();
   
@@ -437,6 +535,10 @@ export default function UsersPage() {
       </CardContent>
     </Card>
   );
+
+  if (areUsersLoading) {
+      return isMobile ? <MobileUsersPageSkeleton /> : <DesktopUsersPageSkeleton />;
+  }
 
   return (
     <div>
