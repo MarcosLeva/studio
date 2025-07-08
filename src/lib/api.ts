@@ -32,7 +32,6 @@ export const setOnAuthFailure = (callback: () => void) => {
 };
 
 export const setToken = (token: string | null) => {
-  console.log("Setting new access token:", token ? "Token received" : "Token cleared");
   accessToken = token;
   if (token) {
     sessionStorage.setItem('access_token', token);
@@ -99,7 +98,7 @@ const refreshToken = async () => {
             console.log("Token refreshed successfully. Setting new access token.");
             setToken(nestedData.access_token);
             
-            return responseData;
+            return nestedData; // Return the unwrapped data for consistency
         } catch (error: any) {
             // If the refresh call itself fails with 401, it's a definitive auth failure.
             if (error.status === 401) {

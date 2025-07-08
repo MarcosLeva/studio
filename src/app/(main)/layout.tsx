@@ -45,8 +45,8 @@ export default function DashboardLayout({
         description: "Por favor, espera un momento.",
     });
     try {
-        const response = await refreshSession();
-        const data = response.data ?? response;
+        const data = await refreshSession();
+        // The API client now ensures `data.user` exists if the call succeeds.
         const appUser = mapApiUserToAppUser(data.user);
         editUser(appUser);
 
