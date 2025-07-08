@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -21,7 +20,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { useApp } from "@/app/store";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, CheckCircle2, AlertTriangle, KeyRound, Pencil, Shield, User } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle, KeyRound, Pencil, ShieldCheck, User } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -253,12 +252,12 @@ export default function ProfilePage() {
                   <div>
                     <Label className="text-sm font-medium text-muted-foreground">Rol</Label>
                     <div className="flex items-center gap-2 pt-2 text-lg">
+                      <span>{user.role}</span>
                       {user.role === 'Administrador' ? (
-                        <Shield className="h-5 w-5 text-primary" />
+                        <ShieldCheck className="h-5 w-5 text-primary" />
                       ) : (
                         <User className="h-5 w-5 text-muted-foreground" />
                       )}
-                      <span>{user.role}</span>
                     </div>
                   </div>
               </div>
