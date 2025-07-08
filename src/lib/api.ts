@@ -59,56 +59,66 @@ const handleResponse = async (response: Response) => {
 
 // This function is the core of the refresh logic.
 const refreshToken = async () => {
+    // This promise-based gatekeeper is essential to prevent multiple refresh requests firing at once.
     if (refreshTokenPromise) {
         return refreshTokenPromise;
     }
-    
-    const storedRefreshToken = localStorage.getItem('refresh_token');
-    if (!storedRefreshToken) {
-        const error = new Error('No refresh token available');
-        (error as any).status = 401;
-        return Promise.reject(error);
-    }
 
-    console.log("Attempting to refresh token...");
-
-    refreshTokenPromise = fetch(`${getApiUrl()}/auth/refresh`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh_token: storedRefreshToken }),
-    })
-    .then(async response => {
-        const responseData = await handleResponse(response);
-        const nestedData = responseData.data;
-
-        if (!nestedData || !nestedData.access_token || !nestedData.user) {
-          const error = new Error('Invalid refresh response from API.');
-          (error as any).status = 500; // Treat as a server-side issue, not an auth failure
-          throw error;
+    const performRefresh = async () => {
+        const storedRefreshToken = localStorage.getItem('refresh_token');
+        if (!storedRefreshToken) {
+            const error = new Error('No refresh token available');
+            (error as any).status = 401;
+            throw error; // This will be caught below
         }
-        
-        setToken(nestedData.access_token);
-        console.log("Token refreshed successfully.");
-        return responseData;
-    })
-    .catch(error => {
-        // Re-throw the error to be handled by the original caller.
-        throw error;
-    })
-    .finally(() => {
-        // Clear the promise once it's settled to allow future refreshes.
+
+        console.log("Attempting to refresh token...");
+        try {
+            const response = await fetch(`${getApiUrl()}/auth/refresh`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refresh_token: storedRefreshToken }),
+            });
+            
+            // handleResponse will throw an error for non-2xx responses, which will be caught below.
+            const responseData = await handleResponse(response);
+            const nestedData = responseData.data;
+
+            if (!nestedData || !nestedData.access_token) {
+              const error = new Error('Invalid refresh response from API: missing access_token.');
+              (error as any).status = 500;
+              throw error;
+            }
+            
+            console.log("Token refreshed successfully. Setting new access token.");
+            setToken(nestedData.access_token);
+            
+            return responseData; // Return the full data so the caller can use it (e.g., store.tsx on load)
+        } catch (error: any) {
+            // If the error is 401, it's a definitive auth failure.
+            if (error.status === 401) {
+                console.error('Refresh token is invalid. Logging out.', error);
+                onAuthFailure(); // Trigger the logout flow in the store
+            } else {
+                // For other errors (network, 500), just log it. The session is not necessarily dead.
+                console.error('An error occurred during token refresh, but not logging out.', error);
+            }
+            throw error; // Propagate the error to the original caller of `request`
+        }
+    };
+    
+    refreshTokenPromise = performRefresh().finally(() => {
+        // Once the promise is settled (resolved or rejected), clear it to allow future refreshes.
         refreshTokenPromise = null;
     });
 
     return refreshTokenPromise;
-}
+};
 
-// Expose the refresh function for initial app load validation.
 export const refreshSession = refreshToken;
 
 // Generic request handler with automatic token refresh.
 const request = async (endpoint: string, options: RequestInit = {}) => {
-  // Helper function to create and execute a fetch request with the correct headers.
   const makeRequest = async (token: string | null) => {
     const headers = new Headers(options.headers);
     if (!headers.has('Content-Type') && options.body) {
@@ -120,35 +130,26 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
     return fetch(`${getApiUrl()}${endpoint}`, { ...options, headers });
   };
 
-  // Make the initial request with the current token.
   let response = await makeRequest(accessToken);
 
-  // If unauthorized (401), and it's not a refresh call itself, try to refresh the token.
   if (response.status === 401 && endpoint !== '/auth/refresh') {
     try {
       console.log(`Request to ${endpoint} failed with 401. Refreshing token...`);
       await refreshToken();
       
-      // Retry the request with the new access token.
       console.log(`Retrying request to ${endpoint} with new token.`);
       response = await makeRequest(accessToken);
     } catch (refreshError: any) {
-      // If the refresh itself fails with 401, it's a definitive auth failure.
-      if (refreshError?.status === 401) {
-        console.error('Refresh token is invalid. Logging out.', refreshError);
-        onAuthFailure();
-      } else {
-        // For any other error during refresh (e.g., network), don't log out.
-        console.error('An error occurred during token refresh. Session will be kept.', refreshError);
-      }
-      // Re-throw the error to stop the original request flow.
-      throw refreshError;
+        console.error("Failed to refresh token, the original request will fail.", refreshError);
+        // The error from refreshToken will propagate, so the caller of request() will see it.
+        // The onAuthFailure() is handled inside refreshToken itself.
+        throw refreshError;
     }
   }
 
-  // Parse and return the final response.
   return handleResponse(response);
 };
+
 
 export const api = {
     get: (endpoint: string) => request(endpoint, { method: 'GET' }),
