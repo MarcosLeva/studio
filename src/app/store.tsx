@@ -221,13 +221,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setAreUsersLoading(true);
     try {
       const response = await api.get(`/users?page=${page}&limit=${limit}`);
+      
+      // Based on the provided API response structure
       const apiUsers = response?.data?.data || [];
-      const paginationData = response?.data?.meta || {};
+      const paginationData = response?.data?.pagination || {};
+
       const appUsers = apiUsers.map(mapApiUserToAppUser);
       setManagedUsers(appUsers);
+
       setUserPagination({
-        currentPage: paginationData.current_page || page,
-        totalPages: paginationData.last_page || 1,
+        currentPage: paginationData.page ? parseInt(paginationData.page, 10) : page,
+        totalPages: paginationData.totalPages || 1,
         totalUsers: paginationData.total || 0,
       });
     } catch (error: any) {
