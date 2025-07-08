@@ -32,29 +32,26 @@ export const setToken = (token: string | null) => {
   accessToken = token;
 };
 
-// This function is the core of the refresh logic. It has no side effects.
+// This function is the core of the refresh logic.
 const refreshToken = async () => {
     if (refreshTokenPromise) {
         return refreshTokenPromise;
     }
 
-    // const storedRefreshToken = localStorage.getItem('refresh_token');
-    // if (!storedRefreshToken) {
-    //     return Promise.reject(new Error('No refresh token available.'));
-    // }
+    const storedRefreshToken = localStorage.getItem('refresh_token');
+    if (!storedRefreshToken) {
+        return Promise.reject(new Error('No refresh token available.'));
+    }
 
     console.log("Attempting to refresh token...");
 
     refreshTokenPromise = fetch(`${getApiUrl()}/auth/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        // body: JSON.stringify({ refresh_token: storedRefreshToken }),
+        body: JSON.stringify({ refresh_token: storedRefreshToken }),
     })
     .then(async response => {
         if (!response.ok) {
-            // A non-OK response (like 401, 403) means the refresh token is invalid.
-            // Let the promise reject so the caller can handle it.
             const error = new Error('Failed to refresh token.');
             (error as any).status = response.status;
             throw error;
@@ -74,6 +71,9 @@ const refreshToken = async () => {
     return refreshTokenPromise;
 }
 
+// Expose the refresh function for initial app load validation
+export const refreshSession = refreshToken;
+
 // Generic request handler with automatic token refresh.
 const request = async (endpoint: string, options: RequestInit = {}) => {
     let headers = new Headers(options.headers);
@@ -88,22 +88,20 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
     let response = await fetch(`${getApiUrl()}${endpoint}`, { 
         ...options, 
         headers,
-        credentials: 'include' // <-- Agregado aquí
     });
 
     // If the access token has expired, try to refresh it and retry the request once.
     if (response.status === 401) {
         console.log(`Request to ${endpoint} failed with 401. Attempting token refresh.`);
         try {
-            const refreshData = await refreshToken();
+            await refreshToken();
             
             // Update headers with the new token and retry the original request.
-            headers.set('Authorization', `Bearer ${refreshData.access_token}`);
+            headers.set('Authorization', `Bearer ${accessToken}`);
             console.log(`Retrying request to ${endpoint} with new token.`);
             response = await fetch(`${getApiUrl()}${endpoint}`, { 
                 ...options, 
                 headers,
-                credentials: 'include' // <-- Agregado aquí también
             });
 
         } catch (error: any) {
@@ -113,6 +111,7 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
                 console.error('Session is invalid and could not be refreshed. Logging out.', error);
                 onAuthFailure();
             }
+            // Re-throw the error to stop the original request flow.
             throw error;
         }
     }
@@ -139,6 +138,4 @@ const handleResponse = async (response: Response) => {
 export const api = {
     get: (endpoint: string) => request(endpoint, { method: 'GET' }),
     post: (endpoint: string, body: unknown) => request(endpoint, { method: 'POST', body: JSON.stringify(body) }),
-    // Expose refreshToken to be called directly for the initial session validation.
-    refreshSession: refreshToken,
 };

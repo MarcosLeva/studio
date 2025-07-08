@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import type { Category, ScanResult, User } from '@/lib/types';
-import { api, setToken, setOnAuthFailure } from '@/lib/api';
+import { api, setToken, setOnAuthFailure, refreshSession } from '@/lib/api';
 
 // Mock Data
 const initialCategories: Category[] = [
@@ -175,7 +175,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     console.log("Executing logout: clearing user state and tokens.");
     setUser(null);
     setToken(null);
-    // localStorage.removeItem('refresh_token');
+    localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
   }, []);
 
@@ -188,29 +188,27 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   // Effect to validate session on initial app load. Runs only once.
   useEffect(() => {
     const validateSessionOnLoad = async () => {
-      // const storedRefreshToken = localStorage.getItem('refresh_token');
+      const storedRefreshToken = localStorage.getItem('refresh_token');
       
-      // // If there's no refresh token, we're done. The user is not logged in.
-      // if (!storedRefreshToken) {
-      //   setIsAuthLoading(false);
-      //   return;
-      // }
+      // If there's no refresh token, we're done. The user is not logged in.
+      if (!storedRefreshToken) {
+        setIsAuthLoading(false);
+        return;
+      }
       
-      // If there IS a token, we try to validate it.
       console.log("Found refresh token. Attempting to validate session on app load...");
       try {
-        const { user: freshUserData } = await api.refreshSession();
+        const { user: freshUserData } = await refreshSession();
         // If refresh is successful, update user data in case it changed.
         const appUser = mapApiUserToAppUser(freshUserData);
         setUser(appUser);
         localStorage.setItem('user', JSON.stringify(appUser));
         console.log("Session validated and refreshed successfully on app load.");
       } catch (error: any) {
-        // This block catches errors from api.refreshSession().
+        // This block catches errors from refreshSession().
         // We ONLY log out if the error is an authentication error (e.g., status 401),
         // which means the refresh token is invalid. For other errors (like a temporary
         // network issue), we do nothing, preserving the locally stored session.
-        // The user can continue to use the app, and subsequent API calls will retry the refresh.
         console.error('An error occurred during session validation:', error);
         if (error.status === 401) {
             console.error('Refresh token is invalid. Logging out.');
@@ -230,9 +228,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (credentials: { email: string; password:string }) => {
       const loginData = await api.post('/auth/login', credentials);
-      if (loginData && loginData.access_token && loginData.user) {
+      if (loginData && loginData.access_token && loginData.user && loginData.refresh_token) {
         setToken(loginData.access_token);
-        // localStorage.setItem('refresh_token', loginData.refresh_token);
+        localStorage.setItem('refresh_token', loginData.refresh_token);
         const appUser = mapApiUserToAppUser(loginData.user);
         setUser(appUser);
         localStorage.setItem('user', JSON.stringify(appUser)); // Persist user data on login
