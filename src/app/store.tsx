@@ -139,22 +139,25 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const isAuthenticated = !!user;
 
   // Centralized logout logic. This is the single source of truth for clearing session state.
-  const logout = useCallback(() => {
-    console.log("Executing logout: clearing user state and tokens.");
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('user');
-  }, []);
-
-  const handleSessionExpiration = useCallback(() => {
-    toast({
+  const logout = useCallback((isSessionExpired = false) => {
+    if (isSessionExpired) {
+       toast({
         variant: "destructive",
         title: "Sesión Expirada",
         description: "Tu sesión ha caducado. Por favor, vuelve a iniciar sesión.",
         icon: <AlertTriangle className="h-5 w-5 text-destructive-foreground" />,
-    });
-    logout();
-  }, [toast, logout]);
+      });
+    }
+    console.log("Executing logout: clearing user state and tokens.");
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem('user');
+    localStorage.removeItem('refresh_token');
+  }, [toast]);
+
+  const handleSessionExpiration = useCallback(() => {
+    logout(true);
+  }, [logout]);
 
   // On mount, connect the api module's failure handler to our new function
   useEffect(() => {
@@ -203,7 +206,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     validateSessionOnLoad();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handleSessionExpiration]);
+  }, []);
 
   // Fetch managed users on initial load
   useEffect(() => {
@@ -212,7 +215,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         setAreUsersLoading(true);
         // Fetch a large number of users to simulate getting all of them for client-side handling
         const response = await api.get('/users?page=1&limit=100');
-        const apiUsers = response?.data?.users || [];
+        // The user list is nested under `data.data` in the API response.
+        const apiUsers = response?.data?.data || [];
         const appUsers = apiUsers.map(mapApiUserToAppUser);
         setManagedUsers(appUsers);
       } catch (error: any) {
@@ -233,7 +237,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         setAreUsersLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated]); // Run when auth state changes
+  }, [isAuthenticated]);
 
 
   const login = async (credentials: { email: string; password:string }) => {
@@ -241,8 +245,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       // The API response may wrap the payload in a `data` object.
       const loginData = response.data ?? response;
 
-      if (loginData && loginData.access_token && loginData.user) {
+      if (loginData && loginData.access_token && loginData.user && loginData.refresh_token) {
         setToken(loginData.access_token);
+        localStorage.setItem('refresh_token', loginData.refresh_token);
         const appUser = mapApiUserToAppUser(loginData.user);
         setUser(appUser);
         localStorage.setItem('user', JSON.stringify(appUser));
@@ -325,7 +330,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     isAuthenticated,
     isAuthLoading,
     login,
-    logout,
+    logout: () => logout(false),
     editUser,
     categories,
     setCategories,
