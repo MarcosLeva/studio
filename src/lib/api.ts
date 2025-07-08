@@ -60,7 +60,7 @@ const refreshToken = async () => {
             throw error;
         }
         const data = await handleResponse(response);
-        if (!data.access_token || !data.user) {
+        if (!data.access_token) {
           throw new Error('Invalid refresh response from API.');
         }
         setToken(data.access_token);
