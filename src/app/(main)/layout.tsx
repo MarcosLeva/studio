@@ -26,7 +26,7 @@ import { HeaderThemeToggle } from '@/components/header-theme-toggle';
 import { useApp } from '../store';
 import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { Button } from '@/components/ui/button';
-import { api } from '@/lib/api';
+import { refreshSession } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
 export default function DashboardLayout({
@@ -45,7 +45,7 @@ export default function DashboardLayout({
         description: "Por favor, espera un momento.",
     });
     try {
-        await api.refreshSession();
+        await refreshSession();
         toast({
             title: "¡Token Refrescado!",
             description: "Tu sesión ha sido extendida con éxito.",
