@@ -216,10 +216,8 @@ export default function UsersPage() {
   }, []);
 
   React.useEffect(() => {
-    if (managedUsers.length === 0 && !usersError) {
-      fetchManagedUsers();
-    }
-  }, [fetchManagedUsers, managedUsers.length, usersError]);
+    fetchManagedUsers();
+  }, [fetchManagedUsers]);
 
   React.useEffect(() => {
     if (newlyAddedUserId) {
@@ -547,7 +545,7 @@ export default function UsersPage() {
       return isMobile ? <MobileUsersPageSkeleton /> : <DesktopUsersPageSkeleton />;
   }
   
-  if (usersError && managedUsers.length === 0) {
+  if (usersError) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center py-10">
         <Alert variant="destructive" className="max-w-lg">
@@ -745,3 +743,5 @@ export default function UsersPage() {
     </div>
   );
 }
+
+    
