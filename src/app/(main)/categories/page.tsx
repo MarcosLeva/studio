@@ -268,9 +268,9 @@ export default function CategoriesPage() {
   React.useEffect(() => {
     setIsFiltering(true);
     const timeout = setTimeout(() => {
-      table.getColumn("name")?.setFilterValue(filterValue);
       if (isMounted.current) {
-          setIsFiltering(false);
+        table.getColumn("name")?.setFilterValue(filterValue);
+        setIsFiltering(false);
       }
     }, 300);
 
