@@ -48,7 +48,8 @@ const refreshToken = async () => {
     refreshTokenPromise = fetch(`${getApiUrl()}/auth/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh_token: storedRefreshToken }),
+        credentials: 'include',
+        // body: JSON.stringify({ refresh_token: storedRefreshToken }),
     })
     .then(async response => {
         if (!response.ok) {
@@ -84,7 +85,11 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
         headers.set('Authorization', `Bearer ${accessToken}`);
     }
 
-    let response = await fetch(`${getApiUrl()}${endpoint}`, { ...options, headers });
+    let response = await fetch(`${getApiUrl()}${endpoint}`, { 
+        ...options, 
+        headers,
+        credentials: 'include' // <-- Agregado aquí
+    });
 
     // If the access token has expired, try to refresh it and retry the request once.
     if (response.status === 401) {
@@ -95,7 +100,11 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
             // Update headers with the new token and retry the original request.
             headers.set('Authorization', `Bearer ${refreshData.access_token}`);
             console.log(`Retrying request to ${endpoint} with new token.`);
-            response = await fetch(`${getApiUrl()}${endpoint}`, { ...options, headers });
+            response = await fetch(`${getApiUrl()}${endpoint}`, { 
+                ...options, 
+                headers,
+                credentials: 'include' // <-- Agregado aquí también
+            });
 
         } catch (error) {
             // This catch block runs if refreshToken() fails.
