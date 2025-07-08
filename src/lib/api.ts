@@ -54,13 +54,16 @@ const refreshToken = async () => {
     })
     .then(async response => {
         // handleResponse throws on non-ok status, which will be caught below.
-        const data = await handleResponse(response);
-        if (!data.access_token) {
+        const responseData = await handleResponse(response);
+        const nestedData = responseData.data;
+
+        if (!nestedData || !nestedData.access_token) {
           throw new Error('Invalid refresh response from API.');
         }
-        setToken(data.access_token);
+        
+        setToken(nestedData.access_token);
         console.log("Token refreshed successfully.");
-        return data;
+        return responseData;
     })
     .catch(error => {
         // The catch block runs if fetch fails or handleResponse throws.
