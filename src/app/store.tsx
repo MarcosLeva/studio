@@ -175,7 +175,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     console.log("Executing logout: clearing user state and tokens.");
     setUser(null);
     setToken(null);
-    localStorage.removeItem('refresh_token');
+    // localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
   }, []);
 
@@ -188,13 +188,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   // Effect to validate session on initial app load. Runs only once.
   useEffect(() => {
     const validateSessionOnLoad = async () => {
-      const storedRefreshToken = localStorage.getItem('refresh_token');
+      // const storedRefreshToken = localStorage.getItem('refresh_token');
       
-      // If there's no refresh token, we're done. The user is not logged in.
-      if (!storedRefreshToken) {
-        setIsAuthLoading(false);
-        return;
-      }
+      // // If there's no refresh token, we're done. The user is not logged in.
+      // if (!storedRefreshToken) {
+      //   setIsAuthLoading(false);
+      //   return;
+      // }
       
       // If there IS a token, we try to validate it.
       console.log("Found refresh token. Attempting to validate session on app load...");
@@ -230,9 +230,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (credentials: { email: string; password:string }) => {
       const loginData = await api.post('/auth/login', credentials);
-      if (loginData && loginData.access_token && loginData.user && loginData.refresh_token) {
+      if (loginData && loginData.access_token && loginData.user) {
         setToken(loginData.access_token);
-        localStorage.setItem('refresh_token', loginData.refresh_token);
+        // localStorage.setItem('refresh_token', loginData.refresh_token);
         const appUser = mapApiUserToAppUser(loginData.user);
         setUser(appUser);
         localStorage.setItem('user', JSON.stringify(appUser)); // Persist user data on login

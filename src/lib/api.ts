@@ -38,10 +38,10 @@ const refreshToken = async () => {
         return refreshTokenPromise;
     }
 
-    const storedRefreshToken = localStorage.getItem('refresh_token');
-    if (!storedRefreshToken) {
-        return Promise.reject(new Error('No refresh token available.'));
-    }
+    // const storedRefreshToken = localStorage.getItem('refresh_token');
+    // if (!storedRefreshToken) {
+    //     return Promise.reject(new Error('No refresh token available.'));
+    // }
 
     console.log("Attempting to refresh token...");
 
