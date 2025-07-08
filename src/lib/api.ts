@@ -67,7 +67,9 @@ const refreshToken = async () => {
     
     const storedRefreshToken = localStorage.getItem('refresh_token');
     if (!storedRefreshToken) {
-        return Promise.reject({ status: 401, message: 'No refresh token available' });
+        const error = new Error('No refresh token available');
+        (error as any).status = 401;
+        return Promise.reject(error);
     }
 
     console.log("Attempting to refresh token...");
@@ -84,7 +86,9 @@ const refreshToken = async () => {
         const nestedData = responseData.data;
 
         if (!nestedData || !nestedData.access_token || !nestedData.user) {
-          throw new Error('Invalid refresh response from API.');
+          const error = new Error('Invalid refresh response from API.');
+          (error as any).status = 500; // Treat as a server-side issue, not an auth failure
+          throw error;
         }
         
         // This is the crucial part: set the new token in the module's state.
@@ -139,10 +143,16 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
             });
 
         } catch (error: any) {
-            // This catch block runs if refreshToken() itself fails (e.g., with a 401).
-            // This is the correct moment to declare the session invalid and log out.
-            console.error('Session is invalid and could not be refreshed. Logging out.', error);
-            onAuthFailure();
+            // This catch block runs if refreshToken() itself fails.
+            // THIS IS THE CRITICAL CHANGE: Only log out if the refresh fails with a 401.
+            if (error?.status === 401) {
+                console.error('Refresh token is invalid. Logging out.', error);
+                onAuthFailure();
+            } else {
+                // For any other error during refresh (e.g., network error, 500),
+                // we log it but do not log the user out. The original request will still fail.
+                console.error('An error occurred during token refresh, but it was not a 401. Session will be kept.', error);
+            }
             // Re-throw the error to stop the original request flow and notify the caller.
             throw error;
         }
