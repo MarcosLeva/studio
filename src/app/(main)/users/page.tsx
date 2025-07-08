@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { PlusCircle, MoreHorizontal, X, Mail, CheckCircle2, Trash2, Loader2 } from "lucide-react";
+import { PlusCircle, MoreHorizontal, X, Mail, CheckCircle2, Trash2, Loader2, AlertTriangle } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -56,6 +56,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -181,7 +182,7 @@ function MobileUsersPageSkeleton() {
 }
 
 export default function UsersPage() {
-  const { managedUsers, addManagedUser, editManagedUser, deleteManagedUser, toggleUserStatus, areUsersLoading, fetchManagedUsers } = useApp();
+  const { managedUsers, addManagedUser, editManagedUser, deleteManagedUser, toggleUserStatus, areUsersLoading, fetchManagedUsers, usersError } = useApp();
   const { toast } = useToast();
   const isMobile = useIsMobile();
   
@@ -215,10 +216,10 @@ export default function UsersPage() {
   }, []);
 
   React.useEffect(() => {
-    if (managedUsers.length === 0) {
+    if (managedUsers.length === 0 && !usersError) {
       fetchManagedUsers();
     }
-  }, [fetchManagedUsers, managedUsers.length]);
+  }, [fetchManagedUsers, managedUsers.length, usersError]);
 
   React.useEffect(() => {
     if (newlyAddedUserId) {
@@ -544,6 +545,20 @@ export default function UsersPage() {
 
   if (areUsersLoading && managedUsers.length === 0) {
       return isMobile ? <MobileUsersPageSkeleton /> : <DesktopUsersPageSkeleton />;
+  }
+  
+  if (usersError && managedUsers.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center py-10">
+        <Alert variant="destructive" className="max-w-lg">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Error al Cargar Usuarios</AlertTitle>
+          <AlertDescription>
+            {usersError}
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
   }
 
   return (

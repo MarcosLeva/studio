@@ -128,6 +128,7 @@ interface AppContextType {
   // Managed Users
   managedUsers: User[];
   areUsersLoading: boolean;
+  usersError: string | null;
   fetchManagedUsers: () => Promise<void>;
   addManagedUser: (user: User) => string;
   editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'status'>>) => void;
@@ -147,6 +148,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(getInitialUser);
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
   const [areUsersLoading, setAreUsersLoading] = useState(false);
+  const [usersError, setUsersError] = useState<string | null>(null);
 
   // Derived state for isAuthenticated
   const isAuthenticated = !!user;
@@ -220,6 +222,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const fetchManagedUsers = useCallback(async () => {
     if (areUsersLoading) return;
 
+    setUsersError(null);
     try {
       setAreUsersLoading(true);
       const response = await api.get('/users?page=1&limit=100');
@@ -227,15 +230,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       const appUsers = apiUsers.map(mapApiUserToAppUser);
       setManagedUsers(appUsers);
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error al cargar usuarios",
-        description: error.message || "No se pudieron obtener los datos de los usuarios desde el servidor.",
-      });
+      const errorMessage = error.message || "No se pudieron obtener los datos de los usuarios desde el servidor.";
+      console.error("Error fetching users:", errorMessage);
+      setUsersError(errorMessage);
     } finally {
       setAreUsersLoading(false);
     }
-  }, [areUsersLoading, toast]);
+  }, [areUsersLoading]);
 
 
   const login = async (credentials: { email: string; password:string }) => {
@@ -342,6 +343,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     editScanResult,
     managedUsers,
     areUsersLoading,
+    usersError,
     fetchManagedUsers,
     addManagedUser,
     editManagedUser,
