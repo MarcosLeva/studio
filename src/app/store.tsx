@@ -176,6 +176,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     setToken(null);
     localStorage.removeItem('user');
+    localStorage.removeItem('refresh_token');
   }, []);
 
   // On mount, connect the api module's failure handler to our logout function
@@ -187,8 +188,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   // Effect to validate session on initial app load. Runs only once.
   useEffect(() => {
     const validateSessionOnLoad = async () => {
-      // No need to check for a refresh token here, as it's an httpOnly cookie.
-      // We just try to refresh the session. If the cookie exists, it will work.
+      // We check for a stored user first. If there's none, no need to refresh.
+      // This also syncs the initial `isAuthLoading` state.
+      if (!getInitialUser()) {
+          setIsAuthLoading(false);
+          return;
+      }
+      
       console.log("Attempting to validate session on app load...");
       try {
         const response = await refreshSession();
@@ -200,6 +206,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             const appUser = mapApiUserToAppUser(data.user);
             setUser(appUser);
             localStorage.setItem('user', JSON.stringify(appUser));
+            // The refresh token might be rotated, so we save the new one.
+            if (data.refresh_token) {
+              localStorage.setItem('refresh_token', data.refresh_token);
+            }
             console.log("Session validated and refreshed successfully on app load.");
         } else {
             console.error('Invalid data structure from refresh session, logging out.');
@@ -225,15 +235,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (credentials: { email: string; password:string }) => {
       const response = await api.post('/auth/login', credentials);
-      // The API response wraps the payload in a `data` object.
-      const payload = (response as any).data;
+      // The API response may wrap the payload in a `data` object.
+      const loginData = response.data ?? response;
 
-      // The refresh_token is handled by an httpOnly cookie, so we don't check for it here.
-      if (payload && payload.access_token && payload.user) {
-        setToken(payload.access_token);
-        const appUser = mapApiUserToAppUser(payload.user);
+      if (loginData && loginData.access_token && loginData.user && loginData.refresh_token) {
+        setToken(loginData.access_token);
+        const appUser = mapApiUserToAppUser(loginData.user);
         setUser(appUser);
         localStorage.setItem('user', JSON.stringify(appUser));
+        localStorage.setItem('refresh_token', loginData.refresh_token);
       } else {
         console.error("Invalid login response structure:", response);
         throw new Error("Respuesta de login inválida desde la API.");

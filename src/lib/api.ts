@@ -38,14 +38,17 @@ const refreshToken = async () => {
         return refreshTokenPromise;
     }
     
-    // The refresh token is an httpOnly cookie, so we don't need to get it from localStorage.
-    // The browser will send it automatically.
+    const storedRefreshToken = localStorage.getItem('refresh_token');
+    if (!storedRefreshToken) {
+        return Promise.reject({ status: 401, message: 'No refresh token available' });
+    }
+
     console.log("Attempting to refresh token...");
 
     refreshTokenPromise = fetch(`${getApiUrl()}/auth/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // No body is needed as the refresh token is in an httpOnly cookie
+        body: JSON.stringify({ refresh_token: storedRefreshToken }),
     })
     .then(async response => {
         const data = await handleResponse(response); // handleResponse throws on non-ok status
@@ -53,6 +56,10 @@ const refreshToken = async () => {
           throw new Error('Invalid refresh response from API.');
         }
         setToken(data.access_token);
+        // The refresh token might be rotated, so we save the new one.
+        if (data.refresh_token) {
+            localStorage.setItem('refresh_token', data.refresh_token);
+        }
         console.log("Token refreshed successfully.");
         return data;
     })
