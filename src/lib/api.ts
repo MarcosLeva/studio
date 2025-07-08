@@ -67,8 +67,7 @@ const handleResponse = async (response: Response) => {
 const refreshToken = async (): Promise<void> => {
     // This promise-based gatekeeper prevents multiple refresh requests from firing at once.
     if (refreshTokenPromise) {
-        await refreshTokenPromise;
-        return;
+        return refreshTokenPromise;
     }
 
     const performRefresh = async () => {
@@ -91,7 +90,7 @@ const refreshToken = async (): Promise<void> => {
             const nestedData = responseData.data;
 
             if (!nestedData || !nestedData.access_token || !nestedData.refresh_token) {
-              const error = new Error('Invalid refresh response from API: missing tokens in data object.');
+              const error = new Error('Invalid refresh response from API: missing tokens.');
               (error as any).status = 500;
               throw error;
             }
@@ -104,9 +103,8 @@ const refreshToken = async (): Promise<void> => {
             if (error.status === 401) {
                 console.error('Refresh token is invalid. Logging out.', error);
                 onAuthFailure();
-            } else {
-                console.error('An error occurred during token refresh:', error);
             }
+            // rethrow the error so the original request knows it failed.
             throw error;
         }
     };
@@ -115,7 +113,7 @@ const refreshToken = async (): Promise<void> => {
         refreshTokenPromise = null;
     });
 
-    await refreshTokenPromise;
+    return refreshTokenPromise;
 };
 
 export const refreshSession = refreshToken;
@@ -123,6 +121,8 @@ export const refreshSession = refreshToken;
 // Generic request handler with automatic token refresh.
 const request = async (endpoint: string, options: RequestInit = {}) => {
   const makeTheRequest = async () => {
+    // Re-read accessToken from sessionStorage before each request
+    accessToken = sessionStorage.getItem('access_token'); 
     const headers = new Headers(options.headers);
     if (!headers.has('Content-Type') && options.body) {
       headers.set('Content-Type', 'application/json');
@@ -143,6 +143,9 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
       response = await makeTheRequest();
     } catch (refreshError: any) {
       console.error("Token refresh failed. The original request will not be retried.", refreshError);
+      // If refresh failed, we want the original error to be thrown,
+      // which is what handleResponse will do with the original 401 response.
+      // But the error might already have been thrown from refreshToken, so we just let it propagate.
       throw refreshError;
     }
   }
