@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/dialog";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 
 const profileSchema = z.object({
   name: z.string().min(3, { message: "El nombre debe tener al menos 3 caracteres." }),
@@ -252,7 +253,11 @@ export default function ProfilePage() {
                   </div>
                   <div>
                     <Label className="text-sm font-medium text-muted-foreground">Rol</Label>
-                    <p className="text-lg">{user.role}</p>
+                    <div className="pt-1">
+                      <Badge variant={user.role === 'Administrador' ? 'default' : 'secondary'}>
+                          {user.role}
+                      </Badge>
+                    </div>
                   </div>
               </div>
             </CardContent>
