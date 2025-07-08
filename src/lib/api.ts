@@ -131,8 +131,7 @@ const handleResponse = async (response: Response) => {
         throw error;
     }
     
-    // API responses can wrap data in a `data` property or return it directly.
-    return (json as any).data ?? json;
+    return json;
 }
 
 export const api = {

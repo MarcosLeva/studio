@@ -190,7 +190,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const validateSessionOnLoad = async () => {
       const storedRefreshToken = localStorage.getItem('refresh_token');
       
-      // If there's no refresh token, we're done. The user is not logged in.
       if (!storedRefreshToken) {
         setIsAuthLoading(false);
         return;
@@ -198,26 +197,27 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       
       console.log("Found refresh token. Attempting to validate session on app load...");
       try {
-        const { user: freshUserData } = await refreshSession();
-        // If refresh is successful, update user data in case it changed.
-        const appUser = mapApiUserToAppUser(freshUserData);
-        setUser(appUser);
-        localStorage.setItem('user', JSON.stringify(appUser));
-        console.log("Session validated and refreshed successfully on app load.");
+        const response = await refreshSession();
+        // Explicitly handle the case where the data is wrapped
+        const data = response.data ?? response;
+
+        if (data && data.user && data.access_token) {
+            setToken(data.access_token);
+            const appUser = mapApiUserToAppUser(data.user);
+            setUser(appUser);
+            localStorage.setItem('user', JSON.stringify(appUser));
+            console.log("Session validated and refreshed successfully on app load.");
+        } else {
+            console.error('Invalid data structure from refresh session, logging out.');
+            logout();
+        }
       } catch (error: any) {
-        // This block catches errors from refreshSession().
-        // We ONLY log out if the error is an authentication error (e.g., status 401),
-        // which means the refresh token is invalid. For other errors (like a temporary
-        // network issue), we do nothing, preserving the locally stored session.
         console.error('An error occurred during session validation:', error);
         if (error.status === 401) {
             console.error('Refresh token is invalid. Logging out.');
             logout();
-        } else {
-            console.log('Non-authentication error during refresh. Session will not be terminated.');
         }
       } finally {
-        // Always stop the loading indicator.
         setIsAuthLoading(false);
       }
     };
@@ -227,13 +227,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [logout]);
 
   const login = async (credentials: { email: string; password:string }) => {
-      const loginData = await api.post('/auth/login', credentials);
+      const response = await api.post('/auth/login', credentials);
+      // Explicitly handle the case where the data is wrapped
+      const loginData = (response as any).data ?? response;
+
       if (loginData && loginData.access_token && loginData.user && loginData.refresh_token) {
         setToken(loginData.access_token);
         localStorage.setItem('refresh_token', loginData.refresh_token);
         const appUser = mapApiUserToAppUser(loginData.user);
         setUser(appUser);
-        localStorage.setItem('user', JSON.stringify(appUser)); // Persist user data on login
+        localStorage.setItem('user', JSON.stringify(appUser));
       } else {
         throw new Error("Respuesta de login inválida desde la API.");
       }
