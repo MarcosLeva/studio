@@ -23,7 +23,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { HeaderUserNav } from '@/components/header-user-nav';
 import { HeaderThemeToggle } from '@/components/header-theme-toggle';
-import { useApp, mapApiUserToAppUser } from '../store';
+import { useApp } from '../store';
 import { LogoSpinner } from '@/components/ui/logo-spinner';
 import { Button } from '@/components/ui/button';
 import { refreshSession } from '@/lib/api';
@@ -36,7 +36,7 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isAuthenticated, isAuthLoading, editUser } = useApp();
+  const { isAuthenticated, isAuthLoading } = useApp();
   const { toast } = useToast();
 
   const handleRefreshToken = async () => {
@@ -45,10 +45,7 @@ export default function DashboardLayout({
         description: "Por favor, espera un momento.",
     });
     try {
-        const data = await refreshSession();
-        // The API client now ensures `data.user` exists if the call succeeds.
-        const appUser = mapApiUserToAppUser(data.user);
-        editUser(appUser);
+        await refreshSession();
 
         toast({
             title: "¡Token Refrescado!",

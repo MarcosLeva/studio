@@ -185,7 +185,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   // Effect to validate session on initial app load. Runs only once.
   useEffect(() => {
     const validateSessionOnLoad = async () => {
-      // If there's no user in local storage, we don't need to do anything.
+      // If there's no user in local storage, we are not logged in.
       if (!getInitialUser()) {
           setIsAuthLoading(false);
           return;
@@ -193,25 +193,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       
       console.log("Attempting to validate session on app load...");
       try {
-        const response = await refreshSession();
-        // The call to refreshSession already validates the token and user presence.
-        // If it succeeds, we just need to set the user state.
-        const data = response.data ?? response;
-        const appUser = mapApiUserToAppUser(data.user);
-        setUser(appUser);
-        localStorage.setItem('user', JSON.stringify(appUser));
+        // This call will either succeed silently or fail and trigger logout via onAuthFailure.
+        // It updates the access token in sessionStorage behind the scenes.
+        await refreshSession();
         console.log("Session validated and refreshed successfully on app load.");
       } catch (error: any) {
-        // Only log out if the error is an authentication error (401),
-        // not a network error.
-        if (error.status === 401) {
-            console.error('Refresh token is invalid. Logging out.');
-            handleSessionExpiration();
-        } else {
-            // For any other error (network, server error, invalid data structure),
-            // we log it but don't log the user out.
-            console.error('An error occurred during session validation:', error);
-        }
+        // The onAuthFailure logic is already handled inside refreshSession.
+        // We just log the error here for debugging purposes.
+        // The user will be logged out if it was a 401.
+        console.error('An error occurred during session validation:', error.message);
       } finally {
         setIsAuthLoading(false);
       }
