@@ -217,7 +217,8 @@ export default function UsersPage() {
 
   React.useEffect(() => {
     fetchManagedUsers();
-  }, [fetchManagedUsers]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   React.useEffect(() => {
     if (newlyAddedUserId) {
