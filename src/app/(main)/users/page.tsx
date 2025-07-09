@@ -9,9 +9,7 @@ import * as z from "zod";
 import {
   useReactTable,
   getCoreRowModel,
-  getFilteredRowModel,
   getSortedRowModel,
-  getPaginationRowModel,
   type SortingState,
   type ColumnFiltersState,
   type PaginationState,
@@ -44,7 +42,7 @@ import {
 } from "@/components/ui/select";
 import { DataTable } from "@/components/data-table";
 import { getColumns } from "./columns";
-import { useApp, mapApiUserToAppUser } from "@/app/store";
+import { useApp } from "@/app/store";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@/lib/types";
 import {
@@ -203,7 +201,6 @@ export default function UsersPage() {
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [filterValue, setFilterValue] = React.useState("");
   const [rowSelection, setRowSelection] = React.useState({});
-  const [isFiltering, setIsFiltering] = React.useState(false);
   const isMounted = React.useRef(true);
   
   const [{ pageIndex, pageSize }, setPagination] = React.useState<PaginationState>({
@@ -226,25 +223,35 @@ export default function UsersPage() {
         isMounted.current = false;
     };
   }, []);
-
+  
   React.useEffect(() => {
-    if (!isAuthLoading) {
-        fetchManagedUsers(pageIndex + 1, pageSize);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthLoading, pageIndex, pageSize]);
-
-
-  React.useEffect(() => {
-    setIsFiltering(true);
     const timeout = setTimeout(() => {
-      if (isMounted.current) {
         setGlobalFilter(filterValue);
-        setIsFiltering(false);
-      }
     }, 300);
     return () => clearTimeout(timeout);
   }, [filterValue]);
+
+  React.useEffect(() => {
+    if (!isAuthLoading) {
+        const roleFilter = columnFilters.find(f => f.id === 'role')?.value as string | undefined;
+        const statusFilter = columnFilters.find(f => f.id === 'status')?.value as string | undefined;
+        
+        let apiRole: string | undefined;
+        if (roleFilter === 'Administrador') {
+            apiRole = 'admin';
+        } else if (roleFilter === 'Miembro') {
+            apiRole = 'user';
+        }
+
+        fetchManagedUsers({
+            page: pageIndex + 1, 
+            limit: pageSize,
+            search: globalFilter || undefined,
+            role: apiRole,
+            status: statusFilter,
+        });
+    }
+  }, [isAuthLoading, pageIndex, pageSize, fetchManagedUsers, globalFilter, columnFilters]);
 
 
   const handleEditClick = React.useCallback((user: User) => {
@@ -264,8 +271,8 @@ export default function UsersPage() {
       description: `El estado de "${user.name}" ha sido actualizado.`,
       icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
     });
-    await fetchManagedUsers(pageIndex + 1, pageSize);
-  }, [toggleUserStatus, toast, fetchManagedUsers, pageIndex, pageSize]);
+    // This will trigger a refetch due to the main useEffect dependencies
+  }, [toggleUserStatus, toast]);
 
   const columns = React.useMemo(() => getColumns(handleEditClick, handleDeleteClick, handleToggleStatusClick), [handleEditClick, handleDeleteClick, handleToggleStatusClick]);
 
@@ -275,14 +282,13 @@ export default function UsersPage() {
     pageCount,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     onRowSelectionChange: setRowSelection,
-    onGlobalFilterChange: setGlobalFilter,
     onPaginationChange: setPagination,
     manualPagination: true,
-    globalFilterFn: "includesString",
+    manualFiltering: true,
     state: {
       sorting,
       columnFilters,
@@ -291,6 +297,13 @@ export default function UsersPage() {
       pagination,
     },
   });
+  
+  // Reset page index when filters change
+  React.useEffect(() => {
+    if(!isMounted.current) {
+      table.setPageIndex(0);
+    }
+  },[globalFilter, columnFilters, table])
 
   async function onSubmit(data: UserFormValues) {
     if (editingUser) {
@@ -300,7 +313,6 @@ export default function UsersPage() {
         description: `Los datos de "${data.name}" han sido actualizados.`,
         icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
       });
-      await fetchManagedUsers(pageIndex + 1, pageSize);
       setIsDialogOpen(false);
       return;
     }
@@ -320,8 +332,9 @@ export default function UsersPage() {
         description: response.message || "Se ha enviado una invitación por correo electrónico.",
         icon: <Mail className="h-5 w-5 text-primary" />,
       });
-      await fetchManagedUsers(1, pageSize);
-      table.setPageIndex(0);
+      if (table.getState().pagination.pageIndex !== 0) {
+        table.setPageIndex(0);
+      }
       setIsDialogOpen(false);
     } catch (error: any) {
       toast({
@@ -359,7 +372,6 @@ export default function UsersPage() {
         icon: <Trash2 className="h-5 w-5 text-primary" />,
       });
       setUserToDelete(null);
-      await fetchManagedUsers(pageIndex + 1, pageSize);
     }
   };
 
@@ -375,7 +387,6 @@ export default function UsersPage() {
         icon: <Trash2 className="h-5 w-5 text-primary" />,
     });
     setIsBulkDeleteOpen(false);
-    await fetchManagedUsers(pageIndex + 1, pageSize);
   }
 
   const handleBulkToggleStatus = async (status: 'activo' | 'inactivo') => {
@@ -391,7 +402,6 @@ export default function UsersPage() {
         description: `El estado de ${selectedRows.length} usuarios ha sido actualizado.`,
         icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
     });
-    await fetchManagedUsers(pageIndex + 1, pageSize);
   }
 
   const roles = [
@@ -603,7 +613,7 @@ export default function UsersPage() {
               {table.getRowModel().rows.map((row) => (
                 <MobileUserCard key={row.id} user={row.original} />
               ))}
-              <MobilePaginationControls />
+              {pageCount > 1 && <MobilePaginationControls />}
             </div>
           ) : (
             <div className="text-center py-10 text-muted-foreground">No hay usuarios.</div>
@@ -629,7 +639,7 @@ export default function UsersPage() {
             <DataTable 
                 table={table}
             />
-            {isFiltering && (
+            {areUsersLoading && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center rounded-b-md bg-card/80 backdrop-blur-sm">
                     <LogoSpinner />
                 </div>

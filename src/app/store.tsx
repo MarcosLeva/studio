@@ -134,7 +134,7 @@ interface AppContextType {
     totalPages: number;
     totalUsers: number;
   };
-  fetchManagedUsers: (page: number, limit: number) => Promise<void>;
+  fetchManagedUsers: (params: { page: number; limit: number; search?: string; role?: string; status?: string; }) => Promise<void>;
   addManagedUser: (user: User) => string;
   editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'status'>>) => void;
   deleteManagedUser: (id: string) => void;
@@ -216,13 +216,23 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchManagedUsers = useCallback(async (page: number, limit: number) => {
+  const fetchManagedUsers = useCallback(async (params: { page: number; limit: number; search?: string; role?: string; status?: string; }) => {
     setUsersError(null);
     setAreUsersLoading(true);
+
+    const { page, limit, search, role, status } = params;
+    const queryParams = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    });
+
+    if (search) queryParams.append('search', search);
+    if (role) queryParams.append('role', role);
+    if (status) queryParams.append('status', status);
+
     try {
-      const response = await api.get(`/users?page=${page}&limit=${limit}`);
+      const response = await api.get(`/users?${queryParams.toString()}`);
       
-      // Based on the provided API response structure
       const apiUsers = response?.data?.data || [];
       const paginationData = response?.data?.pagination || {};
 
