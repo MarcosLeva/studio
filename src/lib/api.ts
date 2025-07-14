@@ -42,25 +42,37 @@ export const setToken = (token: string | null) => {
 
 // Helper to parse response and handle non-OK statuses.
 const handleResponse = async (response: Response) => {
+    // If the response is not OK, we should handle it as an error.
+    if (!response.ok) {
+        let errorBody;
+        try {
+            // Try to parse the error response body as JSON.
+            errorBody = await response.json();
+        } catch (e) {
+            // If parsing fails, create a generic error.
+            const error = new Error(`Error: ${response.status} ${response.statusText}`);
+            (error as any).status = response.status;
+            throw error;
+        }
+
+        // Use the specific message from the API if available.
+        const errorMessage = errorBody?.message || `Error: ${response.status} ${response.statusText}`;
+        const error = new Error(errorMessage);
+        (error as any).status = response.status;
+        throw error;
+    }
+
+    // If the response is OK, parse the success response body.
+    // Handle cases where the response might be empty.
     const text = await response.text();
-    let json;
     try {
-        json = text ? JSON.parse(text) : {};
+        return text ? JSON.parse(text) : {};
     } catch(e) {
         console.error("Failed to parse JSON response:", text);
         const error = new Error("Respuesta JSON inválida del servidor.");
         (error as any).status = response.status;
         throw error;
     }
-    
-    if (!response.ok) {
-        const errorMessage = json?.message || `Error: ${response.status} ${response.statusText}`;
-        const error = new Error(errorMessage);
-        (error as any).status = response.status;
-        throw error;
-    }
-    
-    return json;
 }
 
 // This function is the core of the refresh logic.
