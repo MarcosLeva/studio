@@ -79,7 +79,7 @@ export const mapApiUserToAppUser = (apiUser: any): User => {
     name: name,
     email: email,
     role: role,
-    status: apiUser.status || 'inactivo',
+    status: apiUser.status === 'active' ? 'activo' : 'inactivo',
     avatar: apiUser.avatar || `https://placehold.co/100x100.png`,
   };
 };
@@ -328,12 +328,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const editManagedUser = async (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'status'>>) => {
     const apiRole = data.role === 'Administrador' ? 'admin' : data.role === 'Miembro' ? 'user' : undefined;
     const payload = {
-        ...data,
+        name: data.name,
+        email: data.email,
         role: apiRole,
     };
     
     const response = await api.put(`/users/${id}`, payload);
-    const updatedApiUser = response.data;
+    const updatedApiUser = response; // The API returns the user object directly
     const updatedUser = mapApiUserToAppUser(updatedApiUser);
     
     setManagedUsers(prev => 
@@ -349,7 +350,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const toggleUserStatus = async (id: string, currentStatus: 'activo' | 'inactivo'): Promise<User> => {
     const newApiStatus = currentStatus === 'activo' ? 'inactive' : 'active';
     const response = await api.put(`/users/${id}`, { status: newApiStatus });
-    const updatedApiUser = response.data;
+    const updatedApiUser = response; // The API returns the user object directly
     const updatedUser = mapApiUserToAppUser(updatedApiUser);
 
     setManagedUsers(prev => 
@@ -400,3 +401,5 @@ export const useApp = () => {
   }
   return context;
 };
+
+    
