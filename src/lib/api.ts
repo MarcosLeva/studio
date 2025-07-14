@@ -48,13 +48,13 @@ const handleResponse = async (response: Response) => {
         json = text ? JSON.parse(text) : {};
     } catch(e) {
         console.error("Failed to parse JSON response:", text);
-        const error = new Error("Invalid JSON response from server.");
+        const error = new Error("Respuesta JSON inválida del servidor.");
         (error as any).status = response.status;
         throw error;
     }
     
     if (!response.ok) {
-        const errorMessage = json?.data?.message || json?.message || `Error: ${response.status} ${response.statusText}`;
+        const errorMessage = json?.message || `Error: ${response.status} ${response.statusText}`;
         const error = new Error(errorMessage);
         (error as any).status = response.status;
         throw error;
@@ -158,4 +158,5 @@ export const api = {
     get: (endpoint: string) => request(endpoint, { method: 'GET' }),
     post: (endpoint: string, body: unknown) => request(endpoint, { method: 'POST', body: JSON.stringify(body) }),
     put: (endpoint: string, body: unknown) => request(endpoint, { method: 'PUT', body: JSON.stringify(body) }),
+    delete: (endpoint: string) => request(endpoint, { method: 'DELETE' }),
 };

@@ -56,8 +56,8 @@ export default function LoginPage() {
         icon: <ShieldCheck className="h-5 w-5 text-green-500" />,
       });
       router.push("/analyze-catalog");
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Por favor, comprueba tus credenciales e inténtalo de nuevo.";
+    } catch (error: any) {
+      const errorMessage = error.message || "Por favor, comprueba tus credenciales e inténtalo de nuevo.";
       toast({
         variant: "destructive",
         title: "Error al Iniciar Sesión",
