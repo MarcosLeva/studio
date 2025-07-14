@@ -257,10 +257,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (status) {
         let apiStatus = '';
         switch (status) {
-            case 'Activo': apiStatus = 'active'; break;
-            case 'Inactivo': apiStatus = 'inactive'; break;
-            case 'Pendiente': apiStatus = 'pending'; break;
-            case 'Suspendido': apiStatus = 'suspended'; break;
+            case 'activo': apiStatus = 'active'; break;
+            case 'inactivo': apiStatus = 'inactive'; break;
+            case 'pendiente': apiStatus = 'pending'; break;
+            case 'suspendido': apiStatus = 'suspended'; break;
         }
         if (apiStatus) queryParams.append('status', apiStatus);
     }
@@ -367,6 +367,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     
     await api.put(`/users/${id}`, payload);
     
+    // Optimistic update
     setManagedUsers(prev => 
       prev.map(u => (u.id === id ? { ...u, ...data } : u))
     );
@@ -400,13 +401,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             newApiStatus = 'active';
             break;
         default:
-            // Fallback or throw error if status is unexpected
             console.error("Unexpected user status:", currentStatus);
-            return;
+            throw new Error("Estado de usuario no esperado.");
     }
-
+    
     await api.put(`/users/${id}`, { status: newApiStatus });
 
+    // Optimistic update
     const newAppStatus = newApiStatus === 'active' ? 'activo' : 'inactivo';
     setManagedUsers(prev => 
       prev.map(u => (u.id === id ? { ...u, status: newAppStatus } : u))
