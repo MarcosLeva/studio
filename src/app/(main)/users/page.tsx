@@ -265,13 +265,20 @@ export default function UsersPage() {
   }, []);
 
   const handleToggleStatusClick = React.useCallback(async (user: User) => {
-    toggleUserStatus(user.id);
-    toast({
-      title: user.status === 'activo' ? "Usuario Desactivado" : "Usuario Activado",
-      description: `El estado de "${user.name}" ha sido actualizado.`,
-      icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
-    });
-    // This will trigger a refetch due to the main useEffect dependencies
+    try {
+      await toggleUserStatus(user.id, user.status);
+      toast({
+        title: user.status === 'activo' ? "Usuario Desactivado" : "Usuario Activado",
+        description: `El estado de "${user.name}" ha sido actualizado.`,
+        icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
+      });
+    } catch(error: any) {
+        toast({
+            variant: "destructive",
+            title: "Error al cambiar estado",
+            description: error.message || "No se pudo actualizar el estado del usuario."
+        });
+    }
   }, [toggleUserStatus, toast]);
 
   const columns = React.useMemo(() => getColumns(handleEditClick, handleDeleteClick, handleToggleStatusClick), [handleEditClick, handleDeleteClick, handleToggleStatusClick]);
@@ -300,46 +307,43 @@ export default function UsersPage() {
   
   // Reset page index when filters change
   React.useEffect(() => {
-    if(!isMounted.current) {
-      table.setPageIndex(0);
-    }
+    table.setPageIndex(0);
   },[globalFilter, columnFilters, table])
 
   async function onSubmit(data: UserFormValues) {
-    if (editingUser) {
-      editManagedUser(editingUser.id, data);
-      toast({
-        title: "Usuario Actualizado",
-        description: `Los datos de "${data.name}" han sido actualizados.`,
-        icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
-      });
-      setIsDialogOpen(false);
-      return;
-    }
-
     setIsSubmitting(true);
     try {
-      const apiRole = data.role === 'Administrador' ? 'admin' : 'user';
-      
-      const response = await api.post('/users', {
-        name: data.name,
-        email: data.email,
-        role: apiRole,
-      });
-
-      toast({
-        title: "Usuario Creado",
-        description: response.message || "Se ha enviado una invitación por correo electrónico.",
-        icon: <Mail className="h-5 w-5 text-primary" />,
-      });
-      if (table.getState().pagination.pageIndex !== 0) {
-        table.setPageIndex(0);
+      if (editingUser) {
+        await editManagedUser(editingUser.id, data);
+        toast({
+          title: "Usuario Actualizado",
+          description: `Los datos de "${data.name}" han sido actualizados.`,
+          icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
+        });
+      } else {
+        const apiRole = data.role === 'Administrador' ? 'admin' : 'user';
+        const response = await api.post('/users', {
+          name: data.name,
+          email: data.email,
+          role: apiRole,
+        });
+        toast({
+          title: "Usuario Creado",
+          description: response.message || "Se ha enviado una invitación por correo electrónico.",
+          icon: <Mail className="h-5 w-5 text-primary" />,
+        });
+        // Refetch users on the first page after creation
+        if (table.getState().pagination.pageIndex !== 0) {
+          table.setPageIndex(0);
+        } else {
+           fetchManagedUsers({ page: 1, limit: pageSize });
+        }
       }
       setIsDialogOpen(false);
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error al crear usuario",
+        title: editingUser ? "Error al actualizar" : "Error al crear usuario",
         description: error.message || "Ocurrió un error inesperado. Por favor, inténtalo de nuevo.",
       });
     } finally {
@@ -391,11 +395,14 @@ export default function UsersPage() {
 
   const handleBulkToggleStatus = async (status: 'activo' | 'inactivo') => {
     const selectedRows = table.getFilteredSelectedRowModel().rows;
-    selectedRows.forEach(row => {
+    const promises = selectedRows.map(row => {
         if (row.original.status !== status) {
-            toggleUserStatus(row.original.id);
+            return toggleUserStatus(row.original.id, row.original.status);
         }
+        return Promise.resolve();
     });
+    await Promise.all(promises);
+
     table.resetRowSelection();
     toast({
         title: "Estado de usuarios actualizado",

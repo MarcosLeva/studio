@@ -157,4 +157,5 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
 export const api = {
     get: (endpoint: string) => request(endpoint, { method: 'GET' }),
     post: (endpoint: string, body: unknown) => request(endpoint, { method: 'POST', body: JSON.stringify(body) }),
+    put: (endpoint: string, body: unknown) => request(endpoint, { method: 'PUT', body: JSON.stringify(body) }),
 };

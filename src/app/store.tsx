@@ -136,9 +136,9 @@ interface AppContextType {
   };
   fetchManagedUsers: (params: { page: number; limit: number; search?: string; role?: string; status?: string; }) => Promise<void>;
   addManagedUser: (user: User) => string;
-  editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'status'>>) => void;
+  editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'status'>>) => Promise<User>;
   deleteManagedUser: (id: string) => void;
-  toggleUserStatus: (id: string) => void;
+  toggleUserStatus: (id: string, currentStatus: 'activo' | 'inactivo') => Promise<User>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -217,6 +217,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const fetchManagedUsers = useCallback(async (params: { page: number; limit: number; search?: string; role?: string; status?: string; }) => {
+    if (!isAuthenticated) return;
     setUsersError(null);
     setAreUsersLoading(true);
 
@@ -253,7 +254,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setAreUsersLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
 
   const login = async (credentials: { email: string; password:string }) => {
@@ -324,20 +325,37 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return user.id;
   };
 
-  const editManagedUser = (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'status'>>) => {
+  const editManagedUser = async (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'status'>>) => {
+    const apiRole = data.role === 'Administrador' ? 'admin' : data.role === 'Miembro' ? 'user' : undefined;
+    const payload = {
+        ...data,
+        role: apiRole,
+    };
+    
+    const response = await api.put(`/users/${id}`, payload);
+    const updatedApiUser = response.data;
+    const updatedUser = mapApiUserToAppUser(updatedApiUser);
+    
     setManagedUsers(prev => 
-      prev.map(u => (u.id === id ? { ...u, ...data } : u))
+      prev.map(u => (u.id === id ? updatedUser : u))
     );
+    return updatedUser;
   };
   
   const deleteManagedUser = (id: string) => {
     setManagedUsers(prev => prev.filter(u => u.id !== id));
   };
 
-  const toggleUserStatus = (id: string) => {
+  const toggleUserStatus = async (id: string, currentStatus: 'activo' | 'inactivo'): Promise<User> => {
+    const newStatus = currentStatus === 'activo' ? 'inactivo' : 'activo';
+    const response = await api.put(`/users/${id}`, { status: newStatus });
+    const updatedApiUser = response.data;
+    const updatedUser = mapApiUserToAppUser(updatedApiUser);
+
     setManagedUsers(prev => 
-      prev.map(u => (u.id === id ? { ...u, status: u.status === 'activo' ? 'inactivo' : 'activo' } : u))
+      prev.map(u => (u.id === id ? updatedUser : u))
     );
+    return updatedUser;
   };
 
   const contextValue = {
