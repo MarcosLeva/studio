@@ -74,12 +74,31 @@ export const mapApiUserToAppUser = (apiUser: any): User => {
     role = 'Rol no definido';
   }
 
+  let status: 'activo' | 'inactivo' | 'pendiente' | 'suspendido';
+    switch (apiUser.status) {
+        case 'active':
+            status = 'activo';
+            break;
+        case 'inactive':
+            status = 'inactivo';
+            break;
+        case 'pending':
+            status = 'pendiente';
+            break;
+        case 'suspended':
+            status = 'suspendido';
+            break;
+        default:
+            status = 'inactivo';
+            break;
+    }
+
   return {
     id: apiUser.id,
     name: name,
     email: email,
     role: role,
-    status: apiUser.status === 'active' ? 'activo' : 'inactivo',
+    status: status,
     avatar: apiUser.avatar || `https://placehold.co/100x100.png`,
   };
 };
@@ -138,7 +157,7 @@ interface AppContextType {
   addManagedUser: (user: User) => string;
   editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'status'>>) => Promise<User>;
   deleteManagedUser: (id: string) => void;
-  toggleUserStatus: (id: string, currentStatus: 'activo' | 'inactivo') => Promise<User>;
+  toggleUserStatus: (id: string, currentStatus: User['status']) => Promise<User>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -333,8 +352,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         role: apiRole,
     };
     
-    const response = await api.put(`/users/${id}`, payload);
-    const updatedApiUser = response; // The API returns the user object directly
+    const updatedApiUser = await api.put(`/users/${id}`, payload);
     const updatedUser = mapApiUserToAppUser(updatedApiUser);
     
     setManagedUsers(prev => 
@@ -344,13 +362,21 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const deleteManagedUser = (id: string) => {
-    setManagedUsers(prev => prev.filter(u => u.id !== id));
+    api.delete(`/users/${id}`).then(() => {
+        setManagedUsers(prev => prev.filter(u => u.id !== id));
+    }).catch(error => {
+        console.error("Failed to delete user:", error);
+        toast({
+            variant: "destructive",
+            title: "Error al Eliminar",
+            description: "No se pudo eliminar el usuario."
+        });
+    })
   };
 
-  const toggleUserStatus = async (id: string, currentStatus: 'activo' | 'inactivo'): Promise<User> => {
+  const toggleUserStatus = async (id: string, currentStatus: User['status']): Promise<User> => {
     const newApiStatus = currentStatus === 'activo' ? 'inactive' : 'active';
-    const response = await api.put(`/users/${id}`, { status: newApiStatus });
-    const updatedApiUser = response; // The API returns the user object directly
+    const updatedApiUser = await api.put(`/users/${id}`, { status: newApiStatus });
     const updatedUser = mapApiUserToAppUser(updatedApiUser);
 
     setManagedUsers(prev => 

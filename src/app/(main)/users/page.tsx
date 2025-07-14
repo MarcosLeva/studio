@@ -243,12 +243,20 @@ export default function UsersPage() {
             apiRole = 'user';
         }
 
+        let apiStatus: string | undefined;
+        switch (statusFilter) {
+            case 'Activo': apiStatus = 'active'; break;
+            case 'Inactivo': apiStatus = 'inactive'; break;
+            case 'Pendiente': apiStatus = 'pending'; break;
+            case 'Suspendido': apiStatus = 'suspended'; break;
+        }
+
         fetchManagedUsers({
             page: pageIndex + 1, 
             limit: pageSize,
             search: globalFilter || undefined,
             role: apiRole,
-            status: statusFilter,
+            status: apiStatus,
         });
     }
   }, [isAuthLoading, pageIndex, pageSize, fetchManagedUsers, globalFilter, columnFilters]);
@@ -381,9 +389,9 @@ export default function UsersPage() {
 
   const confirmBulkDelete = async () => {
     const selectedRows = table.getFilteredSelectedRowModel().rows;
-    selectedRows.forEach(row => {
-        deleteManagedUser(row.original.id);
-    });
+    const promises = selectedRows.map(row => deleteManagedUser(row.original.id));
+    await Promise.all(promises);
+
     table.resetRowSelection();
     toast({
         title: "Usuarios Eliminados",
@@ -417,8 +425,10 @@ export default function UsersPage() {
   ];
   
   const statuses = [
-    { value: "activo", label: "Activo" },
-    { value: "inactivo", label: "Inactivo" },
+    { value: "Activo", label: "Activo" },
+    { value: "Inactivo", label: "Inactivo" },
+    { value: "Pendiente", label: "Pendiente" },
+    { value: "Suspendido", label: "Suspendido" },
   ];
   
   const handleClearFilters = () => {
@@ -519,11 +529,14 @@ export default function UsersPage() {
                         )}
                         <span className={cn(
                             "relative inline-flex h-2 w-2 rounded-full",
-                            user.status === 'activo' ? 'bg-green-500' : 'bg-gray-400'
+                            user.status === 'activo' ? 'bg-green-500' : 
+                            user.status === 'inactivo' ? 'bg-gray-400' :
+                            user.status === 'pendiente' ? 'bg-yellow-500' :
+                            user.status === 'suspendido' ? 'bg-red-500' : 'bg-gray-400'
                         )} />
                     </div>
                     <span className="text-xs text-muted-foreground capitalize">
-                        {user.status === 'activo' ? "Activo" : "Inactivo"}
+                        {user.status}
                     </span>
                 </div>
               </div>
@@ -540,7 +553,7 @@ export default function UsersPage() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Acciones</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => handleEditClick(user)}>Editar Usuario</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleToggleStatusClick(user)}>
+              <DropdownMenuItem onClick={() => handleToggleStatusClick(user)} disabled={user.status === 'pendiente' || user.status === 'suspendido'}>
                   {user.status === 'activo' ? "Desactivar Usuario" : "Activar Usuario"}
               </DropdownMenuItem>
               <DropdownMenuSeparator />

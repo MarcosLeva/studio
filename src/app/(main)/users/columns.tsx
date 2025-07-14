@@ -19,6 +19,15 @@ import type { User } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 
+const statusConfig: {
+  [key in User['status']]: { label: string; color: string; translated: string };
+} = {
+  activo: { label: "Activo", color: "bg-green-500", translated: "Activo" },
+  inactivo: { label: "Inactivo", color: "bg-gray-400", translated: "Inactivo" },
+  pendiente: { label: "Pendiente", color: "bg-yellow-500", translated: "Pendiente" },
+  suspendido: { label: "Suspendido", color: "bg-red-500", translated: "Suspendido" },
+};
+
 export const getColumns = (
   onEdit: (user: User) => void,
   onDelete: (user: User) => void,
@@ -93,21 +102,18 @@ export const getColumns = (
     accessorKey: "status",
     header: "Estado",
     cell: ({ row }) => {
-      const status = row.getValue("status") as string;
-      const isActive = status === 'activo';
-      const translatedStatus = isActive ? 'Activo' : 'Inactivo';
+      const status = row.getValue("status") as User['status'];
+      const config = statusConfig[status] || statusConfig.inactivo;
+      
       return (
         <div className="flex items-center gap-2">
           <div className="relative flex h-2 w-2">
-            {isActive && (
+            {status === 'activo' && (
               <span className="absolute inline-flex h-full w-full animate-ping-large rounded-full bg-green-400 opacity-75" />
             )}
-            <span className={cn(
-                "relative inline-flex h-2 w-2 rounded-full",
-                isActive ? 'bg-green-500' : 'bg-gray-400'
-            )} />
+            <span className={cn("relative inline-flex h-2 w-2 rounded-full", config.color)} />
           </div>
-          <span className="capitalize">{translatedStatus}</span>
+          <span className="capitalize">{config.translated}</span>
         </div>
       )
     },
@@ -131,7 +137,7 @@ export const getColumns = (
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                 <DropdownMenuItem onClick={() => onEdit(user)}>Editar Usuario</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onToggleStatus(user)}>
+                <DropdownMenuItem onClick={() => onToggleStatus(user)} disabled={user.status === 'pendiente' || user.status === 'suspendido'}>
                   {user.status === 'activo' ? 'Desactivar Usuario' : 'Activar Usuario'}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
