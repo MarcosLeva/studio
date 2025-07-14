@@ -347,8 +347,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const toggleUserStatus = async (id: string, currentStatus: 'activo' | 'inactivo'): Promise<User> => {
-    const newStatus = currentStatus === 'activo' ? 'inactivo' : 'activo';
-    const response = await api.put(`/users/${id}`, { status: newStatus });
+    const newApiStatus = currentStatus === 'activo' ? 'inactive' : 'active';
+    const response = await api.put(`/users/${id}`, { status: newApiStatus });
     const updatedApiUser = response.data;
     const updatedUser = mapApiUserToAppUser(updatedApiUser);
 
