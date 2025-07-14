@@ -424,10 +424,10 @@ export default function UsersPage() {
   ];
   
   const statuses = [
-    { value: "Activo", label: "Activo" },
-    { value: "Inactivo", label: "Inactivo" },
-    { value: "Pendiente", label: "Pendiente" },
-    { value: "Suspendido", label: "Suspendido" },
+    { value: "activo", label: "Activo" },
+    { value: "inactivo", label: "Inactivo" },
+    { value: "pendiente", label: "Pendiente" },
+    { value: "suspendido", label: "Suspendido" },
   ];
   
   const handleClearFilters = () => {
@@ -551,14 +551,14 @@ export default function UsersPage() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => handleEditClick(user)}>Editar Usuario</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleToggleStatusClick(user)} disabled={user.status === 'pendiente' || user.status === 'suspendido'}>
+              <DropdownMenuItem onClick={() => handleEditClick(user)} className="cursor-pointer">Editar Usuario</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleToggleStatusClick(user)} disabled={user.status === 'pendiente' || user.status === 'suspendido'} className="cursor-pointer">
                   {user.status === 'activo' ? "Desactivar Usuario" : "Activar Usuario"}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => handleDeleteClick(user)}
-                className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
               >
                 Eliminar Usuario
               </DropdownMenuItem>

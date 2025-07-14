@@ -100,12 +100,13 @@ export const getColumns = (
                 <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                 <DropdownMenuItem
                   onClick={() => navigator.clipboard.writeText(category.id)}
+                  className="cursor-pointer"
                 >
                   Copiar ID de Categoría
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => onEdit(category)}>Editar</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDelete(category)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">Eliminar</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onEdit(category)} className="cursor-pointer">Editar</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onDelete(category)} className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer">Eliminar</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
         </div>

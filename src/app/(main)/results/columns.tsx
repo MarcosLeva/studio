@@ -91,13 +91,13 @@ export const getColumns = (
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => onExport(result)}>
+                        <DropdownMenuItem onClick={() => onExport(result)} className="cursor-pointer">
                             Exportar como Excel
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                         onClick={() => onDelete(result)}
-                        className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                        className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
                         >
                         Eliminar
                         </DropdownMenuItem>

@@ -327,12 +327,12 @@ export default function CategoriesPage() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => navigator.clipboard.writeText(category.id)}>
+              <DropdownMenuItem onClick={() => navigator.clipboard.writeText(category.id)} className="cursor-pointer">
                 Copiar ID de Categoría
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleEditClick(category)}>Editar</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleDeleteClick(category)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">Eliminar</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleEditClick(category)} className="cursor-pointer">Editar</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleDeleteClick(category)} className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer">Eliminar</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

@@ -223,13 +223,13 @@ export default function ScannedResultsPage() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => handleExport(result)}>
+              <DropdownMenuItem onClick={() => handleExport(result)} className="cursor-pointer">
                 Exportar como Excel
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => handleDelete(result)}
-                className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
               >
                 Eliminar
               </DropdownMenuItem>

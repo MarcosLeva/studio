@@ -136,14 +136,14 @@ export const getColumns = (
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => onEdit(user)}>Editar Usuario</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onToggleStatus(user)} disabled={user.status === 'pendiente' || user.status === 'suspendido'}>
+                <DropdownMenuItem onClick={() => onEdit(user)} className="cursor-pointer">Editar Usuario</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onToggleStatus(user)} disabled={user.status === 'pendiente' || user.status === 'suspendido'} className="cursor-pointer">
                   {user.status === 'activo' ? 'Desactivar Usuario' : 'Activar Usuario'}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => onDelete(user)}
-                  className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                  className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
                 >
                   Eliminar Usuario
                 </DropdownMenuItem>
