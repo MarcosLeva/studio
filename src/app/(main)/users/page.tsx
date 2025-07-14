@@ -254,7 +254,7 @@ export default function UsersPage() {
     setIsDialogOpen(true);
   }, [form]);
 
-  const handleDeleteClick = React.useCallback((user: User) => {
+  const handleDeleteClick = React.useCallback(async (user: User) => {
     setUserToDelete(user);
   }, []);
 
@@ -711,7 +711,7 @@ export default function UsersPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Rol</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} disabled={!editingUser}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecciona un rol" />
@@ -807,4 +807,3 @@ export default function UsersPage() {
     </div>
   );
 }
-
