@@ -42,38 +42,25 @@ export const setToken = (token: string | null) => {
 
 // Helper to parse response and handle non-OK statuses.
 const handleResponse = async (response: Response) => {
-    // If the response is not OK, we should handle it as an error.
-    if (!response.ok) {
-        let errorBody;
-        try {
-            // Try to parse the error response body as JSON.
-            errorBody = await response.json();
-        } catch (e) {
-            // If parsing fails, create a generic error.
-            const error = new Error(`Error: ${response.status} ${response.statusText}`);
-            (error as any).status = response.status;
-            throw error;
-        }
+    let responseData;
+    try {
+        responseData = await response.json();
+    } catch (error) {
+        // If JSON parsing fails, it's a server error.
+        throw new Error('Respuesta inválida del servidor.');
+    }
 
-        // Use the specific message from the API if available.
-        const errorMessage = errorBody?.message || `Error: ${response.status} ${response.statusText}`;
+    if (!response.ok) {
+        // Use the message from the API error response, or create a generic one.
+        const errorMessage = responseData.message || `Error: ${response.status} ${response.statusText}`;
         const error = new Error(errorMessage);
         (error as any).status = response.status;
         throw error;
     }
-
-    // If the response is OK, parse the success response body.
-    // Handle cases where the response might be empty.
-    const text = await response.text();
-    try {
-        return text ? JSON.parse(text) : {};
-    } catch(e) {
-        console.error("Failed to parse JSON response:", text);
-        const error = new Error("Respuesta JSON inválida del servidor.");
-        (error as any).status = response.status;
-        throw error;
-    }
+    
+    return responseData;
 }
+
 
 // This function is the core of the refresh logic.
 const refreshToken = async (): Promise<void> => {
@@ -92,13 +79,11 @@ const refreshToken = async (): Promise<void> => {
 
         console.log("Attempting to refresh token...");
         try {
-            const response = await fetch(`${getApiUrl()}/auth/refresh`, {
+            const responseData = await request('/auth/refresh', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ refresh_token: storedRefreshToken }),
             });
             
-            const responseData = await handleResponse(response);
             const nestedData = responseData.data;
 
             if (!nestedData || !nestedData.access_token || !nestedData.refresh_token) {
@@ -147,7 +132,7 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
 
   let response = await makeTheRequest();
 
-  if (response.status === 401 && endpoint !== '/auth/refresh') {
+  if (response.status === 401 && endpoint !== '/auth/refresh' && endpoint !== '/auth/login') {
     console.log(`Request to ${endpoint} received 401. Attempting token refresh.`);
     try {
       await refreshToken();
@@ -155,9 +140,6 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
       response = await makeTheRequest();
     } catch (refreshError: any) {
       console.error("Token refresh failed. The original request will not be retried.", refreshError);
-      // If refresh failed, we want the original error to be thrown,
-      // which is what handleResponse will do with the original 401 response.
-      // But the error might already have been thrown from refreshToken, so we just let it propagate.
       throw refreshError;
     }
   }
