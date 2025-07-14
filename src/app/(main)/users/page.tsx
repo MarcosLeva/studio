@@ -181,7 +181,7 @@ function MobileUsersPageSkeleton() {
 }
 
 export default function UsersPage() {
-  const { managedUsers, addManagedUser, editManagedUser, deleteManagedUser, toggleUserStatus, areUsersLoading, fetchManagedUsers, usersError, isAuthLoading, userPagination } = useApp();
+  const { managedUsers, editManagedUser, deleteManagedUser, toggleUserStatus, areUsersLoading, fetchManagedUsers, usersError, isAuthLoading, userPagination } = useApp();
   const { toast } = useToast();
   const isMobile = useIsMobile();
   
@@ -236,27 +236,12 @@ export default function UsersPage() {
         const roleFilter = columnFilters.find(f => f.id === 'role')?.value as string | undefined;
         const statusFilter = columnFilters.find(f => f.id === 'status')?.value as string | undefined;
         
-        let apiRole: string | undefined;
-        if (roleFilter === 'Administrador') {
-            apiRole = 'admin';
-        } else if (roleFilter === 'Miembro') {
-            apiRole = 'user';
-        }
-
-        let apiStatus: string | undefined;
-        switch (statusFilter) {
-            case 'Activo': apiStatus = 'active'; break;
-            case 'Inactivo': apiStatus = 'inactive'; break;
-            case 'Pendiente': apiStatus = 'pending'; break;
-            case 'Suspendido': apiStatus = 'suspended'; break;
-        }
-
         fetchManagedUsers({
             page: pageIndex + 1, 
             limit: pageSize,
             search: globalFilter || undefined,
-            role: apiRole,
-            status: apiStatus,
+            role: roleFilter,
+            status: statusFilter,
         });
     }
   }, [isAuthLoading, pageIndex, pageSize, fetchManagedUsers, globalFilter, columnFilters]);
@@ -377,28 +362,42 @@ export default function UsersPage() {
 
   const confirmDelete = async () => {
     if (userToDelete) {
-      deleteManagedUser(userToDelete.id);
-      toast({
-        title: "Usuario Eliminado",
-        description: `El usuario "${userToDelete.name}" ha sido eliminado.`,
-        icon: <Trash2 className="h-5 w-5 text-primary" />,
-      });
-      setUserToDelete(null);
+      try {
+        await deleteManagedUser(userToDelete.id);
+        toast({
+          title: "Usuario Eliminado",
+          description: `El usuario "${userToDelete.name}" ha sido eliminado.`,
+          icon: <Trash2 className="h-5 w-5 text-primary" />,
+        });
+        setUserToDelete(null);
+      } catch (error) {
+        // Error toast is handled in deleteManagedUser
+        setUserToDelete(null);
+      }
     }
   };
 
   const confirmBulkDelete = async () => {
     const selectedRows = table.getFilteredSelectedRowModel().rows;
     const promises = selectedRows.map(row => deleteManagedUser(row.original.id));
-    await Promise.all(promises);
-
-    table.resetRowSelection();
-    toast({
-        title: "Usuarios Eliminados",
-        description: `${selectedRows.length} usuarios han sido eliminados.`,
-        icon: <Trash2 className="h-5 w-5 text-primary" />,
-    });
-    setIsBulkDeleteOpen(false);
+    
+    try {
+        await Promise.all(promises);
+        table.resetRowSelection();
+        toast({
+            title: "Usuarios Eliminados",
+            description: `${selectedRows.length} usuarios han sido eliminados.`,
+            icon: <Trash2 className="h-5 w-5 text-primary" />,
+        });
+    } catch (error) {
+        toast({
+            variant: "destructive",
+            title: "Error en Eliminación Masiva",
+            description: "Algunos usuarios no pudieron ser eliminados. Por favor, refresca y vuelve a intentarlo.",
+        });
+    } finally {
+        setIsBulkDeleteOpen(false);
+    }
   }
 
   const handleBulkToggleStatus = async (status: 'activo' | 'inactivo') => {

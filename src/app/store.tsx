@@ -156,7 +156,7 @@ interface AppContextType {
   fetchManagedUsers: (params: { page: number; limit: number; search?: string; role?: string; status?: string; }) => Promise<void>;
   addManagedUser: (user: User) => string;
   editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'status'>>) => Promise<void>;
-  deleteManagedUser: (id: string) => void;
+  deleteManagedUser: (id: string) => Promise<void>;
   toggleUserStatus: (id: string, currentStatus: User['status']) => Promise<void>;
 }
 
@@ -247,8 +247,23 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     });
 
     if (search) queryParams.append('search', search);
-    if (role) queryParams.append('role', role);
-    if (status) queryParams.append('status', status);
+    
+    if (role) {
+        let apiRole = '';
+        if (role === 'Administrador') apiRole = 'admin';
+        else if (role === 'Miembro') apiRole = 'user';
+        if (apiRole) queryParams.append('role', apiRole);
+    }
+    if (status) {
+        let apiStatus = '';
+        switch (status) {
+            case 'Activo': apiStatus = 'active'; break;
+            case 'Inactivo': apiStatus = 'inactive'; break;
+            case 'Pendiente': apiStatus = 'pending'; break;
+            case 'Suspendido': apiStatus = 'suspended'; break;
+        }
+        if (apiStatus) queryParams.append('status', apiStatus);
+    }
 
     try {
       const response = await api.get(`/users?${queryParams.toString()}`);
@@ -277,17 +292,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
 
   const login = async (credentials: { email: string; password:string }) => {
-      const response = await api.post('/auth/login', credentials);
-      const loginData = response.data ?? response;
+      const loginData = await api.post('/auth/login', credentials);
 
-      if (loginData && loginData.access_token && loginData.user && loginData.refresh_token) {
-        setToken(loginData.access_token);
-        localStorage.setItem('refresh_token', loginData.refresh_token);
-        const appUser = mapApiUserToAppUser(loginData.user);
+      if (loginData && loginData.data.access_token && loginData.data.user && loginData.data.refresh_token) {
+        setToken(loginData.data.access_token);
+        localStorage.setItem('refresh_token', loginData.data.refresh_token);
+        const appUser = mapApiUserToAppUser(loginData.data.user);
         setUser(appUser);
         localStorage.setItem('user', JSON.stringify(appUser));
       } else {
-        console.error("Invalid login response structure:", response);
+        console.error("Invalid login response structure:", loginData);
         throw new Error("Respuesta de login inválida desde la API.");
       }
   };
@@ -351,34 +365,48 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (data.email) payload.email = data.email;
     if (apiRole) payload.role = apiRole;
     
-    // This expects the updated user object in the response.
-    // Since the API doesn't return it, we will update the state locally if the call is successful.
     await api.put(`/users/${id}`, payload);
     
-    // Update local state on successful API call
     setManagedUsers(prev => 
       prev.map(u => (u.id === id ? { ...u, ...data } : u))
     );
   };
   
-  const deleteManagedUser = (id: string) => {
-    api.delete(`/users/${id}`).then(() => {
+  const deleteManagedUser = async (id: string) => {
+    try {
+        await api.delete(`/users/${id}`);
         setManagedUsers(prev => prev.filter(u => u.id !== id));
-    }).catch(error => {
+    } catch(error: any) {
         console.error("Failed to delete user:", error);
         toast({
             variant: "destructive",
             title: "Error al Eliminar",
-            description: "No se pudo eliminar el usuario."
+            description: error.message || "No se pudo eliminar el usuario."
         });
-    })
+        throw error;
+    }
   };
 
   const toggleUserStatus = async (id: string, currentStatus: User['status']) => {
-    const newApiStatus = currentStatus === 'activo' ? 'inactive' : 'active';
+    let newApiStatus: 'active' | 'inactive';
+
+    switch (currentStatus) {
+        case 'activo':
+            newApiStatus = 'inactive';
+            break;
+        case 'inactivo':
+        case 'pendiente':
+        case 'suspendido':
+            newApiStatus = 'active';
+            break;
+        default:
+            // Fallback or throw error if status is unexpected
+            console.error("Unexpected user status:", currentStatus);
+            return;
+    }
+
     await api.put(`/users/${id}`, { status: newApiStatus });
 
-    // Update local state on successful API call
     const newAppStatus = newApiStatus === 'active' ? 'activo' : 'inactivo';
     setManagedUsers(prev => 
       prev.map(u => (u.id === id ? { ...u, status: newAppStatus } : u))
