@@ -155,9 +155,9 @@ interface AppContextType {
   };
   fetchManagedUsers: (params: { page: number; limit: number; search?: string; role?: string; status?: string; }) => Promise<void>;
   addManagedUser: (user: User) => string;
-  editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'status'>>) => Promise<User>;
+  editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'status'>>) => Promise<void>;
   deleteManagedUser: (id: string) => void;
-  toggleUserStatus: (id: string, currentStatus: User['status']) => Promise<User>;
+  toggleUserStatus: (id: string, currentStatus: User['status']) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -346,19 +346,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const editManagedUser = async (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'status'>>) => {
     const apiRole = data.role === 'Administrador' ? 'admin' : data.role === 'Miembro' ? 'user' : undefined;
-    const payload = {
-        name: data.name,
-        email: data.email,
-        role: apiRole,
-    };
+    const payload: {[key: string]: any} = {};
+    if (data.name) payload.name = data.name;
+    if (data.email) payload.email = data.email;
+    if (apiRole) payload.role = apiRole;
     
-    const updatedApiUser = await api.put(`/users/${id}`, payload);
-    const updatedUser = mapApiUserToAppUser(updatedApiUser);
+    // This expects the updated user object in the response.
+    // Since the API doesn't return it, we will update the state locally if the call is successful.
+    await api.put(`/users/${id}`, payload);
     
+    // Update local state on successful API call
     setManagedUsers(prev => 
-      prev.map(u => (u.id === id ? updatedUser : u))
+      prev.map(u => (u.id === id ? { ...u, ...data } : u))
     );
-    return updatedUser;
   };
   
   const deleteManagedUser = (id: string) => {
@@ -374,15 +374,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     })
   };
 
-  const toggleUserStatus = async (id: string, currentStatus: User['status']): Promise<User> => {
+  const toggleUserStatus = async (id: string, currentStatus: User['status']) => {
     const newApiStatus = currentStatus === 'activo' ? 'inactive' : 'active';
-    const updatedApiUser = await api.put(`/users/${id}`, { status: newApiStatus });
-    const updatedUser = mapApiUserToAppUser(updatedApiUser);
+    await api.put(`/users/${id}`, { status: newApiStatus });
 
+    // Update local state on successful API call
+    const newAppStatus = newApiStatus === 'active' ? 'activo' : 'inactivo';
     setManagedUsers(prev => 
-      prev.map(u => (u.id === id ? updatedUser : u))
+      prev.map(u => (u.id === id ? { ...u, status: newAppStatus } : u))
     );
-    return updatedUser;
   };
 
   const contextValue = {
@@ -427,5 +427,3 @@ export const useApp = () => {
   }
   return context;
 };
-
-    
