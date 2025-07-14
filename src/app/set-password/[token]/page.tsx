@@ -42,13 +42,16 @@ const setPasswordSchema = z.object({
 
 type SetPasswordFormValues = z.infer<typeof setPasswordSchema>;
 
-export default function SetPasswordPage() {
+export default function SetPasswordPage({ params }: { params: { token: string } }) {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
   const [isAlertOpen, setIsAlertOpen] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
   const isMounted = React.useRef(true);
+  
+  // The token is available via params.token
+  const { token } = params;
 
   const form = useForm<SetPasswordFormValues>({
     resolver: zodResolver(setPasswordSchema),
@@ -71,7 +74,8 @@ export default function SetPasswordPage() {
 
   const handlePasswordSet = () => {
     setIsLoading(true);
-    // Simulate API call
+    // Simulate API call using the token
+    console.log("Setting password with token:", token);
     setTimeout(() => {
       if (isMounted.current) {
         setIsLoading(false);
