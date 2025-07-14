@@ -155,7 +155,7 @@ interface AppContextType {
   };
   fetchManagedUsers: (params: { page: number; limit: number; search?: string; role?: string; status?: string; }) => Promise<void>;
   addManagedUser: (user: User) => string;
-  editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'status'>>) => Promise<void>;
+  editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar'>>) => Promise<void>;
   deleteManagedUser: (id: string) => Promise<void>;
   toggleUserStatus: (id: string, currentStatus: User['status']) => Promise<void>;
 }
@@ -358,34 +358,34 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return user.id;
   };
 
-  const editManagedUser = async (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'status'>>) => {
-    const apiRole = data.role === 'Administrador' ? 'admin' : data.role === 'Miembro' ? 'user' : undefined;
+  const editManagedUser = async (id: string, data: Partial<Omit<User, 'id' | 'avatar'>>) => {
     const payload: {[key: string]: any} = {};
     if (data.name) payload.name = data.name;
     if (data.email) payload.email = data.email;
-    if (apiRole) payload.role = apiRole;
+    if (data.role) {
+        payload.role = data.role === 'Administrador' ? 'admin' : 'user';
+    }
+    if (data.status) {
+        let apiStatus: string | undefined;
+        switch (data.status) {
+            case 'activo': apiStatus = 'active'; break;
+            case 'inactivo': apiStatus = 'inactive'; break;
+            case 'pendiente': apiStatus = 'pending'; break;
+            case 'suspendido': apiStatus = 'suspended'; break;
+        }
+        if (apiStatus) payload.status = apiStatus;
+    }
     
     await api.put(`/users/${id}`, payload);
     
-    // Optimistic update
     setManagedUsers(prev => 
       prev.map(u => (u.id === id ? { ...u, ...data } : u))
     );
   };
   
   const deleteManagedUser = async (id: string) => {
-    try {
-        await api.delete(`/users/${id}`);
-        setManagedUsers(prev => prev.filter(u => u.id !== id));
-    } catch(error: any) {
-        console.error("Failed to delete user:", error);
-        toast({
-            variant: "destructive",
-            title: "Error al Eliminar",
-            description: error.message || "No se pudo eliminar el usuario."
-        });
-        throw error;
-    }
+    await api.delete(`/users/${id}`);
+    setManagedUsers(prev => prev.filter(u => u.id !== id));
   };
 
   const toggleUserStatus = async (id: string, currentStatus: User['status']) => {
@@ -406,8 +406,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
     
     await api.put(`/users/${id}`, { status: newApiStatus });
-
-    // Optimistic update
+    
     const newAppStatus = newApiStatus === 'active' ? 'activo' : 'inactivo';
     setManagedUsers(prev => 
       prev.map(u => (u.id === id ? { ...u, status: newAppStatus } : u))

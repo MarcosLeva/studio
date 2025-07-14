@@ -78,6 +78,7 @@ const userSchema = z.object({
   name: z.string().min(3, { message: "El nombre debe tener al menos 3 caracteres." }),
   email: z.string().email({ message: "Por favor, introduce un correo electrónico válido." }),
   role: z.string({ required_error: "Por favor, selecciona un rol." }),
+  status: z.string({ required_error: "Por favor, selecciona un estado." }),
 });
 
 type UserFormValues = z.infer<typeof userSchema>;
@@ -193,7 +194,7 @@ export default function UsersPage() {
   
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
-    defaultValues: { name: "", email: "" },
+    defaultValues: { name: "", email: "", role: "", status: "" },
   });
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -356,7 +357,7 @@ export default function UsersPage() {
 
   const handleCreateClick = () => {
     setEditingUser(null);
-    form.reset({ name: "", email: "", role: undefined });
+    form.reset({ name: "", email: "", role: undefined, status: undefined });
     setIsDialogOpen(true);
   }
 
@@ -710,7 +711,7 @@ export default function UsersPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Rol</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={!editingUser}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecciona un rol" />
@@ -719,6 +720,30 @@ export default function UsersPage() {
                       <SelectContent>
                         <SelectItem value="Administrador">Administrador</SelectItem>
                         <SelectItem value="Miembro">Miembro</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Estado</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona un estado" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {statuses.map((status) => (
+                           <SelectItem key={status.value} value={status.value}>
+                            {status.label}
+                           </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -750,7 +775,7 @@ export default function UsersPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setUserToDelete(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -782,3 +807,4 @@ export default function UsersPage() {
     </div>
   );
 }
+
