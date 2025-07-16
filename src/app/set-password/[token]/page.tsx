@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { QrCode, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { QrCode, ShieldCheck, CheckCircle2, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { PasswordInput } from "@/components/ui/password-input";
+import { api } from "@/lib/api";
 
 const setPasswordSchema = z.object({
   password: z.string().min(8, { message: "La contraseña debe tener al menos 8 caracteres." }),
@@ -50,7 +51,6 @@ export default function SetPasswordPage({ params }: { params: { token: string } 
   const [isSuccess, setIsSuccess] = React.useState(false);
   const isMounted = React.useRef(true);
   
-  // The token is available via params.token
   const { token } = params;
 
   const form = useForm<SetPasswordFormValues>({
@@ -72,27 +72,38 @@ export default function SetPasswordPage({ params }: { params: { token: string } 
     setIsAlertOpen(true);
   };
 
-  const handlePasswordSet = () => {
+  const handlePasswordSet = async () => {
     setIsLoading(true);
-    // Simulate API call using the token
-    console.log("Setting password with token:", token);
-    setTimeout(() => {
+    try {
+      const values = form.getValues();
+      await api.post(`/users/activate/${token}`, {
+        password: values.password,
+      });
+
       if (isMounted.current) {
-        setIsLoading(false);
         setIsSuccess(true);
         toast({
           title: "¡Contraseña Establecida!",
           description: "Tu cuenta ha sido configurada con éxito.",
           icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
         });
-        // Redirect after a short delay
         setTimeout(() => {
           if (isMounted.current) {
             router.push("/login");
           }
         }, 2000);
       }
-    }, 1500);
+    } catch (error: any) {
+        if (isMounted.current) {
+            toast({
+                variant: "destructive",
+                title: "Error al Establecer Contraseña",
+                description: error.message || "Ocurrió un error. Por favor, inténtalo de nuevo.",
+                icon: <AlertTriangle className="h-5 w-5 text-destructive-foreground" />,
+            });
+            setIsLoading(false);
+        }
+    }
   };
   
   if (isSuccess) {
