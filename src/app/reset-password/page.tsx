@@ -1,9 +1,8 @@
 
-
 "use client";
 
 import * as React from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -37,6 +36,7 @@ type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 export default function ResetPasswordPage({ params }: { params: { token: string } }) {
   const router = useRouter();
   const { toast } = useToast();
+  // El token vendrá de la URL, por ejemplo /reset-password/un-token-aqui
   const { token } = params;
 
   const [isLoading, setIsLoading] = React.useState(false);
@@ -53,6 +53,7 @@ export default function ResetPasswordPage({ params }: { params: { token: string 
   const onSubmit = async (data: ResetPasswordFormValues) => {
     setIsLoading(true);
     try {
+      // Usamos el token de la URL en la llamada a la API
       await api.post(`/users/reset-password/${token}`, {
         password: data.password,
       });
