@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -33,14 +33,22 @@ const resetPasswordSchema = z.object({
 
 type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
-export default function ResetPasswordPage({ params }: { params: { token: string } }) {
+export default function ResetPasswordPage() {
   const router = useRouter();
+  const params = useParams();
   const { toast } = useToast();
-  // El token vendrá de la URL, por ejemplo /reset-password/un-token-aqui
-  const { token } = params;
+  const token = params.token as string;
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
+  const isMounted = React.useRef(true);
+
+   React.useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   const form = useForm<ResetPasswordFormValues>({
     resolver: zodResolver(resetPasswordSchema),
@@ -53,31 +61,36 @@ export default function ResetPasswordPage({ params }: { params: { token: string 
   const onSubmit = async (data: ResetPasswordFormValues) => {
     setIsLoading(true);
     try {
-      // Usamos el token de la URL en la llamada a la API
       await api.post(`/users/reset-password/${token}`, {
         password: data.password,
       });
 
-      toast({
-        title: "Contraseña Restablecida",
-        description: "Tu contraseña ha sido actualizada con éxito.",
-        icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
-      });
-      
-      setIsSuccess(true);
-      
-      setTimeout(() => {
-        router.push("/login");
-      }, 2000);
+      if (isMounted.current) {
+        toast({
+            title: "Contraseña Restablecida",
+            description: "Tu contraseña ha sido actualizada con éxito.",
+            icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
+        });
+        
+        setIsSuccess(true);
+        
+        setTimeout(() => {
+            if (isMounted.current) {
+                router.push("/login");
+            }
+        }, 2000);
+      }
 
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error al Restablecer",
-        description: error.message || "Ocurrió un error. El token puede ser inválido o haber expirado.",
-        icon: <AlertTriangle className="h-5 w-5 text-destructive-foreground" />,
-      });
-      setIsLoading(false);
+      if (isMounted.current) {
+        toast({
+            variant: "destructive",
+            title: "Error al Restablecer",
+            description: error.message || "Ocurrió un error. El token puede ser inválido o haber expirado.",
+            icon: <AlertTriangle className="h-5 w-5 text-destructive-foreground" />,
+        });
+        setIsLoading(false);
+      }
     }
   };
   
