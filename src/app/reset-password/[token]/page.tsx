@@ -61,8 +61,9 @@ export default function ResetPasswordPage() {
   const onSubmit = async (data: ResetPasswordFormValues) => {
     setIsLoading(true);
     try {
-      await api.post(`/users/reset-password/${token}`, {
-        password: data.password,
+      await api.post('/users/reset-password', {
+        token: token,
+        newPassword: data.password,
       });
 
       if (isMounted.current) {
