@@ -1,12 +1,13 @@
 
+
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { QrCode, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { QrCode, ShieldCheck, CheckCircle2, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -19,18 +20,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { PasswordInput } from "@/components/ui/password-input";
+import { api } from "@/lib/api";
 
 const resetPasswordSchema = z.object({
   password: z.string().min(8, { message: "La contraseña debe tener al menos 8 caracteres." }),
@@ -42,13 +34,13 @@ const resetPasswordSchema = z.object({
 
 type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
-export default function ResetPasswordPage() {
+export default function ResetPasswordPage({ params }: { params: { token: string } }) {
   const router = useRouter();
   const { toast } = useToast();
+  const { token } = params;
+
   const [isLoading, setIsLoading] = React.useState(false);
-  const [isAlertOpen, setIsAlertOpen] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
-  const isMounted = React.useRef(true);
 
   const form = useForm<ResetPasswordFormValues>({
     resolver: zodResolver(resetPasswordSchema),
@@ -58,37 +50,34 @@ export default function ResetPasswordPage() {
     },
   });
 
-  React.useEffect(() => {
-    isMounted.current = true;
-    return () => {
-        isMounted.current = false;
-    };
-  }, []);
-
-  const onSubmit = () => {
-    setIsAlertOpen(true);
-  };
-
-  const handlePasswordReset = () => {
+  const onSubmit = async (data: ResetPasswordFormValues) => {
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      if (isMounted.current) {
-        setIsLoading(false);
-        setIsSuccess(true);
-        toast({
-          title: "Contraseña Restablecida",
-          description: "Tu contraseña ha sido actualizada con éxito.",
-          icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
-        });
-         // Redirect after a short delay
-         setTimeout(() => {
-          if (isMounted.current) {
-            router.push("/login");
-          }
-        }, 2000);
-      }
-    }, 1500);
+    try {
+      await api.post(`/users/reset-password/${token}`, {
+        password: data.password,
+      });
+
+      toast({
+        title: "Contraseña Restablecida",
+        description: "Tu contraseña ha sido actualizada con éxito.",
+        icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
+      });
+      
+      setIsSuccess(true);
+      
+      setTimeout(() => {
+        router.push("/login");
+      }, 2000);
+
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error al Restablecer",
+        description: error.message || "Ocurrió un error. El token puede ser inválido o haber expirado.",
+        icon: <AlertTriangle className="h-5 w-5 text-destructive-foreground" />,
+      });
+      setIsLoading(false);
+    }
   };
   
   if (isSuccess) {
@@ -166,23 +155,6 @@ export default function ResetPasswordPage() {
           </Form>
         </CardContent>
       </Card>
-
-      <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta acción actualizará tu contraseña. ¿Deseas continuar?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handlePasswordReset}>
-              Continuar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </main>
   );
 }
