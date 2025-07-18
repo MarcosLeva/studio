@@ -5,7 +5,7 @@ import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { QrCode, MailCheck } from "lucide-react";
+import { QrCode, MailCheck, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { api } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email({ message: "Por favor, introduce una dirección de correo electrónico válida." }),
@@ -27,6 +29,7 @@ const forgotPasswordSchema = z.object({
 export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [isSubmitted, setIsSubmitted] = React.useState(false);
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof forgotPasswordSchema>>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -35,13 +38,23 @@ export default function ForgotPasswordPage() {
     },
   });
 
-  const onSubmit = (data: z.infer<typeof forgotPasswordSchema>) => {
+  const onSubmit = async (data: z.infer<typeof forgotPasswordSchema>) => {
     setIsLoading(true);
-    // Simulate sending a reset link
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await api.post("/users/forgot-password", {
+        email: data.email,
+      });
       setIsSubmitted(true);
-    }, 1500);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error al Solicitar Restablecimiento",
+        description: error.message || "Ocurrió un error. Por favor, inténtalo de nuevo.",
+        icon: <AlertTriangle className="h-5 w-5 text-destructive-foreground" />,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
