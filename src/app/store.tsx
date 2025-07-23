@@ -146,7 +146,7 @@ interface AppContextType {
   fetchCategories: (params: { page: number; limit: number; search?: string }) => Promise<void>;
   setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
   addCategory: (category: Omit<Category, 'id' | 'createdAt'>) => Promise<void>;
-  editCategory: (id: string, data: Omit<Category, 'id' | 'createdAt'>) => void;
+  editCategory: (id: string, data: Omit<Category, 'id' | 'createdAt'>) => Promise<void>;
   deleteCategory: (id: string) => void;
 
   // Results
@@ -167,7 +167,7 @@ interface AppContextType {
   };
   fetchManagedUsers: (params: { page: number; limit: number; search?: string; role?: string; status?: string; }) => Promise<void>;
   addManagedUser: (user: User) => string;
-  editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar'>>) => Promise<void>;
+  editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'role'>>) => Promise<void>;
   deleteManagedUser: (id: string) => Promise<void>;
   toggleUserStatus: (id: string, currentStatus: User['status']) => Promise<void>;
 }
@@ -390,14 +390,33 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     
     await api.post('/categories', payload);
     
-    // After successful creation, refetch the categories list to show the new one
-    await fetchCategories({ page: 1, limit: 10 });
+    await fetchCategories({ page: categoryPagination.currentPage, limit: 10, search: undefined });
   };
 
-  const editCategory = (id: string, data: Omit<Category, 'id' | 'createdAt'>) => {
-    setCategories(prev => 
-      prev.map(cat => (cat.id === id ? { ...cat, ...data } : cat))
-    );
+  const editCategory = async (id: string, data: Omit<Category, 'id' | 'createdAt'>) => {
+    let modelId;
+    switch (data.aiModel) {
+        case 'Gemini 2.0 Flash':
+            modelId = 1;
+            break;
+        case 'Gemini Pro':
+            modelId = 2;
+            break;
+        default:
+             modelId = parseInt(data.aiModel.replace('Modelo ', ''), 10) || 1
+    }
+
+    const payload = {
+      name: data.name,
+      model: modelId,
+      description: data.description,
+      prompt: data.prompt,
+      instructions: data.instructions,
+    };
+
+    await api.put(`/categories/${id}`, payload);
+    
+    await fetchCategories({ page: categoryPagination.currentPage, limit: 10, search: undefined });
   };
   
   const deleteCategory = (id: string) => {
@@ -437,13 +456,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return user.id;
   };
 
-  const editManagedUser = async (id: string, data: Partial<Omit<User, 'id' | 'avatar'>>) => {
+  const editManagedUser = async (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'role'>>) => {
     const payload: {[key: string]: any} = {};
     if (data.name) payload.name = data.name;
     if (data.email) payload.email = data.email;
-    if (data.role) {
-        payload.role = data.role === 'Administrador' ? 'admin' : 'user';
-    }
     if (data.status) {
         let apiStatus: string | undefined;
         switch (data.status) {

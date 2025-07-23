@@ -254,7 +254,7 @@ export default function CategoriesPage() {
     setIsSubmitting(true);
     try {
         if (editingCategory) {
-          editCategory(editingCategory.id, values);
+          await editCategory(editingCategory.id, values);
           toast({
             title: "Categoría Actualizada",
             description: `La categoría "${values.name}" ha sido actualizada con éxito.`,
