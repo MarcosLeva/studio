@@ -2,7 +2,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, ArrowUpDown } from "lucide-react";
+import { MoreHorizontal, ArrowUpDown, Eye, Trash2, Pencil } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +19,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 export const getColumns = (
   onEdit: (category: Category) => void,
-  onDelete: (category: Category) => void
+  onDelete: (category: Category) => void,
+  onViewDetails: (category: Category) => void
 ): ColumnDef<Category>[] => [
   {
     id: "select",
@@ -98,6 +99,10 @@ export const getColumns = (
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => onViewDetails(category)} className="cursor-pointer">
+                    <Eye className="mr-2 h-4 w-4" />
+                    Ver Completo
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => navigator.clipboard.writeText(category.id)}
                   className="cursor-pointer"
@@ -105,8 +110,14 @@ export const getColumns = (
                   Copiar ID de Categoría
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => onEdit(category)} className="cursor-pointer">Editar</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDelete(category)} className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer">Eliminar</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onEdit(category)} className="cursor-pointer">
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Editar
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onDelete(category)} className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Eliminar
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
         </div>

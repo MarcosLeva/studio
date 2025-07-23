@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { PlusCircle, Lightbulb, Loader2, MoreHorizontal, Trash2, X } from "lucide-react";
+import { PlusCircle, Lightbulb, Loader2, MoreHorizontal, Trash2, X, Eye } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -188,9 +188,10 @@ function MobileSkeleton() {
 export default function CategoriesPage() {
   const { categories, addCategory, editCategory, deleteCategory, fetchCategories, areCategoriesLoading, categoryPagination, categoriesError, isAuthLoading } = useApp();
   const { toast } = useToast();
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [isFormDialogOpen, setIsFormDialogOpen] = React.useState(false);
   const [editingCategory, setEditingCategory] = React.useState<Category | null>(null);
   const [categoryToDelete, setCategoryToDelete] = React.useState<Category | null>(null);
+  const [viewingCategory, setViewingCategory] = React.useState<Category | null>(null);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = React.useState(false);
   const [isSuggesting, setIsSuggesting] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -269,7 +270,7 @@ export default function CategoriesPage() {
             table.setPageIndex(0);
           }
         }
-        setIsDialogOpen(false);
+        setIsFormDialogOpen(false);
     } catch (error: any) {
         toast({
             variant: "destructive",
@@ -331,13 +332,13 @@ export default function CategoriesPage() {
       setEditingCategory(null);
       form.reset();
     }
-    setIsDialogOpen(open);
+    setIsFormDialogOpen(open);
   }
 
   const handleCreateClick = () => {
     setEditingCategory(null);
     form.reset();
-    setIsDialogOpen(true);
+    setIsFormDialogOpen(true);
   }
 
   const handleEditClick = React.useCallback((category: Category) => {
@@ -346,11 +347,15 @@ export default function CategoriesPage() {
       ...category,
       files: [], // Files are not part of the stored category data
     });
-    setIsDialogOpen(true);
+    setIsFormDialogOpen(true);
   }, [form]);
 
   const handleDeleteClick = React.useCallback((category: Category) => {
     setCategoryToDelete(category);
+  }, []);
+  
+  const handleViewDetailsClick = React.useCallback((category: Category) => {
+    setViewingCategory(category);
   }, []);
   
   const confirmDelete = () => {
@@ -379,7 +384,7 @@ export default function CategoriesPage() {
     setIsBulkDeleteOpen(false);
   }
 
-  const columns = React.useMemo(() => getColumns(handleEditClick, handleDeleteClick), [handleEditClick, handleDeleteClick]);
+  const columns = React.useMemo(() => getColumns(handleEditClick, handleDeleteClick, handleViewDetailsClick), [handleEditClick, handleDeleteClick, handleViewDetailsClick]);
   
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -453,6 +458,9 @@ export default function CategoriesPage() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => handleViewDetailsClick(category)} className="cursor-pointer">
+                Ver Completo
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigator.clipboard.writeText(category.id)} className="cursor-pointer">
                 Copiar ID de Categoría
               </DropdownMenuItem>
@@ -521,7 +529,7 @@ export default function CategoriesPage() {
         </Button>
       </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
+      <Dialog open={isFormDialogOpen} onOpenChange={handleDialogClose}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editingCategory ? "Editar Categoría" : "Añadir Nueva Categoría"}</DialogTitle>
@@ -671,6 +679,45 @@ export default function CategoriesPage() {
           </Form>
         </DialogContent>
       </Dialog>
+      
+      <Dialog open={!!viewingCategory} onOpenChange={(open) => !open && setViewingCategory(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{viewingCategory?.name}</DialogTitle>
+            <DialogDescription>
+              Detalles completos de la categoría.
+            </DialogDescription>
+          </DialogHeader>
+          {viewingCategory && (
+            <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto pr-4">
+              <div className="space-y-1">
+                <h4 className="text-sm font-semibold">Descripción</h4>
+                <p className="text-sm text-muted-foreground">{viewingCategory.description}</p>
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-sm font-semibold">Modelo de IA</h4>
+                <p className="text-sm text-muted-foreground">{viewingCategory.aiModel}</p>
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-sm font-semibold">Prompt</h4>
+                <p className="text-sm text-muted-foreground bg-secondary/50 p-3 rounded-md font-mono">{viewingCategory.prompt}</p>
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-sm font-semibold">Instrucciones</h4>
+                <p className="text-sm text-muted-foreground bg-secondary/50 p-3 rounded-md font-mono">{viewingCategory.instructions}</p>
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-sm font-semibold">Fecha de Creación</h4>
+                <p className="text-sm text-muted-foreground">{viewingCategory.createdAt}</p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setViewingCategory(null)}>Cerrar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
 
       <AlertDialog
         open={!!categoryToDelete}
