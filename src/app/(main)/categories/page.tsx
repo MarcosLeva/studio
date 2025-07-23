@@ -2,18 +2,19 @@
 "use client";
 
 import React from "react";
-import { PlusCircle, Lightbulb, Loader2, MoreHorizontal, CheckCircle2, AlertTriangle, Trash2, X } from "lucide-react";
+import { PlusCircle, Lightbulb, Loader2, MoreHorizontal, Trash2, X } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import {
   useReactTable,
   getCoreRowModel,
-  getFilteredRowModel,
   getSortedRowModel,
+  getFilteredRowModel,
   getPaginationRowModel,
   type SortingState,
   type ColumnFiltersState,
+  type PaginationState,
 } from "@tanstack/react-table";
 
 import { Button } from "@/components/ui/button";
@@ -73,6 +74,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ScrollToTopButton } from "@/components/scroll-to-top-button";
 import { LogoSpinner } from "@/components/ui/logo-spinner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 const readFileAsDataURI = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -92,8 +96,97 @@ const categorySchema = z.object({
     files: z.array(z.instanceof(File)).optional(),
 });
 
+function DesktopSkeleton() {
+    return (
+      <div>
+        {/* Header */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+          <div>
+            <Skeleton className="h-9 w-40" />
+            <Skeleton className="h-4 w-80 mt-2" />
+          </div>
+          <Skeleton className="h-10 w-full sm:w-[170px]" />
+        </div>
+  
+        {/* Toolbar */}
+        <div className="rounded-t-md border bg-card p-4">
+          <Skeleton className="h-10 w-full sm:max-w-sm" />
+        </div>
+  
+        {/* Table Skeleton */}
+        <div className="rounded-b-md border-x border-b">
+          <div className="w-full text-sm">
+            {/* Table Header */}
+            <div className="border-b">
+              <div className="flex h-12 items-center px-4">
+                <Skeleton className="h-4 w-4" />
+                <Skeleton className="ml-4 h-4 w-48" />
+                <Skeleton className="ml-44 h-4 w-32" />
+                <Skeleton className="ml-20 h-4 w-32" />
+                <Skeleton className="ml-16 h-4 w-52" />
+              </div>
+            </div>
+            {/* Table Body */}
+            <div>
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div key={i} className="flex h-[73px] items-center border-b px-4 animate-pulse">
+                  <Skeleton className="h-4 w-4" />
+                  <Skeleton className="ml-4 h-4 w-52" />
+                  <Skeleton className="ml-40 h-6 w-24 rounded-full" />
+                  <Skeleton className="ml-[100px] h-4 w-24" />
+                  <Skeleton className="ml-20 h-4 w-56" />
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Table Pagination */}
+          <div className="flex items-center justify-end space-x-2 p-4">
+            <Skeleton className="h-9 w-24" />
+            <Skeleton className="h-9 w-24" />
+          </div>
+        </div>
+      </div>
+    );
+}
+
+function MobileSkeleton() {
+    return (
+        <div>
+            {/* Header */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+                <div>
+                    <Skeleton className="h-9 w-32" />
+                    <Skeleton className="h-4 w-72 mt-2" />
+                </div>
+                <Skeleton className="h-10 w-full sm:w-[150px]" />
+            </div>
+
+            {/* Toolbar & Cards */}
+            <div className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                {Array.from({ length: 5 }).map((_, i) => (
+                    <Card key={i}>
+                        <CardContent className="p-4 flex justify-between items-start gap-4 animate-pulse">
+                           <div className="space-y-2 flex-grow">
+                                <Skeleton className="h-5 w-3/5" />
+                                <Skeleton className="h-3 w-4/5" />
+                                <Skeleton className="h-3 w-1/2" />
+                                <div className="flex items-center gap-2 pt-1">
+                                    <Skeleton className="h-5 w-24 rounded-full" />
+                                    <Skeleton className="h-3 w-20" />
+                                </div>
+                            </div>
+                            <Skeleton className="h-8 w-8" />
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        </div>
+    )
+}
+
 export default function CategoriesPage() {
-  const { categories, addCategory, editCategory, deleteCategory } = useApp();
+  const { categories, addCategory, editCategory, deleteCategory, fetchCategories, areCategoriesLoading, categoryPagination, categoriesError, isAuthLoading } = useApp();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [editingCategory, setEditingCategory] = React.useState<Category | null>(null);
@@ -102,21 +195,10 @@ export default function CategoriesPage() {
   const [isSuggesting, setIsSuggesting] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const isMobile = useIsMobile();
-  const [visibleRows, setVisibleRows] = React.useState(10);
-  const [isLoadingMore, setIsLoadingMore] = React.useState(false);
+  const [globalFilter, setGlobalFilter] = React.useState("");
+  const [filterValue, setFilterValue] = React.useState("");
   const isMounted = React.useRef(true);
   
-  // Filter state
-  const [filterValue, setFilterValue] = React.useState("");
-  const [isFiltering, setIsFiltering] = React.useState(false);
-
-  React.useEffect(() => {
-    isMounted.current = true;
-    return () => {
-        isMounted.current = false;
-    };
-  }, []);
-
   const form = useForm<z.infer<typeof categorySchema>>({
     resolver: zodResolver(categorySchema),
     defaultValues: {
@@ -128,6 +210,44 @@ export default function CategoriesPage() {
       files: [],
     },
   });
+  
+  const [{ pageIndex, pageSize }, setPagination] = React.useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+
+  const pagination = React.useMemo(
+    () => ({
+      pageIndex,
+      pageSize,
+    }),
+    [pageIndex, pageSize]
+  );
+  const pageCount = categoryPagination.totalPages;
+
+  React.useEffect(() => {
+    isMounted.current = true;
+    return () => {
+        isMounted.current = false;
+    };
+  }, []);
+  
+  React.useEffect(() => {
+    const timeout = setTimeout(() => {
+        setGlobalFilter(filterValue);
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [filterValue]);
+
+  React.useEffect(() => {
+    if (!isAuthLoading) {
+      fetchCategories({
+        page: pageIndex + 1,
+        limit: pageSize,
+        search: globalFilter || undefined,
+      });
+    }
+  }, [isAuthLoading, pageIndex, pageSize, fetchCategories, globalFilter]);
 
   async function onSubmit(values: z.infer<typeof categorySchema>) {
     setIsSubmitting(true);
@@ -137,15 +257,17 @@ export default function CategoriesPage() {
           toast({
             title: "Categoría Actualizada",
             description: `La categoría "${values.name}" ha sido actualizada con éxito.`,
-            icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
           });
         } else {
           await addCategory(values);
           toast({
             title: "Categoría Creada",
             description: `La categoría "${values.name}" ha sido añadida con éxito.`,
-            icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
           });
+          // Reset pagination to first page to see the new category
+          if(table.getState().pagination.pageIndex !== 0) {
+            table.setPageIndex(0);
+          }
         }
         setIsDialogOpen(false);
     } catch (error: any) {
@@ -153,7 +275,6 @@ export default function CategoriesPage() {
             variant: "destructive",
             title: "Error al Guardar",
             description: error.message || "No se pudo guardar la categoría. Inténtalo de nuevo.",
-            icon: <AlertTriangle className="h-5 w-5 text-destructive-foreground" />,
         });
     } finally {
         if(isMounted.current) {
@@ -169,7 +290,6 @@ export default function CategoriesPage() {
         variant: "destructive",
         title: "No se puede sugerir",
         description: "Por favor, introduce primero un nombre de categoría.",
-        icon: <AlertTriangle className="h-5 w-5 text-destructive-foreground" />,
       });
       return;
     }
@@ -197,7 +317,6 @@ export default function CategoriesPage() {
           variant: "destructive",
           title: "Sugerencia Fallida",
           description: "No se pudo generar un prompt. Por favor, inténtalo de nuevo.",
-          icon: <AlertTriangle className="h-5 w-5 text-destructive-foreground" />,
         });
       }
     } finally {
@@ -223,7 +342,10 @@ export default function CategoriesPage() {
 
   const handleEditClick = React.useCallback((category: Category) => {
     setEditingCategory(category);
-    form.reset(category);
+    form.reset({
+      ...category,
+      files: [], // Files are not part of the stored category data
+    });
     setIsDialogOpen(true);
   }, [form]);
 
@@ -266,6 +388,7 @@ export default function CategoriesPage() {
   const table = useReactTable({
     data: categories,
     columns,
+    pageCount,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -273,37 +396,25 @@ export default function CategoriesPage() {
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onRowSelectionChange: setRowSelection,
+    onPaginationChange: setPagination,
+    manualPagination: true,
+    manualFiltering: true,
     state: {
       sorting,
       columnFilters,
       rowSelection,
+      globalFilter,
+      pagination,
     },
   });
-
+  
   React.useEffect(() => {
-    setIsFiltering(true);
-    const timeout = setTimeout(() => {
-      if (isMounted.current) {
-        table.getColumn("name")?.setFilterValue(filterValue);
-        setIsFiltering(false);
-      }
-    }, 300);
+    table.setPageIndex(0);
+  },[globalFilter, table])
 
-    return () => clearTimeout(timeout);
-  }, [filterValue, table]);
 
   const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFilterValue(event.target.value);
-  };
-
-  const handleLoadMore = () => {
-    setIsLoadingMore(true);
-    setTimeout(() => {
-      setVisibleRows(prev => prev + 10);
-      if (isMounted.current) {
-        setIsLoadingMore(false);
-      }
-    }, 500);
   };
 
   const selectedRowCount = table.getFilteredSelectedRowModel().rows.length;
@@ -329,7 +440,7 @@ export default function CategoriesPage() {
           <p className="text-sm text-muted-foreground line-clamp-2">{category.description}</p>
           <div className="flex items-center gap-2 pt-1">
              <Badge variant={category.aiModel === 'Gemini Pro' ? 'secondary' : 'default'}>{category.aiModel}</Badge>
-             <span className="text-xs text-muted-foreground">{category.dateCreated}</span>
+             <span className="text-xs text-muted-foreground">{category.createdAt}</span>
           </div>
         </div>
         <div className="flex-shrink-0">
@@ -354,6 +465,46 @@ export default function CategoriesPage() {
       </CardContent>
     </Card>
   );
+  
+  const MobilePaginationControls = () => (
+    <div className="flex items-center justify-between mt-4">
+        <Button
+            variant="outline"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+        >
+            Anterior
+        </Button>
+        <span className="text-sm text-muted-foreground">
+            Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount()}
+        </span>
+        <Button
+            variant="outline"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+        >
+            Siguiente
+        </Button>
+    </div>
+  );
+
+  if (areCategoriesLoading && categories.length === 0) {
+      return isMobile ? <MobileSkeleton /> : <DesktopSkeleton />;
+  }
+
+  if (categoriesError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center py-10">
+        <Alert variant="destructive" className="max-w-lg">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Error al Cargar Categorías</AlertTitle>
+          <AlertDescription>
+            {categoriesError}
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -568,24 +719,14 @@ export default function CategoriesPage() {
             placeholder="Filtrar categorías..."
             value={filterValue}
             onChange={handleFilterChange}
-            className="max-w-sm"
+            className="w-full"
           />
-          {table.getFilteredRowModel().rows?.length ? (
+          {table.getRowModel().rows?.length ? (
               <div className="space-y-4">
-                  {table.getFilteredRowModel().rows.slice(0, visibleRows).map((row) => (
+                  {table.getRowModel().rows.map((row) => (
                       <MobileCategoryCard key={row.id} category={row.original} />
                   ))}
-                  {visibleRows < table.getFilteredRowModel().rows.length && (
-                      <Button
-                          onClick={handleLoadMore}
-                          variant="outline"
-                          className="w-full"
-                          disabled={isLoadingMore}
-                      >
-                          {isLoadingMore && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                          {isLoadingMore ? "Cargando..." : "Cargar más"}
-                      </Button>
-                  )}
+                  {pageCount > 1 && <MobilePaginationControls />}
               </div>
           ) : (
             <div className="text-center py-10 text-muted-foreground">No hay categorías.</div>
@@ -609,7 +750,7 @@ export default function CategoriesPage() {
           </div>
           <div className="relative">
             <DataTable table={table} />
-            {isFiltering && (
+            {areCategoriesLoading && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center rounded-b-md bg-card/80 backdrop-blur-sm">
                     <LogoSpinner />
                 </div>
@@ -621,7 +762,3 @@ export default function CategoriesPage() {
     </div>
   );
 }
-
-    
-
-    

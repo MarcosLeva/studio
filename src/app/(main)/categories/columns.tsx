@@ -71,7 +71,7 @@ export const getColumns = (
     }
   },
   {
-    accessorKey: "dateCreated",
+    accessorKey: "createdAt",
     header: "Fecha de Creación",
     size: 150,
   },

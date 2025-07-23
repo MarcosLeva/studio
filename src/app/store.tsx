@@ -6,29 +6,9 @@ import type { Category, ScanResult, User } from '@/lib/types';
 import { api, setToken, setOnAuthFailure, refreshSession } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle } from 'lucide-react';
+import { format } from 'date-fns';
 
 // Mock Data
-const initialCategories: Category[] = [
-  {
-    id: 'cat-1',
-    name: 'Descripciones de Productos',
-    aiModel: 'Gemini 2.0 Flash',
-    dateCreated: '2023-10-26',
-    description: 'Analiza las descripciones de los productos en busca de palabras clave y sentimiento.',
-    prompt: 'Extraer nombres de productos, características y sentimiento general del catálogo.',
-    instructions: 'Centrarse en identificar el lenguaje de marketing y los puntos de venta clave mencionados en el texto.',
-  },
-  {
-    id: 'cat-2',
-    name: 'Procesamiento de Facturas',
-    aiModel: 'Gemini Pro',
-    dateCreated: '2023-11-15',
-    description: 'Extrae datos de las facturas.',
-    prompt: 'Extraer el número de factura, la fecha, el importe total y las partidas del documento proporcionado.',
-    instructions: 'El modelo debe manejar varios formatos de factura y devolver un objeto JSON estructurado.',
-  },
-];
-
 const initialScanResults: ScanResult[] = [
   {
     id: 'res-1',
@@ -103,6 +83,18 @@ export const mapApiUserToAppUser = (apiUser: any): User => {
   };
 };
 
+export const mapApiCategoryToAppCategory = (apiCategory: any): Category => {
+  return {
+    id: apiCategory.id,
+    name: apiCategory.name,
+    description: apiCategory.description,
+    prompt: apiCategory.prompt,
+    instructions: apiCategory.instructions,
+    aiModel: apiCategory.model.name,
+    createdAt: format(new Date(apiCategory.createdAt), 'yyyy-MM-dd'),
+  };
+};
+
 // Helper to get user from localStorage on initial load
 const getInitialUser = (): User | null => {
     if (typeof window === 'undefined') {
@@ -132,9 +124,17 @@ interface AppContextType {
 
   // Categories
   categories: Category[];
+  areCategoriesLoading: boolean;
+  categoriesError: string | null;
+  categoryPagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCategories: number;
+  };
+  fetchCategories: (params: { page: number; limit: number; search?: string }) => Promise<void>;
   setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
-  addCategory: (category: Omit<Category, 'id' | 'dateCreated'>) => Promise<void>;
-  editCategory: (id: string, data: Omit<Category, 'id' | 'dateCreated'>) => void;
+  addCategory: (category: Omit<Category, 'id' | 'createdAt'>) => Promise<void>;
+  editCategory: (id: string, data: Omit<Category, 'id' | 'createdAt'>) => void;
   deleteCategory: (id: string) => void;
 
   // Results
@@ -155,7 +155,7 @@ interface AppContextType {
   };
   fetchManagedUsers: (params: { page: number; limit: number; search?: string; role?: string; status?: string; }) => Promise<void>;
   addManagedUser: (user: User) => string;
-  editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'role'>>) => Promise<void>;
+  editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'status'>>) => Promise<void>;
   deleteManagedUser: (id: string) => Promise<void>;
   toggleUserStatus: (id: string, currentStatus: User['status']) => Promise<void>;
 }
@@ -163,7 +163,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [results, setResults] = useState<ScanResult[]>(initialScanResults);
   const [managedUsers, setManagedUsers] = useState<User[]>([]);
   const { toast } = useToast();
@@ -171,6 +171,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   // Auth state
   const [user, setUser] = useState<User | null>(getInitialUser);
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
+
+  // Users state
   const [areUsersLoading, setAreUsersLoading] = useState(false);
   const [usersError, setUsersError] = useState<string | null>(null);
   const [userPagination, setUserPagination] = useState({
@@ -178,6 +180,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     totalPages: 1,
     totalUsers: 0,
   });
+
+  // Categories state
+  const [areCategoriesLoading, setAreCategoriesLoading] = useState(false);
+  const [categoriesError, setCategoriesError] = useState<string | null>(null);
+  const [categoryPagination, setCategoryPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalCategories: 0,
+  });
+
 
   // Derived state for isAuthenticated
   const isAuthenticated = !!user;
@@ -289,6 +301,43 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       setAreUsersLoading(false);
     }
   }, [isAuthenticated]);
+  
+  const fetchCategories = useCallback(async (params: { page: number, limit: number, search?: string }) => {
+    if (!isAuthenticated) return;
+    setCategoriesError(null);
+    setAreCategoriesLoading(true);
+    
+    const { page, limit, search } = params;
+    const queryParams = new URLSearchParams({
+        page: String(page),
+        limit: String(limit),
+    });
+    if (search) queryParams.append('search', search);
+
+    try {
+        const response = await api.get(`/categories?${queryParams.toString()}`);
+        const apiCategories = response?.data?.data || [];
+        const paginationData = response?.data?.pagination || {};
+
+        const appCategories = apiCategories.map(mapApiCategoryToAppCategory);
+        setCategories(appCategories);
+
+        setCategoryPagination({
+            currentPage: paginationData.page ? parseInt(paginationData.page, 10) : page,
+            totalPages: paginationData.totalPages || 1,
+            totalCategories: paginationData.total || 0,
+        });
+
+    } catch (error: any) {
+        const errorMessage = error.message || "No se pudieron obtener las categorías desde el servidor.";
+        console.error("Error fetching categories:", errorMessage);
+        setCategoriesError(errorMessage);
+        setCategories([]);
+        setCategoryPagination({ currentPage: 1, totalPages: 1, totalCategories: 0 });
+    } finally {
+        setAreCategoriesLoading(false);
+    }
+  }, [isAuthenticated]);
 
 
   const login = async (credentials: { email: string; password:string }) => {
@@ -306,7 +355,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       }
   };
   
-  const addCategory = async (category: Omit<Category, 'id' | 'dateCreated'>) => {
+  const addCategory = async (category: Omit<Category, 'id' | 'createdAt'>) => {
     let modelId;
     switch (category.aiModel) {
         case 'Gemini 2.0 Flash':
@@ -327,21 +376,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         instructions: category.instructions,
     };
     
-    // For now, we add it locally. We will connect this to the API later.
-    const newCategory: Category = {
-      ...category,
-      id: `cat-${new Date().getTime()}`,
-      dateCreated: new Date().toISOString().split('T')[0],
-    };
-
-    // Before updating state, make the API call
     await api.post('/categories', payload);
     
-    // If API call is successful, then update state
-    setCategories(prev => [...prev, newCategory]);
+    // After successful creation, refetch the categories list to show the new one
+    await fetchCategories({ page: 1, limit: 10 });
   };
 
-  const editCategory = (id: string, data: Omit<Category, 'id' | 'dateCreated'>) => {
+  const editCategory = (id: string, data: Omit<Category, 'id' | 'createdAt'>) => {
     setCategories(prev => 
       prev.map(cat => (cat.id === id ? { ...cat, ...data } : cat))
     );
@@ -384,10 +425,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return user.id;
   };
 
-  const editManagedUser = async (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'role'>>) => {
+  const editManagedUser = async (id: string, data: Partial<Omit<User, 'id' | 'avatar'>>) => {
     const payload: {[key: string]: any} = {};
     if (data.name) payload.name = data.name;
     if (data.email) payload.email = data.email;
+    if (data.role) {
+        payload.role = data.role === 'Administrador' ? 'admin' : 'user';
+    }
     if (data.status) {
         let apiStatus: string | undefined;
         switch (data.status) {
@@ -444,6 +488,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     logout: () => logout(false),
     editUser,
     categories,
+    areCategoriesLoading,
+    categoriesError,
+    categoryPagination,
+    fetchCategories,
     setCategories,
     addCategory,
     editCategory,
@@ -478,5 +526,3 @@ export const useApp = () => {
   }
   return context;
 };
-
-    

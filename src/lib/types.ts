@@ -2,7 +2,7 @@ export interface Category {
   id: string;
   name: string;
   aiModel: string;
-  dateCreated: string;
+  createdAt: string;
   description: string;
   prompt: string;
   instructions: string;
