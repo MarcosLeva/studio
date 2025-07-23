@@ -84,13 +84,16 @@ export const mapApiUserToAppUser = (apiUser: any): User => {
 };
 
 export const mapApiCategoryToAppCategory = (apiCategory: any): Category => {
-  let modelName = `Modelo ${apiCategory.model}`;
+  let modelName: string;
   switch (apiCategory.model) {
     case 1:
       modelName = "Gemini 2.0 Flash";
       break;
     case 2:
       modelName = "Gemini Pro";
+      break;
+    default:
+      modelName = `Modelo ${apiCategory.model}`;
       break;
   }
 
@@ -101,9 +104,7 @@ export const mapApiCategoryToAppCategory = (apiCategory: any): Category => {
     prompt: apiCategory.prompt,
     instructions: apiCategory.instructions,
     aiModel: modelName,
-    // The API response for categories does not include a `createdAt` field.
-    // We'll use the current date as a placeholder.
-    createdAt: format(new Date(), 'yyyy-MM-dd'),
+    createdAt: format(new Date(apiCategory.createdAt || Date.now()), 'yyyy-MM-dd'),
   };
 };
 
@@ -146,8 +147,8 @@ interface AppContextType {
   fetchCategories: (params: { page: number; limit: number; search?: string }) => Promise<void>;
   setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
   addCategory: (category: Omit<Category, 'id' | 'createdAt'>) => Promise<void>;
-  editCategory: (id: string, data: Omit<Category, 'id' | 'createdAt'>) => Promise<void>;
-  deleteCategory: (id: string) => void;
+  editCategory: (id: string, data: Partial<Omit<Category, 'id' | 'createdAt' | 'aiModel'>> & { aiModel: string }) => Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
 
   // Results
   results: ScanResult[];
@@ -390,20 +391,20 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     
     await api.post('/categories', payload);
     
-    await fetchCategories({ page: categoryPagination.currentPage, limit: 10, search: undefined });
+    await fetchCategories({ page: 1, limit: categoryPagination.totalCategories > 9 ? 10 : categoryPagination.totalCategories + 1 });
   };
 
-  const editCategory = async (id: string, data: Omit<Category, 'id' | 'createdAt'>) => {
-    let modelId;
+  const editCategory = async (id: string, data: Partial<Omit<Category, 'id' | 'createdAt' | 'aiModel'>> & { aiModel: string }) => {
+    let modelId: number;
     switch (data.aiModel) {
-        case 'Gemini 2.0 Flash':
-            modelId = 1;
-            break;
-        case 'Gemini Pro':
-            modelId = 2;
-            break;
-        default:
-             modelId = parseInt(data.aiModel.replace('Modelo ', ''), 10) || 1
+      case 'Gemini 2.0 Flash':
+        modelId = 1;
+        break;
+      case 'Gemini Pro':
+        modelId = 2;
+        break;
+      default:
+        modelId = parseInt(data.aiModel.replace('Modelo ', ''), 10) || 1;
     }
 
     const payload = {
@@ -416,11 +417,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     await api.put(`/categories/${id}`, payload);
     
-    await fetchCategories({ page: categoryPagination.currentPage, limit: 10, search: undefined });
+    await fetchCategories({ page: categoryPagination.currentPage, limit: 10 });
   };
   
-  const deleteCategory = (id: string) => {
-    setCategories(prev => prev.filter(cat => cat.id !== id));
+  const deleteCategory = async (id: string) => {
+    await api.delete(`/categories/${id}`);
+    await fetchCategories({ page: categoryPagination.currentPage, limit: 10 });
   };
 
   const addScanResult = (result: Omit<ScanResult, 'id' | 'dateScanned'>) => {

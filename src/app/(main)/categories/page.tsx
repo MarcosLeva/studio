@@ -358,15 +358,24 @@ export default function CategoriesPage() {
     setViewingCategory(category);
   }, []);
   
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (categoryToDelete) {
-      deleteCategory(categoryToDelete.id);
-      toast({
-        title: "Categoría Eliminada",
-        description: `La categoría "${categoryToDelete.name}" ha sido eliminada.`,
-        icon: <Trash2 className="h-5 w-5 text-primary" />,
-      });
-      setCategoryToDelete(null);
+      try {
+        await deleteCategory(categoryToDelete.id);
+        toast({
+          title: "Categoría Eliminada",
+          description: `La categoría "${categoryToDelete.name}" ha sido eliminada.`,
+          icon: <Trash2 className="h-5 w-5 text-primary" />,
+        });
+        setCategoryToDelete(null);
+      } catch (error: any) {
+        toast({
+          variant: "destructive",
+          title: "Error al Eliminar",
+          description: error.message || "No se pudo eliminar la categoría. Inténtalo de nuevo.",
+        });
+        setCategoryToDelete(null);
+      }
     }
   };
 

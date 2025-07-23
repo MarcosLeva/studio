@@ -2,7 +2,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, ArrowUpDown, Eye, Trash2, Pencil } from "lucide-react";
+import { MoreHorizontal, ArrowUpDown, Eye, Trash2, Pencil, ClipboardCopy } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -107,6 +107,7 @@ export const getColumns = (
                   onClick={() => navigator.clipboard.writeText(category.id)}
                   className="cursor-pointer"
                 >
+                  <ClipboardCopy className="mr-2 h-4 w-4" />
                   Copiar ID de Categoría
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
