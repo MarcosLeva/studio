@@ -100,6 +100,7 @@ export default function CategoriesPage() {
   const [categoryToDelete, setCategoryToDelete] = React.useState<Category | null>(null);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = React.useState(false);
   const [isSuggesting, setIsSuggesting] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const isMobile = useIsMobile();
   const [visibleRows, setVisibleRows] = React.useState(10);
   const [isLoadingMore, setIsLoadingMore] = React.useState(false);
@@ -129,22 +130,36 @@ export default function CategoriesPage() {
   });
 
   async function onSubmit(values: z.infer<typeof categorySchema>) {
-    if (editingCategory) {
-      editCategory(editingCategory.id, values);
-      toast({
-        title: "Categoría Actualizada",
-        description: `La categoría "${values.name}" ha sido actualizada con éxito.`,
-        icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
-      });
-    } else {
-      addCategory(values);
-      toast({
-        title: "Categoría Creada",
-        description: `La categoría "${values.name}" ha sido añadida con éxito.`,
-        icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
-      });
+    setIsSubmitting(true);
+    try {
+        if (editingCategory) {
+          editCategory(editingCategory.id, values);
+          toast({
+            title: "Categoría Actualizada",
+            description: `La categoría "${values.name}" ha sido actualizada con éxito.`,
+            icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
+          });
+        } else {
+          await addCategory(values);
+          toast({
+            title: "Categoría Creada",
+            description: `La categoría "${values.name}" ha sido añadida con éxito.`,
+            icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
+          });
+        }
+        setIsDialogOpen(false);
+    } catch (error: any) {
+        toast({
+            variant: "destructive",
+            title: "Error al Guardar",
+            description: error.message || "No se pudo guardar la categoría. Inténtalo de nuevo.",
+            icon: <AlertTriangle className="h-5 w-5 text-destructive-foreground" />,
+        });
+    } finally {
+        if(isMounted.current) {
+            setIsSubmitting(false);
+        }
     }
-    setIsDialogOpen(false);
   }
   
   const handleSuggestPrompt = async () => {
@@ -496,7 +511,10 @@ export default function CategoriesPage() {
               </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => handleDialogClose(false)}>Cancelar</Button>
-                <Button type="submit">{editingCategory ? "Guardar Cambios" : "Guardar Categoría"}</Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {editingCategory ? "Guardar Cambios" : "Guardar Categoría"}
+                </Button>
               </DialogFooter>
             </form>
           </Form>
@@ -603,5 +621,7 @@ export default function CategoriesPage() {
     </div>
   );
 }
+
+    
 
     

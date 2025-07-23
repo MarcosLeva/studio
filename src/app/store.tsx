@@ -133,7 +133,7 @@ interface AppContextType {
   // Categories
   categories: Category[];
   setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
-  addCategory: (category: Omit<Category, 'id' | 'dateCreated'>) => void;
+  addCategory: (category: Omit<Category, 'id' | 'dateCreated'>) => Promise<void>;
   editCategory: (id: string, data: Omit<Category, 'id' | 'dateCreated'>) => void;
   deleteCategory: (id: string) => void;
 
@@ -155,7 +155,7 @@ interface AppContextType {
   };
   fetchManagedUsers: (params: { page: number; limit: number; search?: string; role?: string; status?: string; }) => Promise<void>;
   addManagedUser: (user: User) => string;
-  editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar'>>) => Promise<void>;
+  editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'role'>>) => Promise<void>;
   deleteManagedUser: (id: string) => Promise<void>;
   toggleUserStatus: (id: string, currentStatus: User['status']) => Promise<void>;
 }
@@ -306,12 +306,38 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       }
   };
   
-  const addCategory = (category: Omit<Category, 'id' | 'dateCreated'>) => {
+  const addCategory = async (category: Omit<Category, 'id' | 'dateCreated'>) => {
+    let modelId;
+    switch (category.aiModel) {
+        case 'Gemini 2.0 Flash':
+            modelId = 1;
+            break;
+        case 'Gemini Pro':
+            modelId = 2;
+            break;
+        default:
+            throw new Error('Modelo de IA no válido seleccionado');
+    }
+
+    const payload = {
+        name: category.name,
+        model: modelId,
+        description: category.description,
+        prompt: category.prompt,
+        instructions: category.instructions,
+    };
+    
+    // For now, we add it locally. We will connect this to the API later.
     const newCategory: Category = {
       ...category,
       id: `cat-${new Date().getTime()}`,
       dateCreated: new Date().toISOString().split('T')[0],
     };
+
+    // Before updating state, make the API call
+    await api.post('/categories', payload);
+    
+    // If API call is successful, then update state
     setCategories(prev => [...prev, newCategory]);
   };
 
@@ -358,13 +384,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return user.id;
   };
 
-  const editManagedUser = async (id: string, data: Partial<Omit<User, 'id' | 'avatar'>>) => {
+  const editManagedUser = async (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'role'>>) => {
     const payload: {[key: string]: any} = {};
     if (data.name) payload.name = data.name;
     if (data.email) payload.email = data.email;
-    if (data.role) {
-        payload.role = data.role === 'Administrador' ? 'admin' : 'user';
-    }
     if (data.status) {
         let apiStatus: string | undefined;
         switch (data.status) {
@@ -455,3 +478,5 @@ export const useApp = () => {
   }
   return context;
 };
+
+    
