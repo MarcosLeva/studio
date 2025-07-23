@@ -2,7 +2,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, ArrowUpDown } from "lucide-react";
+import { MoreHorizontal, ArrowUpDown, FileDown, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -92,6 +92,7 @@ export const getColumns = (
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => onExport(result)} className="cursor-pointer">
+                            <FileDown className="mr-2 h-4 w-4" />
                             Exportar como Excel
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
@@ -99,6 +100,7 @@ export const getColumns = (
                         onClick={() => onDelete(result)}
                         className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
                         >
+                        <Trash2 className="mr-2 h-4 w-4" />
                         Eliminar
                         </DropdownMenuItem>
                     </DropdownMenuContent>

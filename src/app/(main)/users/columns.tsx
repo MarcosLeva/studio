@@ -2,7 +2,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, ArrowUpDown } from "lucide-react";
+import { MoreHorizontal, ArrowUpDown, Pencil, Trash2, UserCheck, UserX } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -136,15 +136,29 @@ export const getColumns = (
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => onEdit(user)} className="cursor-pointer">Editar Usuario</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onEdit(user)} className="cursor-pointer">
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Editar Usuario
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onToggleStatus(user)} disabled={user.status === 'pendiente' || user.status === 'suspendido'} className="cursor-pointer">
-                  {user.status === 'activo' ? 'Desactivar Usuario' : 'Activar Usuario'}
+                  {user.status === 'activo' ? (
+                    <>
+                      <UserX className="mr-2 h-4 w-4" />
+                      <span>Desactivar Usuario</span>
+                    </>
+                  ) : (
+                    <>
+                      <UserCheck className="mr-2 h-4 w-4" />
+                      <span>Activar Usuario</span>
+                    </>
+                  )}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => onDelete(user)}
                   className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
                 >
+                  <Trash2 className="mr-2 h-4 w-4" />
                   Eliminar Usuario
                 </DropdownMenuItem>
               </DropdownMenuContent>
