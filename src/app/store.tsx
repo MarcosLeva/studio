@@ -84,14 +84,26 @@ export const mapApiUserToAppUser = (apiUser: any): User => {
 };
 
 export const mapApiCategoryToAppCategory = (apiCategory: any): Category => {
+  let modelName = `Modelo ${apiCategory.model}`;
+  switch (apiCategory.model) {
+    case 1:
+      modelName = "Gemini 2.0 Flash";
+      break;
+    case 2:
+      modelName = "Gemini Pro";
+      break;
+  }
+
   return {
     id: apiCategory.id,
     name: apiCategory.name,
     description: apiCategory.description,
     prompt: apiCategory.prompt,
     instructions: apiCategory.instructions,
-    aiModel: apiCategory.model.name,
-    createdAt: format(new Date(apiCategory.createdAt), 'yyyy-MM-dd'),
+    aiModel: modelName,
+    // The API response for categories does not include a `createdAt` field.
+    // We'll use the current date as a placeholder.
+    createdAt: format(new Date(), 'yyyy-MM-dd'),
   };
 };
 
@@ -155,7 +167,7 @@ interface AppContextType {
   };
   fetchManagedUsers: (params: { page: number; limit: number; search?: string; role?: string; status?: string; }) => Promise<void>;
   addManagedUser: (user: User) => string;
-  editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar' | 'status'>>) => Promise<void>;
+  editManagedUser: (id: string, data: Partial<Omit<User, 'id' | 'avatar'>>) => Promise<void>;
   deleteManagedUser: (id: string) => Promise<void>;
   toggleUserStatus: (id: string, currentStatus: User['status']) => Promise<void>;
 }
