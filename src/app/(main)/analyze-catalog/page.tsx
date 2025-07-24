@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lightbulb, Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Lightbulb, Loader2, CheckCircle2, AlertTriangle, Check, ChevronsUpDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -18,18 +18,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileUploader } from "@/components/file-uploader";
 import { useApp } from "@/app/store";
 import { analyzeCatalogInput } from "@/ai/flows/analyze-catalog-input";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 const readFileAsDataURI = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -52,6 +48,7 @@ export default function AnalyzeCatalogPage() {
   const router = useRouter();
   const { toast } = useToast();
   const isMounted = React.useRef(true);
+  const [isCategoryPopoverOpen, setCategoryPopoverOpen] = React.useState(false);
 
   React.useEffect(() => {
     isMounted.current = true;
@@ -155,32 +152,63 @@ export default function AnalyzeCatalogPage() {
                       control={form.control}
                       name="category"
                       render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="flex flex-col">
                           <FormLabel>Categoría</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            disabled={areCategoriesLoading}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue
-                                  placeholder={
-                                    areCategoriesLoading
-                                      ? "Cargando categorías..."
-                                      : "Selecciona una categoría para el análisis"
-                                  }
-                                />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {categories.map((cat) => (
-                                <SelectItem key={cat.id} value={cat.id}>
-                                  {cat.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <Popover open={isCategoryPopoverOpen} onOpenChange={setCategoryPopoverOpen}>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  aria-expanded={isCategoryPopoverOpen}
+                                  className={cn(
+                                    "w-full justify-between font-normal",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                  disabled={areCategoriesLoading}
+                                >
+                                  {areCategoriesLoading
+                                    ? "Cargando categorías..."
+                                    : field.value
+                                    ? categories.find(
+                                        (cat) => cat.id === field.value
+                                      )?.name
+                                    : "Selecciona una categoría"}
+                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                               <Command>
+                                <CommandInput placeholder="Buscar categoría..." />
+                                <CommandList>
+                                  <CommandEmpty>No se encontraron categorías.</CommandEmpty>
+                                  <CommandGroup>
+                                    {categories.map((cat) => (
+                                      <CommandItem
+                                        value={cat.name}
+                                        key={cat.id}
+                                        onSelect={() => {
+                                          form.setValue("category", cat.id);
+                                          setCategoryPopoverOpen(false);
+                                        }}
+                                      >
+                                        <Check
+                                          className={cn(
+                                            "mr-2 h-4 w-4",
+                                            cat.id === field.value
+                                              ? "opacity-100"
+                                              : "opacity-0"
+                                          )}
+                                        />
+                                        {cat.name}
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
                           <FormMessage />
                         </FormItem>
                       )}
