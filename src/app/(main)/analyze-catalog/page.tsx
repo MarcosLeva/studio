@@ -47,7 +47,7 @@ const formSchema = z.object({
 });
 
 export default function AnalyzeCatalogPage() {
-  const { categories, addScanResult } = useApp();
+  const { categories, addScanResult, fetchCategories, areCategoriesLoading, isAuthLoading } = useApp();
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -59,6 +59,13 @@ export default function AnalyzeCatalogPage() {
         isMounted.current = false;
     };
   }, []);
+
+  React.useEffect(() => {
+    if (!isAuthLoading) {
+      // Fetch all categories for the dropdown
+      fetchCategories({ page: 1, limit: 1000 });
+    }
+  }, [isAuthLoading, fetchCategories]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -150,10 +157,20 @@ export default function AnalyzeCatalogPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Categoría</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                            disabled={areCategoriesLoading}
+                          >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Selecciona una categoría para el análisis" />
+                                <SelectValue
+                                  placeholder={
+                                    areCategoriesLoading
+                                      ? "Cargando categorías..."
+                                      : "Selecciona una categoría para el análisis"
+                                  }
+                                />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
