@@ -43,11 +43,13 @@ export const setToken = (token: string | null) => {
 // Helper to parse response and handle non-OK statuses.
 const handleResponse = async (response: Response) => {
     let responseData;
-    try {
+    // Check if the response is JSON, otherwise treat as text/html
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
         responseData = await response.json();
-    } catch (error) {
-        // If JSON parsing fails, it's a server error.
-        throw new Error('Respuesta inválida del servidor.');
+    } else {
+        // If not json, just get the text. The logic that calls this will need to handle it.
+        responseData = { data: await response.text() };
     }
 
     if (!response.ok) {
@@ -121,8 +123,11 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
     // Re-read accessToken from sessionStorage before each request
     accessToken = sessionStorage.getItem('access_token'); 
     const headers = new Headers(options.headers);
-    if (!headers.has('Content-Type') && options.body) {
-      headers.set('Content-Type', 'application/json');
+    // Do not set Content-Type for FormData, browser does it automatically with boundary.
+    if (!(options.body instanceof FormData)) {
+        if (!headers.has('Content-Type') && options.body) {
+            headers.set('Content-Type', 'application/json');
+        }
     }
     if (accessToken) {
       headers.set('Authorization', `Bearer ${accessToken}`);
@@ -150,7 +155,15 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
 
 export const api = {
     get: (endpoint: string) => request(endpoint, { method: 'GET' }),
-    post: (endpoint: string, body: unknown) => request(endpoint, { method: 'POST', body: JSON.stringify(body) }),
+    post: (endpoint: string, body: unknown) => {
+        const options: RequestInit = {
+            method: 'POST',
+            body: body instanceof FormData ? body : JSON.stringify(body),
+        };
+        return request(endpoint, options);
+    },
     put: (endpoint: string, body: unknown) => request(endpoint, { method: 'PUT', body: JSON.stringify(body) }),
     delete: (endpoint: string) => request(endpoint, { method: 'DELETE' }),
 };
+
+    
