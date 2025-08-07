@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import React, { useState } from "react";
 import { Lightbulb, Loader2, AlertTriangle, FileUp, Sparkles } from "lucide-react";
+import { marked } from "marked";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -64,8 +65,9 @@ export default function AnalyzeCatalogPage() {
       const result = await api.post('/uploads/upload-file', formData);
       
       if (isMounted.current) {
-        // Asumiendo que la API devuelve el HTML/texto en una propiedad 'data' o similar
-        setAnalysisResult(result.data || result.message || "Análisis completado, pero no se recibió contenido.");
+        const geminiResult = result.data.geminiResult;
+        const htmlResult = await marked.parse(geminiResult || "Análisis completado, pero no se recibió contenido.");
+        setAnalysisResult(htmlResult);
       }
 
     } catch (error) {
@@ -206,5 +208,3 @@ export default function AnalyzeCatalogPage() {
     </div>
   );
 }
-
-    
